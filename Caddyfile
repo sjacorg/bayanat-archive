@@ -1,0 +1,10 @@
+{$DOMAIN:localhost} {
+    handle /static/* {
+        root * /app
+        file_server
+    }
+
+    handle {
+        reverse_proxy flask:8000
+    }
+}

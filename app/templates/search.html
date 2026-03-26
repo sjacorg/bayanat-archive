@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-6 py-12">
+
+    <!-- Search -->
+    <div class="flex items-baseline gap-6 mb-10">
+        <h1 class="text-4xl font-light tracking-tight text-primary shrink-0">Search</h1>
+        <input
+            type="search"
+            name="q"
+            placeholder="Search documents..."
+            class="input input-bordered w-full bg-base-100 text-base"
+            hx-get="/search"
+            hx-trigger="keyup changed delay:300ms"
+            hx-target="#results"
+            hx-push-url="true"
+            hx-indicator="#loading"
+        >
+    </div>
+
+    <!-- Loading skeleton -->
+    <div id="loading" class="htmx-indicator">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% for _ in range(4) %}
+            <div class="skeleton h-64 w-full"></div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Results (HTMX target) -->
+    <div id="results">
+        <p class="text-base-content/50 text-center py-20">
+            Archive not yet loaded. Run <code class="bg-base-300 px-2 py-1 rounded text-sm">flask import-archive</code> to populate.
+        </p>
+    </div>
+
+</div>
+{% endblock %}

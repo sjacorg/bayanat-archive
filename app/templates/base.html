@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Bayanat Document Archive{% endblock %}</title>
+    <meta name="description" content="{% block description %}Public searchable archive of Syrian government documents{% endblock %}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind 4 + DaisyUI 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/full.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2"></script>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
+
+    <!-- Archive theme overrides -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/archive.css') }}">
+
+    {% block head %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col bg-base-200" style="font-family: 'Inter', sans-serif;">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 backdrop-blur-md bg-base-200/92 border-b border-base-300/30">
+        <nav class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="/" class="text-xl font-light tracking-tight text-primary">
+                Bayanat <span class="font-semibold">Document Archive</span>
+            </a>
+            <div class="flex items-center gap-6">
+                <a href="/" class="text-sm text-base-content/70 hover:text-primary transition-colors">Search</a>
+                <a href="/about" class="text-sm text-base-content/70 hover:text-primary transition-colors">About</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-base-300/50 mt-auto">
+        <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-base-content/50">
+                A project by <a href="https://syriaaccountability.org" target="_blank" rel="noopener" class="hover:text-primary transition-colors">Syria Justice & Accountability Centre</a>
+            </div>
+            <div class="flex gap-6 text-sm text-base-content/50">
+                <a href="/about" class="hover:text-primary transition-colors">About this archive</a>
+                <a href="/feedback" class="hover:text-primary transition-colors">Give feedback</a>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

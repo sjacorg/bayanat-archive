@@ -1,0 +1,22 @@
+[project]
+name = "bayanat-archive"
+version = "0.1.0"
+description = "Public searchable archive for human rights documents exported from Bayanat"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.1.0",
+    "gunicorn>=23.0.0",
+    "python-dotenv>=1.1.0",
+    "python-slugify>=8.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["ruff"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP"]
+ignore = ["E501"]
