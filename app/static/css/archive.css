@@ -3,18 +3,20 @@
  * Based on: Digital Archivist spec + Stasi Mediathek patterns + Bayanat brand colors
  */
 
-/* DaisyUI theme tokens */
-:root {
-    --p: 168 52% 18%;         /* primary: #1A4540 */
-    --s: 170 43% 42%;         /* secondary: #3D9B8F */
-    --a: 38 95% 52%;          /* accent: #F59E0B */
-    --b1: 200 7% 95%;         /* base-100: #EFF1F2 (archival grey) */
-    --b2: 200 5% 90%;         /* base-200: #E4E6E7 */
-    --b3: 200 4% 85%;         /* base-300: #D5D7D8 */
-    --bc: 215 75% 11%;        /* base-content: #0F172A */
-    --rounded-box: 0rem;      /* sharp corners on cards */
-    --rounded-btn: 0.125rem;  /* 2px on buttons */
-    --rounded-badge: 0rem;    /* sharp corners on badges/chips */
+/* Brand overrides on top of DaisyUI light theme — only what differs */
+[data-theme="light"] {
+    /* Primary: Bayanat dark teal #1A4540 */
+    --color-primary: oklch(0.61 0.085 180);
+
+    /* Sharp corners — Stasi / institutional pattern */
+    --radius-box: 0rem;
+    --radius-selector: 0.125rem;
+    --radius-field: 0.125rem;
+
+    /* Custom brand tokens (not DaisyUI standard) */
+    --color-primary-mid: oklch(0.61 0.085 180);   /* #3D9B8F links, hover */
+    --color-primary-light: oklch(0.71 0.083 182); /* #5AB5A9 tags, secondary interactive */
+    --color-ink-muted: oklch(0.37 0.005 255);     /* #4B4B4B body text */
 }
 
 /* Ambient shadow (not drop shadow) */
