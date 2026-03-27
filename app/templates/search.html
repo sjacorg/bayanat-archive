@@ -4,13 +4,13 @@
 <div class="max-w-7xl mx-auto px-6 py-12">
 
     <!-- Search -->
-    <div class="flex items-baseline gap-6 mb-10">
+    <div class="flex items-center gap-6 mb-10">
         <h1 class="text-4xl font-light tracking-tight text-primary shrink-0">Search</h1>
         <input
             type="search"
             name="q"
             placeholder="Search documents..."
-            class="input input-bordered w-full bg-base-100 text-base"
+            class="input w-full bg-base-100 text-base"
             hx-get="/search"
             hx-trigger="keyup changed delay:300ms"
             hx-target="#results"
