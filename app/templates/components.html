@@ -2,109 +2,85 @@
 
 {% block title %}Component Demo — Bayanat Archive{% endblock %}
 
-{% block head %}
-<style>
-    .demo-section {
-        padding: 2rem 0;
-        border-bottom: 1px solid oklch(0.90 0 0);
-    }
-    .demo-label {
-        display: block;
-        font-size: 0.65rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: oklch(0.55 0 0);
-        margin-bottom: 1rem;
-    }
-    .swatch {
-        width: 3rem;
-        height: 3rem;
-        border-radius: 0;
-        flex-shrink: 0;
-    }
-</style>
-{% endblock %}
-
 {% block content %}
-    <div class="max-w-7xl mx-auto px-6 py-12">
+    <div class="py-4 lg:py-8">
 
         <!-- Page title -->
-        <div class="demo-section">
-            <p class="demo-label">Component Library</p>
-            <h1 class="text-display text-primary">UI Components</h1>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Component Library</p>
+            <h1 class="text-[clamp(2.5rem,4vw,3.25rem)] font-light leading-[1.1] tracking-[-0.02em] text-primary">UI Components</h1>
             <p class="text-base-content/60 mt-3 text-sm max-w-xl">
                 DaisyUI 5 + Tailwind 4 with Bayanat brand overrides. All components reflect the archival aesthetic: sharp corners, tonal surfaces, institutional typography.
             </p>
         </div>
 
         <!-- ── COLOUR PALETTE ── -->
-        <div class="demo-section">
-            <p class="demo-label">Colour Palette</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Colour Palette</p>
             <div class="flex flex-wrap gap-4">
                 <div class="flex flex-col items-start gap-1">
-                    <div class="swatch bg-primary"></div>
+                    <div class="h-12 w-12 shrink-0 rounded-none bg-primary"></div>
                     <span class="text-xs text-base-content/60">primary<br>#1A4540</span>
                 </div>
                 <div class="flex flex-col items-start gap-1">
-                    <div class="swatch bg-secondary"></div>
+                    <div class="h-12 w-12 shrink-0 rounded-none bg-secondary"></div>
                     <span class="text-xs text-base-content/60">secondary<br>#3D9B8F</span>
                 </div>
                 <div class="flex flex-col items-start gap-1">
-                    <div class="swatch bg-accent"></div>
+                    <div class="h-12 w-12 shrink-0 rounded-none bg-accent"></div>
                     <span class="text-xs text-base-content/60">accent<br>#F59E0B</span>
                 </div>
                 <div class="flex flex-col items-start gap-1">
-                    <div class="swatch" style="background:#EFF1F2; border:1px solid #ccc;"></div>
+                    <div class="h-12 w-12 shrink-0 rounded-none border border-[#ccc] bg-[#EFF1F2]"></div>
                     <span class="text-xs text-base-content/60">base-100<br>#EFF1F2</span>
                 </div>
                 <div class="flex flex-col items-start gap-1">
-                    <div class="swatch" style="background:#E4E6E7; border:1px solid #ccc;"></div>
+                    <div class="h-12 w-12 shrink-0 rounded-none border border-[#ccc] bg-[#E4E6E7]"></div>
                     <span class="text-xs text-base-content/60">base-200<br>#E4E6E7</span>
                 </div>
                 <div class="flex flex-col items-start gap-1">
-                    <div class="swatch bg-white border border-base-300"></div>
+                    <div class="h-12 w-12 shrink-0 rounded-none border border-base-300 bg-white"></div>
                     <span class="text-xs text-base-content/60">base-300<br>#FFFFFF</span>
                 </div>
                 <div class="flex flex-col items-start gap-1">
-                    <div class="swatch" style="background:#0F172A;"></div>
+                    <div class="h-12 w-12 shrink-0 rounded-none bg-[#0F172A]"></div>
                     <span class="text-xs text-base-content/60">ink<br>#0F172A</span>
                 </div>
                 <div class="flex flex-col items-start gap-1">
-                    <div class="swatch" style="background:#4B4B4B;"></div>
+                    <div class="h-12 w-12 shrink-0 rounded-none bg-[#4B4B4B]"></div>
                     <span class="text-xs text-base-content/60">ink-muted<br>#4B4B4B</span>
                 </div>
             </div>
         </div>
 
         <!-- ── TYPOGRAPHY ── -->
-        <div class="demo-section">
-            <p class="demo-label">Typography</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Typography</p>
             <div class="space-y-6">
                 <div>
-                    <span class="demo-label">Display — 2.5–3.25rem / weight 300 / −0.02em</span>
-                    <p class="text-display text-primary">The Archive of Memory</p>
+                    <span class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Display — 2.5–3.25rem / weight 300 / −0.02em</span>
+                    <p class="text-[clamp(2.5rem,4vw,3.25rem)] font-light leading-[1.1] tracking-[-0.02em] text-primary">The Archive of Memory</p>
                 </div>
                 <div>
-                    <span class="demo-label">Headline — 1.5–2rem / weight 600</span>
+                    <span class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Headline — 1.5–2rem / weight 600</span>
                     <p class="text-2xl font-semibold text-base-content">Syrian Government Documents</p>
                 </div>
                 <div>
-                    <span class="demo-label">Body — 1rem / weight 400</span>
+                    <span class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Body — 1rem / weight 400</span>
                     <p class="text-base text-base-content/80 max-w-prose">
                         This archive contains declassified and leaked documents from the Syrian government. Documents have been verified, translated, and indexed to support accountability efforts.
                     </p>
                 </div>
                 <div>
-                    <span class="demo-label">Label — 0.75rem / weight 500 / uppercase</span>
+                    <span class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Label — 0.75rem / weight 500 / uppercase</span>
                     <p class="text-xs font-medium uppercase tracking-widest text-base-content/60">Document Classification · Internal Use Only</p>
                 </div>
             </div>
         </div>
 
         <!-- ── BUTTONS ── -->
-        <div class="demo-section">
-            <p class="demo-label">Buttons — max 2px radius</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Buttons — max 2px radius</p>
             <div class="flex flex-wrap gap-3 items-center">
                 <button class="btn btn-primary">Primary</button>
                 <button class="btn btn-secondary">Secondary</button>
@@ -132,8 +108,8 @@
         </div>
 
         <!-- ── DOCUMENT CHIPS / BADGES ── -->
-        <div class="demo-section">
-            <p class="demo-label">Document Chips — 0px radius, mimics physical tab folders</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Document Chips — 0px radius, mimics physical tab folders</p>
             <div class="flex flex-wrap gap-2">
                 <!-- .doc-chip custom class -->
                 <span class="doc-chip">Intelligence Report</span>
@@ -151,8 +127,8 @@
         </div>
 
         <!-- ── CARDS ── -->
-        <div class="demo-section">
-            <p class="demo-label">Cards — 0px radius, tonal surfaces, ambient shadow</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Cards — 0px radius, tonal surfaces, ambient shadow</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
                 <!-- Document result card -->
@@ -222,8 +198,8 @@
         </div>
 
         <!-- ── SKELETON LOADERS ── -->
-        <div class="demo-section">
-            <p class="demo-label">Skeleton Loaders — verify theme rendering</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Skeleton Loaders — verify theme rendering</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div class="card bg-base-100 shadow-ambient">
                     <div class="card-body gap-3">
@@ -264,12 +240,12 @@
         </div>
 
         <!-- ── SIDEBAR BUTTONS ── -->
-        <div class="demo-section">
-            <p class="demo-label">Sidebar Buttons — Document Viewer Panel (Stasi pattern)</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Sidebar Buttons — Document Viewer Panel (Stasi pattern)</p>
             <div class="flex gap-8 flex-wrap">
                 <div class="w-56 bg-base-100 shadow-ambient">
                     <button class="sidebar-btn">Overview</button>
-                    <button class="sidebar-btn" style="background:#1A4540;">Transcription</button>
+                    <button class="sidebar-btn !bg-primary hover:!bg-primary">Transcription</button>
                     <button class="sidebar-btn">Translation</button>
                     <button class="sidebar-btn">Metadata</button>
                     <button class="sidebar-btn">Related Documents</button>
@@ -282,8 +258,8 @@
         </div>
 
         <!-- ── FORM ELEMENTS ── -->
-        <div class="demo-section">
-            <p class="demo-label">Form Elements</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Form Elements</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
                 <div class="flex flex-col gap-1">
                     <label class="text-xs font-medium uppercase tracking-widest text-base-content/60">Search Query</label>
@@ -317,8 +293,8 @@
         </div>
 
         <!-- ── ALERTS / NOTICES ── -->
-        <div class="demo-section">
-            <p class="demo-label">Alerts &amp; Notices</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Alerts &amp; Notices</p>
             <div class="space-y-3 max-w-2xl">
                 <div role="alert" class="alert alert-info">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -342,8 +318,8 @@
         </div>
 
         <!-- ── PAGINATION ── -->
-        <div class="demo-section">
-            <p class="demo-label">Pagination</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Pagination</p>
             <div class="join">
                 <button class="join-item btn btn-sm">«</button>
                 <button class="join-item btn btn-sm">1</button>
@@ -355,8 +331,8 @@
         </div>
 
         <!-- ── LOADING STATES ── -->
-        <div class="demo-section">
-            <p class="demo-label">Loading Spinners</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Loading Spinners</p>
             <div class="flex items-center gap-8">
                 <span class="loading loading-spinner loading-sm text-primary"></span>
                 <span class="loading loading-spinner loading-md text-primary"></span>
@@ -367,8 +343,8 @@
         </div>
 
         <!-- ── MODAL PREVIEW ── -->
-        <div class="demo-section">
-            <p class="demo-label">Modal</p>
+        <div class="border-b border-base-300/50 py-8">
+            <p class="mb-4 block text-[0.65rem] font-semibold uppercase tracking-[0.1em] text-base-content/55">Modal</p>
             <button class="btn btn-primary" onclick="document.getElementById('demo_modal').showModal()">Open Document Modal</button>
             <dialog id="demo_modal" class="modal">
                 <div class="modal-box max-w-2xl" style="border-radius:0;">
