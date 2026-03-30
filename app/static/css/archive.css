@@ -18,9 +18,6 @@
     --color-accent-content: oklch(0.20 0.040 72);
 
     /* Surface tiers */
-    --color-base-100: oklch(0.95 0.004 210);     /* #EFF1F2 archival grey */
-    --color-base-200: oklch(0.91 0.004 210);     /* #E4E6E7 section backgrounds */
-    --color-base-300: oklch(1 0 0);              /* #FFFFFF cards, elevated surfaces */
     --color-base-content: oklch(0.13 0.033 255); /* #0F172A primary text */
 
     /* Sharp corners — Stasi / institutional pattern */
