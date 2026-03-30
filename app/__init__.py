@@ -1,5 +1,6 @@
 import os
 import sqlite3
+from datetime import datetime
 
 from flask import Flask, g
 
@@ -24,6 +25,10 @@ def close_db(e=None):
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-change-me")
+
+    @app.context_processor
+    def inject_template_globals():
+        return {"current_year": datetime.now().year}
 
     app.teardown_appcontext(close_db)
 
