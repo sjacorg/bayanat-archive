@@ -1,30 +1,93 @@
 {% extends "base.html" %}
 
 {% block title %}About - Bayanat Document Archive{% endblock %}
+{% block description %}About the Bayanat Document Archive, its methodology, SJAC context, and how to use it.{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl py-4 lg:py-8">
-    <h1 class="text-4xl font-light tracking-tight text-primary mb-8">About this archive</h1>
-    <div class="prose prose-lg text-base-content/80">
-        <p>
-            The Bayanat Document Archive is a public repository of Syrian government documents,
-            created by the <a href="https://syriaaccountability.org" target="_blank" rel="noopener">Syria Justice and Accountability Centre</a> (SJAC).
+<div class="max-w-4xl py-4 lg:py-8">
+    <header class="mb-10">
+        <p class="text-xs font-medium uppercase tracking-[0.12em] text-base-content/50">About</p>
+        <h1 class="mt-3 text-4xl font-light tracking-tight text-primary">
+            About the Bayanat Document Archive
+        </h1>
+        <p class="mt-2 text-sm text-base-content/60">
+            Built by SJAC using the Bayanat documentation platform.
         </p>
-        <p>
-            With the opening of Syria's intelligence facility archives, this project makes
-            selected government documents accessible to researchers, legal professionals,
-            justice mechanisms, and the Syrian public.
+        <p class="mt-4 max-w-3xl text-base text-base-content/75">
+            The Bayanat Document Archive is a public interface for accessing selected Syrian government documents relevant to accountability, legal analysis, and historical research. 
+            It provides structured, searchable access to materials preserved through over a decade of human rights documentation work.
         </p>
-        <p>
-            All documents have been reviewed by SJAC staff and redacted where necessary
-            to protect the identities of individuals mentioned. Documents are presented
-            in their original Arabic alongside English translations.
-        </p>
-        <p>
-            This archive is powered by
-            <a href="https://bayanat.org" target="_blank" rel="noopener">Bayanat</a>,
-            SJAC's open-source evidence management platform.
-        </p>
+    </header>
+
+    <div class="space-y-6">
+        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
+            <h2 class="text-lg font-semibold text-base-content">What This Archive Is</h2>
+            <p class="mt-3 text-sm leading-relaxed text-base-content/75">
+                This archive publishes curated document records to make key materials accessible to researchers, legal practitioners, journalists, and the public. 
+                It is designed to support evidence-led investigation, enable discovery across large document sets, and contribute to long-term preservation of historically significant records.
+            </p>
+        </section>
+
+        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
+            <h2 class="text-lg font-semibold text-base-content">Who Built This Archive</h2>
+            <p class="mt-3 text-sm leading-relaxed text-base-content/75">
+                The archive is maintained by the 
+                <a class="text-primary hover:text-secondary transition-colors" href="https://syriaaccountability.org" target="_blank" rel="noopener noreferrer">
+                    Syria Justice and Accountability Centre (SJAC)
+                </a>, 
+                a Syrian-led human rights organization working to advance justice and accountability. 
+                Over more than a decade, SJAC has collected, verified, and analyzed large volumes of documentation related to human rights violations, supporting legal processes, policy work, and historical record-building.
+            </p>
+            <p class="mt-3 text-sm leading-relaxed text-base-content/75">
+                This archive reflects a subset of that work, making selected materials publicly accessible while adhering to responsible documentation practices.
+            </p>
+        </section>
+
+        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
+            <h2 class="text-lg font-semibold text-base-content">How Documents Are Prepared</h2>
+            <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-base-content/75">
+                <li>Documents are collected from verified sources, including institutional repositories and established archival processes.</li>
+                <li>Each record is reviewed by SJAC staff to ensure relevance, accuracy of metadata, and suitability for publication.</li>
+                <li>Sensitive personal information is redacted where necessary to reduce harm and protect individuals.</li>
+                <li>Documents are structured with consistent metadata to support search, filtering, and analysis.</li>
+                <li>Where available, original Arabic content is preserved alongside contextual or translated information.</li>
+            </ol>
+        </section>
+
+        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
+            <h2 class="text-lg font-semibold text-base-content">How to Use the Archive</h2>
+            <ul class="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-base-content/75">
+                <li>Use the search bar to find documents by names, institutions, locations, or keywords across the archive.</li>
+                <li>Browse individual records to view document details, metadata, and available formats.</li>
+                <li>Apply filters to narrow results by time period, entity, or classification.</li>
+                <li>Use document identifiers and source references when citing materials.</li>
+                <li>Explore connections across records to support research, investigation, or reporting.</li>
+            </ul>
+        </section>
+
+        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
+            <h2 class="text-lg font-semibold text-base-content">About the Bayanat Platform</h2>
+            <p class="mt-3 text-sm leading-relaxed text-base-content/75">
+                This archive is powered by 
+                <a class="text-primary hover:text-secondary transition-colors" href="https://bayanat.org" target="_blank" rel="noopener noreferrer">
+                    Bayanat
+                </a>, 
+                SJAC's open-source platform for human rights documentation. 
+                Bayanat enables organizations to securely collect, organize, verify, and analyze large volumes of evidence while maintaining auditability and data integrity.
+            </p>
+            <a
+                href="https://bayanat.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-outline btn-primary mt-4"
+            >
+                Learn more about Bayanat
+            </a>
+        </section>
     </div>
+
+    <p class="mt-8 text-sm text-base-content/60">
+        This archive is intended to support research, accountability efforts, and the preservation of historical record.
+    </p>
 </div>
 {% endblock %}
