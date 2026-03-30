@@ -67,6 +67,16 @@
     letter-spacing: 0.05em;
 }
 
+/* HTMX request indicators: hidden by default, visible during request */
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    display: block;
+}
+
 /* Cross-document View Transitions API */
 @view-transition {
     navigation: auto;
