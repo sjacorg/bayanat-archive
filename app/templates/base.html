@@ -24,6 +24,11 @@
     <!-- Archive theme overrides -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/archive.css') }}">
 
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='assets/favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='assets/favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='assets/site.webmanifest') }}">
+
     {% block head %}{% endblock %}
 </head>
 <body class="min-h-screen flex flex-col bg-base-200" style="font-family: 'Inter', sans-serif;">
