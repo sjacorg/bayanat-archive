@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Component Demo — Bayanat Archive{% endblock %}
+
+{% block head %}
+<style>
+    .demo-section {
+        padding: 2rem 0;
+        border-bottom: 1px solid oklch(0.90 0 0);
+    }
+    .demo-label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: oklch(0.55 0 0);
+        margin-bottom: 1rem;
+    }
+    .swatch {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="max-w-7xl mx-auto px-6 py-12">
+
+        <!-- Page title -->
+        <div class="demo-section">
+            <p class="demo-label">Component Library</p>
+            <h1 class="text-display text-primary">UI Components</h1>
+            <p class="text-base-content/60 mt-3 text-sm max-w-xl">
+                DaisyUI 5 + Tailwind 4 with Bayanat brand overrides. All components reflect the archival aesthetic: sharp corners, tonal surfaces, institutional typography.
+            </p>
+        </div>
+
+        <!-- ── COLOUR PALETTE ── -->
+        <div class="demo-section">
+            <p class="demo-label">Colour Palette</p>
+            <div class="flex flex-wrap gap-4">
+                <div class="flex flex-col items-start gap-1">
+                    <div class="swatch bg-primary"></div>
+                    <span class="text-xs text-base-content/60">primary<br>#1A4540</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                    <div class="swatch bg-secondary"></div>
+                    <span class="text-xs text-base-content/60">secondary<br>#3D9B8F</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                    <div class="swatch bg-accent"></div>
+                    <span class="text-xs text-base-content/60">accent<br>#F59E0B</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                    <div class="swatch" style="background:#EFF1F2; border:1px solid #ccc;"></div>
+                    <span class="text-xs text-base-content/60">base-100<br>#EFF1F2</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                    <div class="swatch" style="background:#E4E6E7; border:1px solid #ccc;"></div>
+                    <span class="text-xs text-base-content/60">base-200<br>#E4E6E7</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                    <div class="swatch bg-white border border-base-300"></div>
+                    <span class="text-xs text-base-content/60">base-300<br>#FFFFFF</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                    <div class="swatch" style="background:#0F172A;"></div>
+                    <span class="text-xs text-base-content/60">ink<br>#0F172A</span>
+                </div>
+                <div class="flex flex-col items-start gap-1">
+                    <div class="swatch" style="background:#4B4B4B;"></div>
+                    <span class="text-xs text-base-content/60">ink-muted<br>#4B4B4B</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── TYPOGRAPHY ── -->
+        <div class="demo-section">
+            <p class="demo-label">Typography</p>
+            <div class="space-y-6">
+                <div>
+                    <span class="demo-label">Display — 2.5–3.25rem / weight 300 / −0.02em</span>
+                    <p class="text-display text-primary">The Archive of Memory</p>
+                </div>
+                <div>
+                    <span class="demo-label">Headline — 1.5–2rem / weight 600</span>
+                    <p class="text-2xl font-semibold text-base-content">Syrian Government Documents</p>
+                </div>
+                <div>
+                    <span class="demo-label">Body — 1rem / weight 400</span>
+                    <p class="text-base text-base-content/80 max-w-prose">
+                        This archive contains declassified and leaked documents from the Syrian government. Documents have been verified, translated, and indexed to support accountability efforts.
+                    </p>
+                </div>
+                <div>
+                    <span class="demo-label">Label — 0.75rem / weight 500 / uppercase</span>
+                    <p class="text-xs font-medium uppercase tracking-widest text-base-content/60">Document Classification · Internal Use Only</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── BUTTONS ── -->
+        <div class="demo-section">
+            <p class="demo-label">Buttons — max 2px radius</p>
+            <div class="flex flex-wrap gap-3 items-center">
+                <button class="btn btn-primary">Primary</button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-accent">Accent</button>
+                <button class="btn btn-ghost">Ghost</button>
+                <button class="btn btn-outline btn-primary">Outline</button>
+                <button class="btn btn-primary btn-sm">Small</button>
+                <button class="btn btn-primary btn-lg">Large</button>
+                <button class="btn btn-primary" disabled>Disabled</button>
+            </div>
+            <div class="flex flex-wrap gap-3 items-center mt-4">
+                <button class="btn btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 111 11a6 6 0 0116 0z"/>
+                    </svg>
+                    Search Archive
+                </button>
+                <button class="btn btn-outline btn-secondary">
+                    View Document
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- ── DOCUMENT CHIPS / BADGES ── -->
+        <div class="demo-section">
+            <p class="demo-label">Document Chips — 0px radius, mimics physical tab folders</p>
+            <div class="flex flex-wrap gap-2">
+                <!-- .doc-chip custom class -->
+                <span class="doc-chip">Intelligence Report</span>
+                <span class="doc-chip">Classified</span>
+                <span class="doc-chip">Ministry of Interior</span>
+                <span class="doc-chip">1987–1994</span>
+                <!-- DaisyUI badges for comparison -->
+                <span class="badge badge-primary">Primary</span>
+                <span class="badge badge-secondary">Secondary</span>
+                <span class="badge badge-accent">Accent</span>
+                <span class="badge badge-ghost">Ghost</span>
+                <span class="badge badge-outline">Outline</span>
+                <span class="badge badge-error">Urgent</span>
+            </div>
+        </div>
+
+        <!-- ── CARDS ── -->
+        <div class="demo-section">
+            <p class="demo-label">Cards — 0px radius, tonal surfaces, ambient shadow</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <!-- Document result card -->
+                <div class="card bg-base-100 shadow-ambient">
+                    <div class="card-body gap-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="doc-chip">Intelligence Report</span>
+                            <span class="text-xs text-base-content/40 whitespace-nowrap">1991-03-14</span>
+                        </div>
+                        <h2 class="card-title text-base font-semibold leading-snug">
+                            Security Directorate Communiqué — Damascus Branch
+                        </h2>
+                        <p class="text-sm text-base-content/60 line-clamp-3">
+                            Internal communication regarding surveillance activities and detainee processing at Branch 215. Document references operational procedures.
+                        </p>
+                        <div class="card-actions justify-between items-center mt-2">
+                            <div class="flex gap-2">
+                                <span class="badge badge-ghost text-xs">Arabic</span>
+                                <span class="badge badge-ghost text-xs">PDF</span>
+                            </div>
+                            <button class="btn btn-primary btn-xs">View</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Elevated card (white bg) -->
+                <div class="card bg-white shadow-ambient">
+                    <div class="card-body gap-3">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="doc-chip">Administrative</span>
+                            <span class="text-xs text-base-content/40">1985-07-02</span>
+                        </div>
+                        <h2 class="card-title text-base font-semibold leading-snug">
+                            Personnel Transfer Order — Air Force Intelligence
+                        </h2>
+                        <p class="text-sm text-base-content/60 line-clamp-3">
+                            Official transfer documentation for senior personnel within air force intelligence apparatus. Contains unit and posting information.
+                        </p>
+                        <div class="card-actions justify-between items-center mt-2">
+                            <div class="flex gap-2">
+                                <span class="badge badge-ghost text-xs">Arabic</span>
+                                <span class="badge badge-ghost text-xs">Scan</span>
+                            </div>
+                            <button class="btn btn-primary btn-xs">View</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats / summary card -->
+                <div class="card bg-primary text-primary-content shadow-ambient">
+                    <div class="card-body">
+                        <p class="text-xs font-medium uppercase tracking-widest opacity-70">Archive Summary</p>
+                        <div class="mt-4 space-y-3">
+                            <div>
+                                <p class="text-3xl font-light">47,291</p>
+                                <p class="text-sm opacity-70">Documents indexed</p>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-light">12</p>
+                                <p class="text-sm opacity-70">Source collections</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── SKELETON LOADERS ── -->
+        <div class="demo-section">
+            <p class="demo-label">Skeleton Loaders — verify theme rendering</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="card bg-base-100 shadow-ambient">
+                    <div class="card-body gap-3">
+                        <div class="skeleton h-4 w-24"></div>
+                        <div class="skeleton h-5 w-full"></div>
+                        <div class="skeleton h-5 w-4/5"></div>
+                        <div class="skeleton h-16 w-full"></div>
+                        <div class="flex gap-2 mt-1">
+                            <div class="skeleton h-5 w-12"></div>
+                            <div class="skeleton h-5 w-12"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-ambient">
+                    <div class="card-body gap-3">
+                        <div class="skeleton h-4 w-32"></div>
+                        <div class="skeleton h-5 w-full"></div>
+                        <div class="skeleton h-5 w-3/5"></div>
+                        <div class="skeleton h-16 w-full"></div>
+                        <div class="flex gap-2 mt-1">
+                            <div class="skeleton h-5 w-16"></div>
+                            <div class="skeleton h-5 w-10"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card bg-base-100 shadow-ambient hidden lg:block">
+                    <div class="card-body gap-3">
+                        <div class="skeleton h-4 w-20"></div>
+                        <div class="skeleton h-5 w-full"></div>
+                        <div class="skeleton h-5 w-2/3"></div>
+                        <div class="skeleton h-16 w-full"></div>
+                        <div class="flex gap-2 mt-1">
+                            <div class="skeleton h-5 w-12"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SIDEBAR BUTTONS ── -->
+        <div class="demo-section">
+            <p class="demo-label">Sidebar Buttons — Document Viewer Panel (Stasi pattern)</p>
+            <div class="flex gap-8 flex-wrap">
+                <div class="w-56 bg-base-100 shadow-ambient">
+                    <button class="sidebar-btn">Overview</button>
+                    <button class="sidebar-btn" style="background:#1A4540;">Transcription</button>
+                    <button class="sidebar-btn">Translation</button>
+                    <button class="sidebar-btn">Metadata</button>
+                    <button class="sidebar-btn">Related Documents</button>
+                    <button class="sidebar-btn">Download</button>
+                </div>
+                <div class="text-sm text-base-content/50 self-start mt-2 max-w-xs">
+                    Active state shown on "Transcription" (dark primary bg). Default state uses secondary (#3D9B8F). Hover → dark primary.
+                </div>
+            </div>
+        </div>
+
+        <!-- ── FORM ELEMENTS ── -->
+        <div class="demo-section">
+            <p class="demo-label">Form Elements</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium uppercase tracking-widest text-base-content/60">Search Query</label>
+                    <input type="text" placeholder="e.g. Branch 215, Damascus" class="input input-bordered w-full" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium uppercase tracking-widest text-base-content/60">Document Type</label>
+                    <select class="select select-bordered w-full">
+                        <option>All types</option>
+                        <option>Intelligence Report</option>
+                        <option>Administrative Order</option>
+                        <option>Correspondence</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium uppercase tracking-widest text-base-content/60">Date Range</label>
+                    <input type="text" placeholder="1980 – 2011" class="input input-bordered w-full" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-medium uppercase tracking-widest text-base-content/60">Language</label>
+                    <select class="select select-bordered w-full">
+                        <option>Any language</option>
+                        <option>Arabic</option>
+                        <option>English (translated)</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <button class="btn btn-primary w-full sm:w-auto px-10">Search Archive</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── ALERTS / NOTICES ── -->
+        <div class="demo-section">
+            <p class="demo-label">Alerts &amp; Notices</p>
+            <div class="space-y-3 max-w-2xl">
+                <div role="alert" class="alert">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>This document is machine-translated. Review the original Arabic for verification.</span>
+                </div>
+                <div role="alert" class="alert alert-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                    <span>This document contains sensitive content related to detention and human rights violations.</span>
+                </div>
+                <div role="alert" class="alert alert-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>Document authenticity verified against original source.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── PAGINATION ── -->
+        <div class="demo-section">
+            <p class="demo-label">Pagination</p>
+            <div class="join">
+                <button class="join-item btn btn-sm">«</button>
+                <button class="join-item btn btn-sm">1</button>
+                <button class="join-item btn btn-sm btn-active btn-primary">2</button>
+                <button class="join-item btn btn-sm">3</button>
+                <button class="join-item btn btn-sm">4</button>
+                <button class="join-item btn btn-sm">»</button>
+            </div>
+        </div>
+
+        <!-- ── LOADING STATES ── -->
+        <div class="demo-section">
+            <p class="demo-label">Loading Spinners</p>
+            <div class="flex items-center gap-8">
+                <span class="loading loading-spinner loading-sm text-primary"></span>
+                <span class="loading loading-spinner loading-md text-primary"></span>
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <span class="loading loading-dots loading-md text-secondary"></span>
+                <span class="loading loading-ring loading-md text-accent"></span>
+            </div>
+        </div>
+
+        <!-- ── MODAL PREVIEW ── -->
+        <div class="demo-section">
+            <p class="demo-label">Modal</p>
+            <button class="btn btn-primary" onclick="document.getElementById('demo_modal').showModal()">Open Document Modal</button>
+            <dialog id="demo_modal" class="modal">
+                <div class="modal-box max-w-2xl" style="border-radius:0;">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <div>
+                            <span class="doc-chip mb-2 inline-block">Intelligence Report</span>
+                            <h3 class="text-lg font-semibold">Security Directorate Communiqué</h3>
+                            <p class="text-sm text-base-content/50 mt-1">Damascus Branch · March 14, 1991</p>
+                        </div>
+                        <form method="dialog">
+                            <button class="btn btn-ghost btn-sm">✕</button>
+                        </form>
+                    </div>
+                    <p class="text-sm text-base-content/70 leading-relaxed">
+                        Internal communication regarding surveillance activities and detainee processing procedures. This document has been translated from Arabic and verified against the original scan.
+                    </p>
+                    <div class="modal-action">
+                        <button class="btn btn-primary">View Full Document</button>
+                        <form method="dialog">
+                            <button class="btn btn-ghost">Close</button>
+                        </form>
+                    </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+        </div>
+
+    </div>
+{% endblock %}
