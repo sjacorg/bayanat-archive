@@ -18,6 +18,11 @@ def about():
     return render_template("about.html")
 
 
+@bp.route("/feedback")
+def feedback():
+    return render_template("feedback.html")
+
+
 @bp.route("/health")
 def health():
     return {"status": "ok"}
