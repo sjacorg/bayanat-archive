@@ -54,15 +54,20 @@
     <!-- Footer -->
     <footer class="bg-base-300/50 mt-auto">
         <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="text-sm text-base-content/50">
-                A project by <a href="https://syriaaccountability.org" target="_blank" rel="noopener" class="hover:text-primary transition-colors">Syria Justice & Accountability Centre</a>
+            <div class="flex justify-center">
+                <div class="text-sm text-base-content/50 mt-2 mr-3">
+                A project by
+                </div>
+                <a href="https://syriaaccountability.org/" target="_blank" rel="noopener noreferrer">
+                <img src="{{ url_for('static', filename='assets/sjac-logo-dt.svg') }}" alt="SJAC logo" class="w-[188px]" />
+                </a>
             </div>
+            
             <div class="flex gap-6 text-sm text-base-content/50">
                 <a href="/about" class="hover:text-primary transition-colors">About this archive</a>
                 <a href="/feedback" class="hover:text-primary transition-colors">Give feedback</a>
             </div>
         </div>
     </footer>
-
 </body>
 </html>
