@@ -40,10 +40,9 @@
             <header
                 class="sticky top-0 z-50 border-b border-base-300/70 bg-base-200/85 backdrop-blur-md"
                 hx-boost="true"
-                hx-target="#page-main"
-                hx-select="#page-main"
+                hx-target=".drawer"
+                hx-select=".drawer"
                 hx-swap="outerHTML transition:true"
-                hx-push-url="true"
             >
                 <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
                     <div class="flex min-h-16 items-center justify-between gap-4 py-2">
@@ -64,12 +63,16 @@
                             <a href="{{ url_for('pages.feedback') }}" class="{% if request.path == '/feedback' %}text-primary font-medium{% else %}text-base-content/70 hover:text-primary{% endif %} transition-colors">Feedback</a>
                         </nav>
 
+                        {% if request.path != '/' %}
                         <a href="{{ url_for('pages.index') }}" class="btn btn-ghost btn-square" aria-label="Go to search">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
                                 <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path>
                             </svg>
                         </a>
+                        {% else %}
+                        <span class="h-10 w-10" aria-hidden="true"></span>
+                        {% endif %}
                     </div>
                 </div>
             </header>
@@ -83,10 +86,9 @@
             <footer
                 class="mt-auto border-t border-base-300/70 bg-base-300/40"
                 hx-boost="true"
-                hx-target="#page-main"
-                hx-select="#page-main"
+                hx-target=".drawer"
+                hx-select=".drawer"
                 hx-swap="outerHTML transition:true"
-                hx-push-url="true"
             >
                 <div class="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 lg:px-10">
                     <div class="flex flex-col items-start justify-between gap-5 md:flex-row md:items-center">
@@ -110,34 +112,21 @@
         <div
             class="drawer-side z-[60]"
             hx-boost="true"
-            hx-target="#page-main"
-            hx-select="#page-main"
+            hx-target=".drawer"
+            hx-select=".drawer"
             hx-swap="outerHTML transition:true"
-            hx-push-url="true"
         >
             <label for="main-nav-drawer" aria-label="Close navigation menu" class="drawer-overlay"></label>
             <aside class="min-h-full w-72 bg-base-100 p-6">
                 <p class="text-xs font-medium uppercase tracking-[0.14em] text-base-content/50">Navigation</p>
                 <ul class="menu mt-3 w-full p-0 text-base">
-                    <li><a href="{{ url_for('pages.index') }}" data-drawer-close class="{% if request.path == '/' %}active font-medium{% endif %}">Search</a></li>
-                    <li><a href="{{ url_for('pages.about') }}" data-drawer-close class="{% if request.path == '/about' %}active font-medium{% endif %}">About</a></li>
-                    <li><a href="{{ url_for('pages.feedback') }}" data-drawer-close class="{% if request.path == '/feedback' %}active font-medium{% endif %}">Feedback</a></li>
+                    <li><a href="{{ url_for('pages.index') }}" class="{% if request.path == '/' %}active font-medium{% endif %}">Search</a></li>
+                    <li><a href="{{ url_for('pages.about') }}" class="{% if request.path == '/about' %}active font-medium{% endif %}">About</a></li>
+                    <li><a href="{{ url_for('pages.feedback') }}" class="{% if request.path == '/feedback' %}active font-medium{% endif %}">Feedback</a></li>
                 </ul>
             </aside>
         </div>
     </div>
-
-    <script>
-        (() => {
-            const drawerToggle = document.getElementById("main-nav-drawer");
-            if (!drawerToggle) return;
-
-            document.addEventListener("click", (event) => {
-                const closeLink = event.target.closest("[data-drawer-close]");
-                if (closeLink) drawerToggle.checked = false;
-            });
-        })();
-    </script>
 
     {% block scripts %}{% endblock %}
 </body>
