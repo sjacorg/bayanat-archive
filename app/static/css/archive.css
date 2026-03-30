@@ -36,13 +36,6 @@
     box-shadow: 0 0 32px rgba(26, 69, 64, 0.06);
 }
 
-/* Glass header */
-.glass-header {
-    background: rgba(239, 241, 242, 0.92);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-}
-
 /* Document viewer sidebar buttons (Stasi pattern) */
 .sidebar-btn {
     display: block;
@@ -63,14 +56,6 @@
     background: #1A4540;
 }
 
-/* Typography overrides */
-.text-display {
-    font-size: clamp(2.5rem, 4vw, 3.25rem);
-    font-weight: 300;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-}
-
 /* Document chip (mimics physical tab folder) */
 .doc-chip {
     display: inline-block;
@@ -80,4 +65,9 @@
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+}
+
+/* Cross-document View Transitions API */
+@view-transition {
+    navigation: auto;
 }
