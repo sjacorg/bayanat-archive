@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template, request, make_response
 
 bp = Blueprint("pages", __name__)
 
@@ -35,3 +35,15 @@ def feedback():
 @bp.route("/health")
 def health():
     return {"status": "ok"}
+
+
+@bp.route("/robots.txt")
+def robots():
+    body = render_template("robots.txt")
+    return make_response(body, 200, {"Content-Type": "text/plain"})
+
+
+@bp.route("/sitemap.xml")
+def sitemap():
+    body = render_template("sitemap.xml")
+    return make_response(body, 200, {"Content-Type": "application/xml"})
