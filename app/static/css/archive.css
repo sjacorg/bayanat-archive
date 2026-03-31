@@ -67,6 +67,9 @@
     letter-spacing: 0.05em;
 }
 
+/* Alpine.js: hide x-cloak elements before hydration */
+[x-cloak] { display: none !important; }
+
 /* HTMX request indicators: hidden by default, visible during request */
 .htmx-indicator {
     display: none;

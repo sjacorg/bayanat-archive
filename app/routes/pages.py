@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 
 bp = Blueprint("pages", __name__)
 
@@ -18,8 +18,17 @@ def about():
     return render_template("about.html")
 
 
-@bp.route("/feedback")
+@bp.route("/feedback", methods=["GET", "POST"])
 def feedback():
+    if request.method == "POST":
+        try:
+            # TODO: persist/email submission
+            _ = request.form.get("rating")
+            _ = request.form.get("comment", "").strip()
+            _ = request.form.get("email", "").strip() or None
+            return render_template("partials/feedback_success.html"), 200
+        except Exception:
+            return render_template("partials/feedback_error.html"), 200
     return render_template("feedback.html")
 
 
