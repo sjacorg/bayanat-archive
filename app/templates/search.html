@@ -4,7 +4,18 @@
 <div class="py-4 lg:py-8">
 
     <!-- Search -->
-    <div class="flex items-center gap-6 mb-10">
+    <div
+        class="flex items-center gap-6 mb-10"
+        x-data
+        x-init="
+            const params = new URLSearchParams(window.location.search);
+            const q = params.get('q');
+            if (q) {
+                $refs.q.value = q;
+                $nextTick(() => htmx.ajax('GET', '/search?' + params.toString(), { target: '#results' }));
+            }
+        "
+    >
         <h1 class="hidden text-xl font-medium tracking-tight text-primary shrink-0 md:text-4xl md:font-light md:block">Search</h1>
         <label class="input w-full">
             <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -20,15 +31,21 @@
                 </g>
             </svg>
             <input
+                x-ref="q"
                 type="search"
                 name="q"
                 placeholder="Search documents..."
                 class="text-base"
                 hx-get="/search"
-                hx-trigger="keyup changed delay:300ms"
+                hx-trigger="keyup[key=='Enter'], input[this.value=='']"
                 hx-target="#results"
-                hx-push-url="true"
                 hx-indicator="#loading"
+                hx-disabled-elt="this"
+                hx-on:htmx:before-request="
+                    const u = new URL(window.location);
+                    this.value ? u.searchParams.set('q', this.value) : u.searchParams.delete('q');
+                    history.replaceState({}, '', u);
+                "
             >
         </label>
     </div>
