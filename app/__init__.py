@@ -2,7 +2,7 @@ import os
 import sqlite3
 from datetime import datetime
 
-from flask import Flask, g
+from flask import Flask, g, render_template
 
 
 def get_db():
@@ -34,5 +34,9 @@ def create_app():
 
     from app.routes.pages import bp as pages_bp
     app.register_blueprint(pages_bp)
+
+    @app.errorhandler(404)
+    def not_found(e):
+        return render_template("404.html"), 404
 
     return app
