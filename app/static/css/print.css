@@ -1,0 +1,71 @@
+@media print {
+  /* Hide chrome */
+  header,
+  footer,
+  .drawer-side,
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  /* Reset backgrounds and shadows */
+  body,
+  .bg-base-200,
+  .bg-base-100,
+  .card {
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+
+  /* Full-width content, no drawer offset */
+  .drawer,
+  .drawer-content {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Document detail layout */
+  .document-detail {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Metadata table */
+  .document-meta th,
+  .document-meta td {
+    border: 1px solid #ccc;
+    padding: 4px 8px;
+    font-size: 10pt;
+  }
+
+  /* Page breaks */
+  .document-body {
+    page-break-before: always;
+  }
+
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Print URL after links */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #555;
+  }
+
+  /* Suppress link annotations on nav/icon links */
+  a[aria-label]::after,
+  a[data-print-no-href]::after {
+    content: none;
+  }
+
+  @page {
+    margin: 1in;
+  }
+}
