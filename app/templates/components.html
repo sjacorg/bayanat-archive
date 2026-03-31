@@ -374,5 +374,42 @@
             </dialog>
         </div>
 
+        <!-- ── EXIT SURVEY BANNER ── -->
+        <div class="demo-section">
+            <p class="demo-label">Exit Survey Banner — document pages, dismissible via localStorage</p>
+            <div
+                x-data="{ show: true }"
+                x-show="show"
+                x-cloak
+                x-transition:leave="transition ease-in duration-150"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+            >
+                <div role="alert" class="alert bg-primary text-primary-content rounded-none shadow-ambient">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 shrink-0 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-3 3v-3z"/>
+                    </svg>
+                    <span class="text-sm">
+                        Found what you were looking for?
+                        <a href="/feedback" class="underline font-medium hover:no-underline">Share your feedback</a>
+                        — it takes 2 minutes.
+                    </span>
+                    <button
+                        @click="show = false"
+                        class="btn btn-ghost btn-sm ml-auto text-primary-content hover:bg-primary-content/10"
+                        aria-label="Dismiss"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <p class="mt-3 text-xs text-base-content/40">
+                Production version uses <code>localStorage.getItem('exit_survey_dismissed')</code> to persist dismissal.
+                Place in document templates via <code>{% raw %}{% block banners %}{% endblock %}{% endraw %}</code>.
+            </p>
+        </div>
+
     </div>
 {% endblock %}
