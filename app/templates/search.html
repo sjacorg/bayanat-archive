@@ -1,70 +1,77 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="py-4 lg:py-8">
+{% block title %}Search — Bayanat Document Archive{% endblock %}
 
-    <!-- Search -->
-    <div
-        class="flex items-center gap-6 mb-10"
-        x-data
-        x-init="
-            const params = new URLSearchParams(window.location.search);
-            const q = params.get('q');
-            if (q) {
-                $refs.q.value = q;
-                $nextTick(() => htmx.ajax('GET', '/search?' + params.toString(), { target: '#results' }));
-            }
-        "
-    >
-        <h1 class="hidden text-xl font-medium tracking-tight text-primary shrink-0 md:text-4xl md:font-light md:block">Search</h1>
-        <label class="input w-full">
+{% block content %}
+<div
+    class="py-4 lg:py-6"
+    x-data
+    x-init="
+        const p = new URLSearchParams(window.location.search);
+        if (p.get('q')) $refs.searchInput.value = p.get('q');
+        $nextTick(() => htmx.ajax('GET', '/search?' + p.toString(), {
+            target: '#results',
+            swap: 'innerHTML',
+            indicator: '#loading'
+        }));
+    "
+>
+
+    <!-- Search row: label left, input right (Stasi pattern) -->
+    <div class="flex items-center gap-4 sm:gap-8 mb-8">
+        <h1 class="hidden text-2xl font-light tracking-tight text-primary shrink-0 sm:block">Search</h1>
+        <label class="input w-full border-base-300 bg-base-100">
             <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <g
-                stroke-linejoin="round"
-                stroke-linecap="round"
-                stroke-width="2.5"
-                fill="none"
-                stroke="currentColor"
-                >
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.3-4.3"></path>
+                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
                 </g>
             </svg>
             <input
-                x-ref="q"
+                x-ref="searchInput"
                 type="search"
                 name="q"
+                id="q-input"
                 placeholder="Search documents..."
-                class="text-base"
+                autocomplete="off"
+                class="search-param text-base"
                 hx-get="/search"
-                hx-trigger="keyup[key=='Enter'], input[this.value=='']"
+                hx-trigger="keyup changed delay:300ms, search"
                 hx-target="#results"
+                hx-push-url="true"
+                hx-include=".search-param"
+                hx-vals='{"page": "1"}'
                 hx-indicator="#loading"
                 hx-disabled-elt="this"
-                hx-on:htmx:before-request="
-                    const u = new URL(window.location);
-                    this.value ? u.searchParams.set('q', this.value) : u.searchParams.delete('q');
-                    history.replaceState({}, '', u);
-                "
             >
         </label>
     </div>
 
     <!-- Loading skeleton -->
     <div id="loading" class="htmx-indicator">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Facet bar skeleton -->
+        <div class="mb-6 flex gap-1 border-t border-b border-base-content/8 py-1">
             {% for _ in range(4) %}
-            <div class="skeleton h-64 w-full"></div>
+            <div class="skeleton h-10 w-36 opacity-50"></div>
+            {% endfor %}
+        </div>
+        <!-- Card skeleton grid -->
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {% for _ in range(8) %}
+            <div>
+                <div class="skeleton h-52 w-full"></div>
+                <div class="mt-3 space-y-2">
+                    <div class="skeleton h-4 w-3/4"></div>
+                    <div class="skeleton h-3 w-full"></div>
+                    <div class="skeleton h-3 w-2/3"></div>
+                </div>
+            </div>
             {% endfor %}
         </div>
     </div>
 
-    <!-- Results (HTMX target) -->
-    <div id="results">
-        <p class="text-base-content/50 text-center py-20">
-            Archive not yet loaded. Run <code class="bg-base-300 px-2 py-1 rounded text-sm">flask import-archive</code> to populate.
-        </p>
-    </div>
+    <!-- Results (HTMX swap target) -->
+    <div id="results"></div>
 
 </div>
 {% endblock %}
