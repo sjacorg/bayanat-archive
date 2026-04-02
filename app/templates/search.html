@@ -5,16 +5,27 @@
 {% block content %}
 <div
     class="py-4 lg:py-6"
-    x-data
+    x-data="{ open: null }"
     x-init="
         const p = new URLSearchParams(window.location.search);
         if (p.get('q')) $refs.searchInput.value = p.get('q');
-        $nextTick(() => htmx.ajax('GET', '/search?' + p.toString(), {
-            target: '#results',
-            swap: 'innerHTML',
-            indicator: '#loading'
-        }));
+        $nextTick(() => {
+            document.dispatchEvent(new CustomEvent('facets-updated', {
+                detail: {
+                    type:       p.getAll('type'),
+                    location:   p.getAll('location'),
+                    department: p.getAll('department'),
+                    source:     p.getAll('source'),
+                }
+            }));
+            htmx.ajax('GET', '/search?' + p.toString(), {
+                target: '#documents',
+                swap: 'innerHTML',
+                indicator: '#loading'
+            });
+        });
     "
+    @keydown.escape.window="open = null"
 >
 
     <!-- Search row: label left, input right (Stasi pattern) -->
@@ -36,8 +47,8 @@
                 autocomplete="off"
                 class="search-param text-base"
                 hx-get="/search"
-                hx-trigger="keyup changed delay:300ms, search"
-                hx-target="#results"
+                hx-trigger="keyup[key=='Enter'], input[this.value=='']"
+                hx-target="#documents"
                 hx-push-url="true"
                 hx-include=".search-param"
                 hx-vals='{"page": "1"}'
@@ -47,17 +58,85 @@
         </label>
     </div>
 
-    <!-- Loading skeleton -->
-    <div id="loading" class="htmx-indicator">
-        <!-- Facet grid skeleton -->
-        <div class="mb-6 grid grid-cols-2 gap-2 lg:grid-cols-4">
-            {% for _ in range(4) %}
-            <div class="skeleton h-9 w-full opacity-50"></div>
-            {% endfor %}
+    <!-- Facet grid: 2-col mobile, 4-col desktop -->
+    <div class="mb-6 grid grid-cols-2 gap-2 lg:grid-cols-4">
+
+        {% macro facet(key, label, items, counts, selected) %}
+        <div class="relative" x-data="{ sel: new URLSearchParams(window.location.search).getAll('{{ key }}') }" @facets-updated.document="sel = $event.detail['{{ key }}']">
+            <button
+                type="button"
+                @click.stop="open = (open === '{{ key }}') ? null : '{{ key }}'"
+                :class="open === '{{ key }}' ? 'bg-gray-500/15' : 'bg-gray-500/8 hover:bg-gray-500/12'"
+                class="flex w-full items-center justify-between gap-3 px-3 py-2.5 transition-colors select-none"
+                aria-haspopup="listbox"
+                :aria-expanded="open === '{{ key }}'"
+            >
+                <span class="flex min-w-0 items-baseline gap-2 truncate">
+                    <span class="truncate text-sm font-medium text-base-content/70">{{ label }}</span>
+                    <span x-show="sel.length > 0" x-text="sel.length" class="shrink-0 flex h-3.5 w-3.5 items-center justify-center bg-primary text-[10px] font-semibold text-white"></span>
+                </span>
+                <svg class="h-3 w-3 shrink-0 text-base-content/30 transition-transform duration-150" :class="{ 'rotate-180': open === '{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 4l4 4 4-4"/>
+                </svg>
+            </button>
+
+            <div
+                x-show="open === '{{ key }}'"
+                x-cloak
+                x-transition:enter="transition ease-out duration-100"
+                x-transition:enter-start="opacity-0 -translate-y-0.5"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                @click.outside="open = null"
+                class="absolute top-full left-0 z-30 min-w-56 bg-base-100 border border-base-content/12 shadow-ambient py-1"
+                role="listbox"
+                aria-multiselectable="true"
+            >
+                {% if items %}
+                    {% for item in items %}
+                    <label class="flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors hover:bg-base-200/70">
+                        <input
+                            type="checkbox"
+                            name="{{ key }}"
+                            value="{{ item }}"
+                            class="search-param checkbox checkbox-sm checkbox-primary"
+                            x-model="sel"
+                            hx-get="/search"
+                            hx-trigger="change"
+                            hx-target="#documents"
+                            hx-push-url="true"
+                            hx-include=".search-param"
+                            hx-vals='{"page": "1"}'
+                            hx-indicator="#loading"
+                            @change="open = null"
+                        >
+                        <span class="flex-1 text-sm text-base-content/80">{{ item }}</span>
+                        <span class="tabular-nums text-xs text-base-content/35">{{ counts[item] }}</span>
+                    </label>
+                    {% endfor %}
+                {% else %}
+                    <p class="px-4 py-3 text-xs text-base-content/40">No options available.</p>
+                {% endif %}
+            </div>
         </div>
-        <!-- Card skeleton grid -->
+        {% endmacro %}
+
+        {{ facet("type",       "Document Types", all_types,       type_counts,       selected_types) }}
+        {{ facet("location",   "Locations",      all_locations,   location_counts,   selected_locations) }}
+        {{ facet("department", "Departments",    all_departments, department_counts, selected_departments) }}
+        {{ facet("source",     "Sources",        all_sources,     source_counts,     selected_sources) }}
+
+    </div>
+
+    <!-- Toolbar: count + active filters + sort + view toggle (updated via OOB) -->
+    <div id="toolbar" class="mb-5 flex flex-col gap-3">
+        <!-- Populated by search_documents.html OOB swap -->
+    </div>
+
+    <!-- Loading skeleton (cards only — facets and toolbar are static) -->
+    <div id="loading" class="htmx-indicator">
+        <div class="mb-5 skeleton h-6 w-32 opacity-40"></div>
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {% for _ in range(8) %}
+            {% for _ in range(4) %}
             <div>
                 <div class="skeleton h-52 w-full"></div>
                 <div class="mt-3 space-y-2">
@@ -70,8 +149,33 @@
         </div>
     </div>
 
-    <!-- Results (HTMX swap target) -->
-    <div id="results"></div>
+    <!-- Documents (HTMX swap target) -->
+    <div id="documents"></div>
 
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.body.addEventListener('htmx:beforeSwap', function (evt) {
+        if (evt.detail.target.id === 'documents') {
+            evt.detail.swapSpec.transition = true;
+        }
+    });
+
+    // After every #documents swap, read the new URL params and broadcast
+    // so facet Alpine components can sync their `sel` arrays.
+    document.body.addEventListener('htmx:afterSettle', function (evt) {
+        if (evt.detail.target.id !== 'documents') return;
+        const p = new URLSearchParams(window.location.search);
+        document.dispatchEvent(new CustomEvent('facets-updated', {
+            detail: {
+                type:       p.getAll('type'),
+                location:   p.getAll('location'),
+                department: p.getAll('department'),
+                source:     p.getAll('source'),
+            }
+        }));
+    });
+</script>
 {% endblock %}

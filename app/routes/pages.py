@@ -257,7 +257,37 @@ MOCK_DOCUMENTS = [
 
 @bp.route("/")
 def index():
-    return render_template("search.html")
+    q = request.args.get("q", "").strip()
+    selected_types = request.args.getlist("type")
+    selected_locations = request.args.getlist("location")
+    selected_departments = request.args.getlist("department")
+    selected_sources = request.args.getlist("source")
+    sort = request.args.get("sort", "date_new")
+    view = request.args.get("view", "grid")
+
+    type_counts = Counter(d["type"] for d in MOCK_DOCUMENTS)
+    location_counts = Counter(d["location"] for d in MOCK_DOCUMENTS)
+    department_counts = Counter(d["department"] for d in MOCK_DOCUMENTS)
+    source_counts = Counter(d["source"] for d in MOCK_DOCUMENTS)
+
+    return render_template(
+        "search.html",
+        q=q,
+        sort=sort,
+        view=view,
+        selected_types=selected_types,
+        selected_locations=selected_locations,
+        selected_departments=selected_departments,
+        selected_sources=selected_sources,
+        type_counts=type_counts,
+        location_counts=location_counts,
+        department_counts=department_counts,
+        source_counts=source_counts,
+        all_types=sorted(type_counts.keys()),
+        all_locations=sorted(location_counts.keys()),
+        all_departments=sorted(department_counts.keys()),
+        all_sources=sorted(source_counts.keys()),
+    )
 
 
 @bp.route("/search")
@@ -344,8 +374,7 @@ def search():
         ([f"q={q}"] if q else []) + [f"sort={sort}", f"view={view}"]
     )
 
-    return render_template(
-        "partials/search_results.html",
+    ctx = dict(
         documents=paginated,
         total=total,
         page=page,
@@ -368,6 +397,8 @@ def search():
         all_departments=sorted(department_counts.keys()),
         all_sources=sorted(source_counts.keys()),
     )
+
+    return render_template("partials/search_documents.html", **ctx)
 
 
 @bp.route("/components")
