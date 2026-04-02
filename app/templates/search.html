@@ -49,10 +49,10 @@
 
     <!-- Loading skeleton -->
     <div id="loading" class="htmx-indicator">
-        <!-- Facet bar skeleton -->
-        <div class="mb-6 flex gap-1 border-t border-b border-base-content/8 py-1">
+        <!-- Facet grid skeleton -->
+        <div class="mb-6 grid grid-cols-2 gap-2 lg:grid-cols-4">
             {% for _ in range(4) %}
-            <div class="skeleton h-10 w-36 opacity-50"></div>
+            <div class="skeleton h-9 w-full opacity-50"></div>
             {% endfor %}
         </div>
         <!-- Card skeleton grid -->
