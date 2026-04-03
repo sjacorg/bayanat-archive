@@ -1,11 +1,14 @@
 {#
-  partials/search_documents.html
-  Main content for #documents (cards/list + pagination).
-  Also includes an OOB swap that updates #toolbar (count, filters, sort, view).
+  partials/search_results.html
+  OOB swap for #toolbar + main swap for #results (cards/list + pagination only).
+  Facets and toolbar placeholder live in search.html and never re-render.
 #}
 
 {# ── Toolbar OOB swap ──────────────────────────────────────────────────────── #}
 <div id="toolbar" hx-swap-oob="innerHTML">
+
+    {# Hidden inputs so any hx-include=".search-param" picks up sort & view #}
+    <input type="hidden" name="view" value="{{ view }}" class="search-param">
 
     {# Active filter badges #}
     {% if active_filters %}
@@ -17,10 +20,14 @@
             <button
                 aria-label="Remove {{ f.label }} filter"
                 class="ml-0.5 transition-colors hover:text-error"
-                hx-get="{{ f.remove_url }}"
-                hx-target="#documents"
-                hx-push-url="true"
-                hx-indicator="#loading"
+                @click="
+                    const url = '{{ f.remove_url }}';
+                    const p = new URLSearchParams(url.split('?')[1] || '');
+                    $dispatch('facets-sync', { type: p.getAll('type'), location: p.getAll('location'), department: p.getAll('department'), source: p.getAll('source'), view: p.get('view') || 'grid' });
+                    $el.parentElement.remove();
+                    history.pushState(null, '', url);
+                    htmx.ajax('GET', url, { target: '#results', swap: 'innerHTML', indicator: '#loading' });
+                "
             >
                 <svg class="h-3 w-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
                     <path d="M2 2l8 8M10 2l-8 8"/>
@@ -28,19 +35,21 @@
             </button>
         </span>
         {% endfor %}
-        {% if active_filters %}
         <button
             class="text-xs text-base-content/35 underline underline-offset-2 transition-colors hover:text-error"
-            hx-get="{{ clear_url }}"
-            hx-target="#documents"
-            hx-push-url="true"
-            hx-indicator="#loading"
+            @click="
+                const url = '{{ clear_url }}';
+                const p = new URLSearchParams(url.split('?')[1] || '');
+                $dispatch('facets-sync', { type: p.getAll('type'), location: p.getAll('location'), department: p.getAll('department'), source: p.getAll('source'), view: p.get('view') || 'grid' });
+                $el.parentElement.remove();
+                history.pushState(null, '', url);
+                htmx.ajax('GET', url, { target: '#results', swap: 'innerHTML', indicator: '#loading' });
+            "
         >Clear all</button>
-        {% endif %}
     </div>
     {% endif %}
 
-    {# Count + sort + view toggle row #}
+    {# Count + sort + view toggle #}
     <div class="flex items-center justify-between gap-4">
         <p class="text-xs text-base-content/55">
             {% if total == 0 %}0 documents
@@ -50,14 +59,13 @@
         </p>
 
         <div class="flex items-center gap-2.5">
-            {# Sort #}
             <select
                 aria-label="Sort order"
                 name="sort"
-                class="select select-sm select-ghost border-base-content/15 text-sm text-base-content/70 search-param rounded-0"
+                class="select select-sm select-ghost border-base-content/15 text-sm text-base-content/70 rounded-0 search-param"
                 hx-get="/search"
                 hx-trigger="change"
-                hx-target="#documents"
+                hx-target="#results"
                 hx-push-url="true"
                 hx-include=".search-param"
                 hx-vals='{"page": "1"}'
@@ -68,17 +76,18 @@
                 <option value="relevance" {% if sort == "relevance" %}selected{% endif %}>Relevance</option>
             </select>
 
-            {# View toggle #}
             <div class="flex border border-base-content/15" role="group" aria-label="View as">
                 <button
                     type="button"
                     aria-label="Grid view"
-                    aria-pressed="{{ 'true' if view == 'grid' else 'false' }}"
-                    class="p-2 transition-colors {% if view == 'grid' %}bg-primary text-primary-content{% else %}text-base-content/40 hover:bg-base-200 hover:text-base-content{% endif %}"
+                    :aria-pressed="view === 'grid' ? 'true' : 'false'"
+                    :class="view === 'grid' ? 'bg-primary text-primary-content' : 'text-base-content/40 hover:bg-base-200 hover:text-base-content'"
+                    class="p-2 transition-colors"
+                    @click="view = 'grid'"
                     hx-get="/search"
                     hx-include=".search-param"
                     hx-vals='{"view": "grid", "page": "1"}'
-                    hx-target="#documents"
+                    hx-target="#results"
                     hx-push-url="true"
                     hx-indicator="#loading"
                 >
@@ -92,12 +101,14 @@
                 <button
                     type="button"
                     aria-label="List view"
-                    aria-pressed="{{ 'true' if view == 'list' else 'false' }}"
-                    class="border-l border-base-content/15 p-2 transition-colors {% if view == 'list' %}bg-primary text-primary-content{% else %}text-base-content/40 hover:bg-base-200 hover:text-base-content{% endif %}"
+                    :aria-pressed="view === 'list' ? 'true' : 'false'"
+                    :class="view === 'list' ? 'bg-primary text-primary-content' : 'text-base-content/40 hover:bg-base-200 hover:text-base-content'"
+                    class="border-l border-base-content/15 p-2 transition-colors"
+                    @click="view = 'list'"
                     hx-get="/search"
                     hx-include=".search-param"
                     hx-vals='{"view": "list", "page": "1"}'
-                    hx-target="#documents"
+                    hx-target="#results"
                     hx-push-url="true"
                     hx-indicator="#loading"
                 >
@@ -133,7 +144,7 @@
 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
     {% for doc in documents %}
     <article class="group cursor-pointer">
-        <div class="relative overflow-hidden bg-base-200/70 w-full h-full max-h-[224px]">
+        <div class="relative overflow-hidden bg-base-200/70 w-full h-[224px]">
             <img
                 src="https://images.unsplash.com/photo-1773158097627-cef40c9ca3ee?q=80&w=1287&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 alt=""
@@ -203,7 +214,7 @@
             hx-get="/search"
             hx-include=".search-param"
             hx-vals='{"page": "{{ page - 1 }}"}'
-            hx-target="#documents"
+            hx-target="#results"
             hx-push-url="true"
             hx-indicator="#loading"
             {% endif %}
@@ -216,7 +227,7 @@
             hx-get="/search"
             hx-include=".search-param"
             hx-vals='{"page": "{{ p }}"}'
-            hx-target="#documents"
+            hx-target="#results"
             hx-push-url="true"
             hx-indicator="#loading"
             aria-label="Page {{ p }}"
@@ -230,7 +241,7 @@
             hx-get="/search"
             hx-include=".search-param"
             hx-vals='{"page": "{{ page + 1 }}"}'
-            hx-target="#documents"
+            hx-target="#results"
             hx-push-url="true"
             hx-indicator="#loading"
             {% endif %}

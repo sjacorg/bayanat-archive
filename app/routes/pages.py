@@ -257,36 +257,20 @@ MOCK_DOCUMENTS = [
 
 @bp.route("/")
 def index():
-    q = request.args.get("q", "").strip()
-    selected_types = request.args.getlist("type")
-    selected_locations = request.args.getlist("location")
-    selected_departments = request.args.getlist("department")
-    selected_sources = request.args.getlist("source")
-    sort = request.args.get("sort", "date_new")
-    view = request.args.get("view", "grid")
-
     type_counts = Counter(d["type"] for d in MOCK_DOCUMENTS)
     location_counts = Counter(d["location"] for d in MOCK_DOCUMENTS)
     department_counts = Counter(d["department"] for d in MOCK_DOCUMENTS)
     source_counts = Counter(d["source"] for d in MOCK_DOCUMENTS)
-
     return render_template(
         "search.html",
-        q=q,
-        sort=sort,
-        view=view,
-        selected_types=selected_types,
-        selected_locations=selected_locations,
-        selected_departments=selected_departments,
-        selected_sources=selected_sources,
-        type_counts=type_counts,
-        location_counts=location_counts,
-        department_counts=department_counts,
-        source_counts=source_counts,
         all_types=sorted(type_counts.keys()),
         all_locations=sorted(location_counts.keys()),
         all_departments=sorted(department_counts.keys()),
         all_sources=sorted(source_counts.keys()),
+        type_counts=type_counts,
+        location_counts=location_counts,
+        department_counts=department_counts,
+        source_counts=source_counts,
     )
 
 
@@ -311,19 +295,10 @@ def search():
 
     q_lower = q.lower()
 
-    # Q-filtered base used for facet counts (counts shown regardless of active facets)
-    base = [
+    docs = [
         d for d in MOCK_DOCUMENTS
         if not q or q_lower in d["title"].lower() or q_lower in d["snippet"].lower()
     ]
-
-    type_counts = Counter(d["type"] for d in base)
-    location_counts = Counter(d["location"] for d in base)
-    department_counts = Counter(d["department"] for d in base)
-    source_counts = Counter(d["source"] for d in base)
-
-    # Apply facet filters on top of base
-    docs = list(base)
     if selected_types:
         docs = [d for d in docs if d["type"] in selected_types]
     if selected_locations:
@@ -382,23 +357,11 @@ def search():
         q=q,
         sort=sort,
         view=view,
-        selected_types=selected_types,
-        selected_locations=selected_locations,
-        selected_departments=selected_departments,
-        selected_sources=selected_sources,
         active_filters=active_filters,
         clear_url=clear_url,
-        type_counts=type_counts,
-        location_counts=location_counts,
-        department_counts=department_counts,
-        source_counts=source_counts,
-        all_types=sorted(type_counts.keys()),
-        all_locations=sorted(location_counts.keys()),
-        all_departments=sorted(department_counts.keys()),
-        all_sources=sorted(source_counts.keys()),
     )
 
-    return render_template("partials/search_documents.html", **ctx)
+    return render_template("partials/search_results.html", **ctx)
 
 
 @bp.route("/components")

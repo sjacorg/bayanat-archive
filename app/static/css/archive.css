@@ -67,19 +67,19 @@
     letter-spacing: 0.05em;
 }
 
-/* Scope view transition to documents grid only — rest of page stays static */
-#documents {
-    view-transition-name: search-documents;
+/* Scope view transition to results area only — rest of page stays static */
+#results {
+    view-transition-name: search-results;
 }
 
-/* Card entry animation — plays on every HTMX swap into #documents */
-@keyframes fade {
+/* Card entry animation — plays on every HTMX swap into #results */
+@keyframes fade-in {
     from { opacity: 0; }
     to   { opacity: 1; }
 }
 
-#documents > *:not(#toolbar) {
-    animation: fade 500ms ease both;
+#results > *:not(#toolbar) {
+    animation: fade-in 1000ms ease both;
 }
 
 /* Alpine.js: hide x-cloak elements before hydration */
