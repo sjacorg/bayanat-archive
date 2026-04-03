@@ -38,7 +38,7 @@
                 autocomplete="off"
                 class="search-param text-base"
                 hx-get="/search"
-                hx-trigger="keyup[key=='Enter'], input[this.value=='']"
+                hx-trigger="keyup changed delay:500ms"
                 hx-target="#results"
                 hx-push-url="true"
                 hx-include=".search-param"
