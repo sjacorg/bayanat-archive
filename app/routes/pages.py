@@ -1,4 +1,5 @@
 from collections import Counter
+from urllib.parse import urlencode
 
 from flask import Blueprint, make_response, redirect, render_template, request, url_for
 
@@ -8,6 +9,9 @@ bp = Blueprint("pages", __name__)
 # ── Mock documents (replace with DB queries once real data is imported) ────────
 
 _PAGE_SIZE = 12
+_FACET_KEYS = ("type", "location", "department", "source")
+_DEFAULT_SORT = "date_new"
+_DEFAULT_VIEW = "grid"
 
 MOCK_DOCUMENTS = [
     {
@@ -253,24 +257,100 @@ MOCK_DOCUMENTS = [
 ]
 
 
+def _get_search_params():
+    q = request.args.get("q", "").strip()
+    selected = {key: request.args.getlist(key) for key in _FACET_KEYS}
+    sort = request.args.get("sort", _DEFAULT_SORT)
+    view = request.args.get("view", _DEFAULT_VIEW)
+    try:
+        page = max(1, int(request.args.get("page") or 1))
+    except ValueError:
+        page = 1
+    return q, selected, sort, view, page
+
+
+def _filter_documents(documents, q, selected):
+    q_lower = q.lower()
+    docs = [
+        d
+        for d in documents
+        if not q or q_lower in d["title"].lower() or q_lower in d["snippet"].lower()
+    ]
+
+    for key, selected_values in selected.items():
+        if selected_values:
+            allowed = set(selected_values)
+            docs = [d for d in docs if d[key] in allowed]
+    return docs
+
+
+def _sort_documents(documents, sort):
+    docs = list(documents)
+    if sort == "date_new":
+        docs.sort(key=lambda d: d["date"], reverse=True)
+    elif sort == "date_old":
+        docs.sort(key=lambda d: d["date"])
+    return docs
+
+
+def _paginate_documents(documents, page, page_size):
+    total = len(documents)
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page = min(page, total_pages)
+    start = (page - 1) * page_size
+    end = start + page_size
+    return documents[start:end], total, page, total_pages
+
+
+def _search_url(q, selected, sort, view, exclude=None):
+    params = []
+    if q:
+        params.append(("q", q))
+
+    for key in _FACET_KEYS:
+        for value in selected[key]:
+            if exclude == (key, value):
+                continue
+            params.append((key, value))
+
+    params.extend((("sort", sort), ("view", view)))
+    return "/search?" + urlencode(params, doseq=True)
+
+
+def _active_filters(q, selected, sort, view):
+    filters = []
+    for key in _FACET_KEYS:
+        filters.extend(
+            {
+                "label": value,
+                "remove_url": _search_url(
+                    q, selected, sort, view, exclude=(key, value)
+                ),
+            }
+            for value in selected[key]
+        )
+    return filters
+
+
+def _facet_counts(documents):
+    return {key: Counter(d[key] for d in documents) for key in _FACET_KEYS}
+
+
 # ── Routes ─────────────────────────────────────────────────────────────────────
 
 @bp.route("/")
 def index():
-    type_counts = Counter(d["type"] for d in MOCK_DOCUMENTS)
-    location_counts = Counter(d["location"] for d in MOCK_DOCUMENTS)
-    department_counts = Counter(d["department"] for d in MOCK_DOCUMENTS)
-    source_counts = Counter(d["source"] for d in MOCK_DOCUMENTS)
+    facet_counts = _facet_counts(MOCK_DOCUMENTS)
     return render_template(
         "search.html",
-        all_types=sorted(type_counts.keys()),
-        all_locations=sorted(location_counts.keys()),
-        all_departments=sorted(department_counts.keys()),
-        all_sources=sorted(source_counts.keys()),
-        type_counts=type_counts,
-        location_counts=location_counts,
-        department_counts=department_counts,
-        source_counts=source_counts,
+        all_types=sorted(facet_counts["type"]),
+        all_locations=sorted(facet_counts["location"]),
+        all_departments=sorted(facet_counts["department"]),
+        all_sources=sorted(facet_counts["source"]),
+        type_counts=facet_counts["type"],
+        location_counts=facet_counts["location"],
+        department_counts=facet_counts["department"],
+        source_counts=facet_counts["source"],
     )
 
 
@@ -281,73 +361,11 @@ def search():
         qs = request.query_string.decode()
         return redirect(url_for("pages.index") + ("?" + qs if qs else ""))
 
-    q = request.args.get("q", "").strip()
-    selected_types = request.args.getlist("type")
-    selected_locations = request.args.getlist("location")
-    selected_departments = request.args.getlist("department")
-    selected_sources = request.args.getlist("source")
-    sort = request.args.get("sort", "date_new")
-    view = request.args.get("view", "grid")
-    try:
-        page = max(1, int(request.args.get("page") or 1))
-    except ValueError:
-        page = 1
+    q, selected, sort, view, page = _get_search_params()
 
-    q_lower = q.lower()
-
-    docs = [
-        d for d in MOCK_DOCUMENTS
-        if not q or q_lower in d["title"].lower() or q_lower in d["snippet"].lower()
-    ]
-    if selected_types:
-        docs = [d for d in docs if d["type"] in selected_types]
-    if selected_locations:
-        docs = [d for d in docs if d["location"] in selected_locations]
-    if selected_departments:
-        docs = [d for d in docs if d["department"] in selected_departments]
-    if selected_sources:
-        docs = [d for d in docs if d["source"] in selected_sources]
-
-    if sort == "date_new":
-        docs.sort(key=lambda d: d["date"], reverse=True)
-    elif sort == "date_old":
-        docs.sort(key=lambda d: d["date"])
-
-    total = len(docs)
-    total_pages = max(1, (total + _PAGE_SIZE - 1) // _PAGE_SIZE)
-    page = min(page, total_pages)
-    paginated = docs[(page - 1) * _PAGE_SIZE: page * _PAGE_SIZE]
-
-    # Build server-side remove URLs for active filter badges
-    def _remove_url(excl_param, excl_value):
-        parts = []
-        if q:
-            parts.append(f"q={q}")
-        for v in selected_types:
-            if not (excl_param == "type" and excl_value == v):
-                parts.append(f"type={v}")
-        for v in selected_locations:
-            if not (excl_param == "location" and excl_value == v):
-                parts.append(f"location={v}")
-        for v in selected_departments:
-            if not (excl_param == "department" and excl_value == v):
-                parts.append(f"department={v}")
-        for v in selected_sources:
-            if not (excl_param == "source" and excl_value == v):
-                parts.append(f"source={v}")
-        parts += [f"sort={sort}", f"view={view}"]
-        return "/search?" + "&".join(parts)
-
-    active_filters = (
-        [{"label": t, "remove_url": _remove_url("type", t)} for t in selected_types]
-        + [{"label": l, "remove_url": _remove_url("location", l)} for l in selected_locations]
-        + [{"label": d, "remove_url": _remove_url("department", d)} for d in selected_departments]
-        + [{"label": s, "remove_url": _remove_url("source", s)} for s in selected_sources]
-    )
-
-    clear_url = "/search?" + "&".join(
-        ([f"q={q}"] if q else []) + [f"sort={sort}", f"view={view}"]
-    )
+    docs = _filter_documents(MOCK_DOCUMENTS, q, selected)
+    docs = _sort_documents(docs, sort)
+    paginated, total, page, total_pages = _paginate_documents(docs, page, _PAGE_SIZE)
 
     ctx = dict(
         documents=paginated,
@@ -357,8 +375,10 @@ def search():
         q=q,
         sort=sort,
         view=view,
-        active_filters=active_filters,
-        clear_url=clear_url,
+        active_filters=_active_filters(q, selected, sort, view),
+        clear_url=_search_url(
+            q, {key: [] for key in _FACET_KEYS}, sort, view
+        ),
     )
 
     return render_template("partials/search_results.html", **ctx)
