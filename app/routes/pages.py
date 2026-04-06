@@ -17,7 +17,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 1,
         "title": "Security Directive on Detention Procedures — Aleppo Branch",
-        "type": "Intelligence Report",
+        "type": "Audios",
         "date": "2011-08-14",
         "date_display": "14 Aug 2011",
         "department": "General Intelligence Directorate",
@@ -29,7 +29,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 2,
         "title": "Presidential Decree No. 161 — Emergency Powers Extension",
-        "type": "Presidential Decree",
+        "type": "Documents",
         "date": "2011-04-21",
         "date_display": "21 Apr 2011",
         "department": "Presidential Palace",
@@ -41,7 +41,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 3,
         "title": "Transfer Order for Political Prisoners — Homs Governorate",
-        "type": "Administrative Order",
+        "type": "Photos",
         "date": "2012-02-09",
         "date_display": "9 Feb 2012",
         "department": "Ministry of Interior",
@@ -53,7 +53,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 4,
         "title": "Air Force Intelligence Report on Hama Protests",
-        "type": "Intelligence Report",
+        "type": "Audios",
         "date": "2011-07-31",
         "date_display": "31 Jul 2011",
         "department": "Air Force Intelligence",
@@ -65,7 +65,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 5,
         "title": "Correspondence: Coordination Between Security Branches",
-        "type": "Correspondence",
+        "type": "Videos",
         "date": "2012-05-18",
         "date_display": "18 May 2012",
         "department": "Military Intelligence",
@@ -77,7 +77,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 6,
         "title": "Military Court Ruling — Case No. 882/2012",
-        "type": "Court Document",
+        "type": "Photos",
         "date": "2012-11-03",
         "date_display": "3 Nov 2012",
         "department": "Ministry of Defense",
@@ -89,7 +89,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 7,
         "title": "Security Report: Deir ez-Zor Tribal Leadership Assessment",
-        "type": "Security Report",
+        "type": "Documents",
         "date": "2013-01-12",
         "date_display": "12 Jan 2013",
         "department": "Political Security",
@@ -101,7 +101,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 8,
         "title": "Detention Register — Branch 285, October 2011",
-        "type": "Administrative Order",
+        "type": "Photos",
         "date": "2011-10-01",
         "date_display": "1 Oct 2011",
         "department": "General Intelligence Directorate",
@@ -113,7 +113,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 9,
         "title": "Order for Release of Detainees — Reconciliation Decree",
-        "type": "Presidential Decree",
+        "type": "Documents",
         "date": "2013-06-05",
         "date_display": "5 Jun 2013",
         "department": "Presidential Palace",
@@ -125,7 +125,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 10,
         "title": "Military Intelligence Directive — Latakia Operations",
-        "type": "Military Order",
+        "type": "Documents",
         "date": "2012-08-22",
         "date_display": "22 Aug 2012",
         "department": "Military Intelligence",
@@ -137,7 +137,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 11,
         "title": "Ba'ath Party Report on Opposition Networks — Daraa",
-        "type": "Intelligence Report",
+        "type": "Audios",
         "date": "2011-05-28",
         "date_display": "28 May 2011",
         "department": "Ba'ath Party Regional Command",
@@ -149,7 +149,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 12,
         "title": "Administrative Circular on Media Reporting Restrictions",
-        "type": "Administrative Order",
+        "type": "Photos",
         "date": "2011-09-14",
         "date_display": "14 Sep 2011",
         "department": "Ministry of Interior",
@@ -161,7 +161,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 13,
         "title": "Correspondence: Request for Additional Detention Capacity",
-        "type": "Correspondence",
+        "type": "Videos",
         "date": "2012-03-07",
         "date_display": "7 Mar 2012",
         "department": "General Intelligence Directorate",
@@ -173,7 +173,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 14,
         "title": "Security Report: Border Crossing Surveillance — Deir ez-Zor",
-        "type": "Security Report",
+        "type": "Documents",
         "date": "2013-04-30",
         "date_display": "30 Apr 2013",
         "department": "Military Intelligence",
@@ -185,7 +185,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 15,
         "title": "Military Court Judgment — Mass Trial, Damascus 2013",
-        "type": "Court Document",
+        "type": "Photos",
         "date": "2013-09-17",
         "date_display": "17 Sep 2013",
         "department": "Ministry of Defense",
@@ -197,7 +197,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 16,
         "title": "Political Security Weekly Bulletin — Aleppo, March 2012",
-        "type": "Security Report",
+        "type": "Audios",
         "date": "2012-03-19",
         "date_display": "19 Mar 2012",
         "department": "Political Security",
@@ -209,7 +209,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 17,
         "title": "Presidential Decree on Counter-Terrorism Court Establishment",
-        "type": "Presidential Decree",
+        "type": "Documents",
         "date": "2012-07-02",
         "date_display": "2 Jul 2012",
         "department": "Presidential Palace",
@@ -221,7 +221,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 18,
         "title": "Correspondence: Inter-Branch Coordination on Disappearances",
-        "type": "Correspondence",
+        "type": "Videos",
         "date": "2014-02-11",
         "date_display": "11 Feb 2014",
         "department": "Air Force Intelligence",
@@ -233,7 +233,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 19,
         "title": "Military Order — Siege Operations Protocol, Homs",
-        "type": "Military Order",
+        "type": "Audios",
         "date": "2012-02-01",
         "date_display": "1 Feb 2012",
         "department": "Ministry of Defense",
@@ -245,7 +245,7 @@ MOCK_DOCUMENTS = [
     {
         "id": 20,
         "title": "Administrative Order — Confiscation of Property, Daraa",
-        "type": "Administrative Order",
+        "type": "Photos",
         "date": "2013-11-25",
         "date_display": "25 Nov 2013",
         "department": "Ministry of Interior",
