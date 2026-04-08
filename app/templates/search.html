@@ -20,33 +20,36 @@
 >
 
     <!-- Search row -->
-    <div class="flex items-center gap-4 sm:gap-8 mb-8">
-        <h1 class="hidden text-2xl font-light tracking-tight text-primary shrink-0 sm:block">Search</h1>
-        <label class="input w-full border-base-300 bg-base-100">
-            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.3-4.3"></path>
-                </g>
-            </svg>
-            <input
-                x-ref="searchInput"
-                type="search"
-                name="q"
-                id="q-input"
-                autofocus
-                placeholder="Search documents..."
-                autocomplete="off"
-                class="search-param text-base"
-                hx-get="/search"
-                hx-trigger="keyup changed delay:500ms"
-                hx-target="#results"
-                hx-push-url="true"
-                hx-include=".search-param"
-                hx-vals='{"page": "1"}'
-                hx-indicator="#loading"
-            >
-        </label>
+    <div class="relative left-1/2 right-1/2 mb-8 w-screen -translate-x-1/2 bg-gray-200/60">
+        <div class="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-4 py-6 sm:gap-8 sm:px-6 lg:px-10">
+            <h1 class="hidden text-2xl font-semibold tracking-tight text-primary shrink-0 sm:block">Search</h1>
+            <label class="input w-full border-base-300 bg-base-100">
+                <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.3-4.3"></path>
+                    </g>
+                </svg>
+                <input
+                    x-ref="searchInput"
+                    type="search"
+                    name="q"
+                    id="q-input"
+                    autofocus
+                    placeholder="Search for a document"
+                    autocomplete="off"
+                    class="search-param text-base"
+                    hx-get="/search"
+                    hx-trigger="keyup changed delay:500ms"
+                    hx-target="#results"
+                    hx-push-url="true"
+                    hx-include=".search-param"
+                    hx-vals='{"page": "1"}'
+                    hx-indicator="#loading"
+                >
+            </label>
+            <button type="button" class="hidden text-5xl leading-none text-primary/80 sm:block" aria-label="Add filter">+</button>
+        </div>
     </div>
 
     <!-- Facets: live outside #results so they never re-render or flash -->
@@ -59,7 +62,7 @@
             type="button"
             @click.stop="open = (open === 'facet:{{ key }}') ? null : 'facet:{{ key }}'"
             :class="open === 'facet:{{ key }}' ? 'bg-white' : 'hover:bg-gray-500/12'"
-            class="flex w-full items-center justify-between gap-3 px-3 py-2.5 select-none bg-gray-500/8 border border-gray-400"
+            class="flex w-full items-center justify-between gap-3 px-3 h-[33px] select-none bg-gray-500/8 border border-gray-400"
             aria-haspopup="listbox"
             :aria-expanded="open === 'facet:{{ key }}'"
         >
@@ -79,7 +82,7 @@
             x-transition:enter-start="opacity-0 -translate-y-0.5"
             x-transition:enter-end="opacity-100 translate-y-0"
             @click.outside="open = null"
-            class="absolute top-[120%] left-0 z-30 w-full bg-base-100 border border-base-content/12 shadow-ambient p-6 min-h-[274px]"
+            class="absolute top-[120%] left-0 z-30 w-full bg-base-100 border border-base-content/12 shadow-ambient p-6 h-[274px] overflow-y-auto"
             role="listbox"
             aria-multiselectable="true"
         >
@@ -113,12 +116,20 @@
     </div>
     {% endmacro %}
 
-    <div class="mb-6 grid grid-cols-2 gap-5 lg:grid-cols-4 relative">
-        {{ facet("type",       "Document Types", all_types,       type_counts) }}
-        {{ facet("location",   "Locations",      all_locations,   location_counts) }}
-        {{ facet("department", "Departments",    all_departments, department_counts) }}
-        {{ facet("source",     "Sources",        all_sources,     source_counts) }}
+    <div class="relative mb-8 flex items-center gap-6 lg:gap-8">
+        <p id="result-count" class="text-base font-semibold text-base-content">0 results</p>
+
+        <div class="grid flex-1 grid-cols-2 gap-5 lg:grid-cols-4">
+            {{ facet("type",       "Document Type", all_types,       type_counts) }}
+            {{ facet("location",   "Locations",     all_locations,   location_counts) }}
+            {{ facet("department", "Departments",   all_departments, department_counts) }}
+            {{ facet("source",     "Sources",       all_sources,     source_counts) }}
+        </div>
     </div>
+
+    <div id="active-filters" class="mb-6"></div>
+
+    <div class="mb-7 border-b border-gray-200"></div>
 
     <!-- Toolbar: count + active filters + sort + view (updated via OOB) -->
     <div id="toolbar" class="mb-5 flex flex-col gap-3"></div>
@@ -142,6 +153,14 @@
 
     <!-- Results: toolbar + cards + pagination only (facets are above, static) -->
     <div id="results"></div>
+
+    <a
+        href="{{ url_for('pages.feedback') }}"
+        class="fixed bottom-4 right-4 z-50 inline-flex items-center gap-3 border border-base-content/20 bg-base-100 px-4 py-3 text-xl font-semibold text-primary shadow-ambient transition-colors hover:bg-base-200"
+    >
+        <span class="text-2xl leading-none">^</span>
+        <span class="text-sm font-semibold">Feedback Form</span>
+    </a>
 
 </div>
 {% endblock %}
