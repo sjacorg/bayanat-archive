@@ -72,11 +72,6 @@
                 <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
                     <div class="flex min-h-16 items-center justify-between gap-4 py-2">
                         <div class="flex items-center gap-2">
-                            <label for="main-nav-drawer" class="btn btn-ghost btn-square md:hidden" aria-label="Open navigation menu">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M4 7h16M4 12h16M4 17h16" stroke-width="2" stroke-linecap="round"></path>
-                                </svg>
-                            </label>
                             <a href="{{ url_for('pages.index') }}" class="text-lg font-light tracking-tight text-primary sm:text-xl">
                                 Bayanat <span class="font-semibold">Document Archive</span>
                             </a>
@@ -90,16 +85,11 @@
                             {% endfor %}
                         </nav>
 
-                        {% if request.path != '/' %}
-                        <a href="{{ url_for('pages.index') }}" class="btn btn-ghost btn-square" aria-label="Go to search">
+                        <label for="main-nav-drawer" class="btn btn-ghost btn-square md:hidden" aria-label="Open navigation menu">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
-                                <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path>
+                                <path d="M4 7h16M4 12h16M4 17h16" stroke-width="2" stroke-linecap="round"></path>
                             </svg>
-                        </a>
-                        {% else %}
-                        <span class="h-10 w-10" aria-hidden="true"></span>
-                        {% endif %}
+                        </label>
                     </div>
                 </div>
             </header>
