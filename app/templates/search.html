@@ -5,7 +5,7 @@
 {% block content %}
 <div
     class="py-4 lg:py-6"
-    x-data="{ open: null, view: new URLSearchParams(window.location.search).get('view') || 'grid' }"
+    x-data="searchPageState()"
     x-init="
         const p = new URLSearchParams(window.location.search);
         if (p.get('q')) $refs.searchInput.value = p.get('q');
@@ -15,8 +15,8 @@
             indicator: '#loading'
         }));
     "
-    @keydown.escape.window="open = null"
-    @facets-sync.document="view = $event.detail.view || 'grid'"
+    @keydown.escape.window="open = null; closeMobileFilters()"
+    @facets-sync.document="syncMobileFromDetail($event.detail)"
 >
 
     <!-- Search row -->
@@ -89,7 +89,10 @@
             <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
                 {% if items %}
                     {% for item in items %}
-                    <label class="cursor-pointer items-center gap-3 px-4 py-2 transition-colors hover:bg-gray-200/50">
+                    <label
+                        :class='sel.includes({{ item | tojson }}) ? "bg-secondary/10" : ""'
+                        class="flex cursor-pointer items-center justify-between gap-3 px-4 py-2 transition-colors hover:bg-gray-200/50"
+                    >
                         <input
                             type="checkbox"
                             name="{{ key }}"
@@ -105,7 +108,23 @@
                             hx-indicator="#loading"
                             @change="open = null"
                         >
-                        <span class="text-sm text-base-content/80">{{ item }} ({{ counts[item] }})</span>
+                        <span
+                            :class='sel.includes({{ item | tojson }}) ? "text-secondary" : "text-base-content/80"'
+                            class="text-sm"
+                        >{{ item }} ({{ counts[item] }})</span>
+                        <svg
+                            :class='sel.includes({{ item | tojson }}) ? "opacity-100" : "opacity-0"'
+                            class="h-3.5 w-3.5 shrink-0 text-secondary transition-opacity duration-100"
+                            viewBox="0 0 12 12"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <path d="M2 6l3 3 5-5"/>
+                        </svg>
                     </label>
                     {% endfor %}
                 {% else %}
@@ -116,15 +135,152 @@
     </div>
     {% endmacro %}
 
+    {% macro mobile_facet(key, label, items, counts) %}
+    <div class="border-b border-base-content/10">
+        <button
+            type="button"
+            class="flex w-full items-center justify-between py-3 text-left"
+            @click="mobileFacetOpen = mobileFacetOpen === '{{ key }}' ? null : '{{ key }}'"
+        >
+            <div class="flex items-center gap-2">
+                <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-base-content/70">{{ label }}</span>
+                <span
+                    :class="mobileSelected['{{ key }}'].length ? 'inline' : 'hidden'"
+                    class="text-[11px] text-secondary"
+                    x-text="`(${mobileSelected['{{ key }}'].length} Selected)`"
+                ></span>
+            </div>
+            <svg class="h-3 w-3 text-base-content/35 transition-transform duration-150" :class="{ 'rotate-180': mobileFacetOpen === '{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M2 4l4 4 4-4"/>
+            </svg>
+        </button>
+
+        <div
+            x-show="mobileFacetOpen === '{{ key }}'"
+            x-cloak
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 -translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-120"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-1"
+            class="pb-3"
+        >
+            <label class="input input-sm mb-3 w-full border-base-300 bg-base-100">
+                <svg class="h-3.5 w-3.5 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8" stroke-width="2"></circle>
+                    <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+                <input
+                    type="search"
+                    :placeholder="'Search ' + '{{ label | lower }}'"
+                    x-model="mobileSearch['{{ key }}']"
+                >
+            </label>
+
+            <div class="max-h-56 overflow-y-auto">
+                {% for item in items %}
+                <label
+                    :class='mobileMatches("{{ key }}", {{ item | tojson }}) ? "flex" : "hidden"'
+                    class="w-full cursor-pointer items-center justify-between py-2 text-left text-sm text-base-content/85"
+                >
+                    <input
+                        type="checkbox"
+                        class="sr-only"
+                        value="{{ item }}"
+                        x-model="mobileSelected['{{ key }}']"
+                    >
+                    <span
+                        :class='isMobileSelected("{{ key }}", {{ item | tojson }}) ? "text-secondary" : ""'
+                    >{{ item }} ({{ counts[item] }})</span>
+                    <svg
+                        :class='isMobileSelected("{{ key }}", {{ item | tojson }}) ? "opacity-100" : "opacity-0"'
+                        class="h-3.5 w-3.5 text-secondary transition-opacity duration-100"
+                        viewBox="0 0 12 12"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
+                        <path d="M2 6l3 3 5-5"/>
+                    </svg>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endmacro %}
+
     <div class="relative mb-8 flex items-center gap-6 lg:gap-8">
         <p id="result-count" class="text-base font-semibold text-base-content">0 results</p>
 
-        <div class="grid flex-1 grid-cols-2 gap-5 lg:grid-cols-4">
+        <button
+            type="button"
+            class="ml-auto inline-flex items-center gap-2 border border-base-content/25 bg-base-100 px-3 py-1.5 text-sm font-medium text-base-content lg:hidden"
+            @click="openMobileFilters()"
+        >
+            <svg class="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M2 3h12v2H2V3zm2 4h8v2H4V7zm2 4h4v2H6v-2z"/>
+            </svg>
+            Filter
+        </button>
+
+        <div class="hidden flex-1 grid-cols-2 gap-5 lg:grid lg:grid-cols-4">
             {{ facet("type",       "Document Type", all_types,       type_counts) }}
             {{ facet("location",   "Locations",     all_locations,   location_counts) }}
             {{ facet("department", "Departments",   all_departments, department_counts) }}
             {{ facet("source",     "Sources",       all_sources,     source_counts) }}
         </div>
+    </div>
+
+    <!-- Mobile filter drawer -->
+    <div
+        x-show="mobileDrawerOpen"
+        x-cloak
+        class="fixed inset-0 z-[70] lg:hidden"
+        aria-modal="true"
+        role="dialog"
+    >
+        <button
+            type="button"
+            class="absolute inset-0 z-0 bg-black/35"
+            x-transition.opacity.duration.150ms
+            @click="closeMobileFilters()"
+            aria-label="Close filters"
+        ></button>
+
+        <aside
+            class="absolute inset-y-0 right-0 z-10 w-full bg-base-100"
+            x-transition:enter="transition ease-out duration-180"
+            x-transition:enter-start="translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="translate-x-full"
+        >
+            <div class="flex h-full flex-col">
+                <div class="flex items-center border-b border-base-content/10 px-4 py-4">
+                    <button type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-base-content" @click="closeMobileFilters()">
+                        <span class="text-base">×</span>
+                        Close Filter
+                    </button>
+                </div>
+
+                <div class="min-h-0 flex-1 overflow-y-auto px-4 py-2">
+                    {{ mobile_facet("type",       "Document Type", all_types,       type_counts) }}
+                    {{ mobile_facet("location",   "Locations",     all_locations,   location_counts) }}
+                    {{ mobile_facet("department", "Departments",   all_departments, department_counts) }}
+                    {{ mobile_facet("source",     "Sources",       all_sources,     source_counts) }}
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 border-t border-base-content/10 bg-base-100 px-4 py-4">
+                    <button type="button" class="btn btn-ghost border border-base-content/25" @click="clearMobileFilters()">Clear Filter</button>
+                    <button type="button" class="btn btn-primary" @click="applyMobileFilters()">Apply Filter</button>
+                </div>
+            </div>
+        </aside>
     </div>
 
     <div id="active-filters" class="mb-6"></div>
@@ -167,6 +323,95 @@
 
 {% block scripts %}
 <script>
+    function searchPageState() {
+        return {
+            open: null,
+            view: new URLSearchParams(window.location.search).get('view') || 'grid',
+            mobileDrawerOpen: false,
+            mobileFacetOpen: null,
+            mobileSearch: { type: '', location: '', department: '', source: '' },
+            mobileSelected: { type: [], location: [], department: [], source: [] },
+            facetKeys: ['type', 'location', 'department', 'source'],
+
+            readSelectedFromUrl() {
+                const p = new URLSearchParams(window.location.search);
+                return {
+                    type: p.getAll('type'),
+                    location: p.getAll('location'),
+                    department: p.getAll('department'),
+                    source: p.getAll('source'),
+                };
+            },
+
+            openMobileFilters() {
+                this.mobileSelected = this.readSelectedFromUrl();
+                this.mobileDrawerOpen = true;
+                this.mobileFacetOpen = null;
+                this.mobileSearch = { type: '', location: '', department: '', source: '' };
+                document.body.classList.add('overflow-hidden');
+            },
+
+            closeMobileFilters() {
+                this.mobileDrawerOpen = false;
+                this.mobileFacetOpen = null;
+                document.body.classList.remove('overflow-hidden');
+            },
+
+            isMobileSelected(key, value) {
+                return (this.mobileSelected[key] || []).includes(value);
+            },
+
+            mobileMatches(key, value) {
+                const term = (this.mobileSearch[key] || '').trim().toLowerCase();
+                if (!term) return true;
+                return String(value).toLowerCase().includes(term);
+            },
+
+            clearMobileFilters() {
+                this.mobileSelected = { type: [], location: [], department: [], source: [] };
+                this.mobileSearch = { type: '', location: '', department: '', source: '' };
+            },
+
+            applyMobileFilters() {
+                const p = new URLSearchParams(window.location.search);
+
+                this.facetKeys.forEach((key) => {
+                    p.delete(key);
+                    (this.mobileSelected[key] || []).forEach((value) => p.append(key, value));
+                });
+
+                p.set('page', '1');
+
+                const qs = p.toString();
+                const url = '/search' + (qs ? `?${qs}` : '');
+                history.pushState(null, '', url);
+                this.closeMobileFilters();
+
+                document.dispatchEvent(new CustomEvent('facets-sync', {
+                    detail: {
+                        type: this.mobileSelected.type,
+                        location: this.mobileSelected.location,
+                        department: this.mobileSelected.department,
+                        source: this.mobileSelected.source,
+                        view: p.get('view') || 'grid',
+                    }
+                }));
+
+                htmx.ajax('GET', url, { target: '#results', swap: 'innerHTML', indicator: '#loading' });
+            },
+
+            syncMobileFromDetail(detail) {
+                this.view = detail?.view || 'grid';
+                this.mobileSelected = {
+                    type: detail?.type || [],
+                    location: detail?.location || [],
+                    department: detail?.department || [],
+                    source: detail?.source || [],
+                };
+            },
+        };
+    }
+
     // Smooth crossfade on every #results swap
     document.body.addEventListener('htmx:beforeSwap', function (evt) {
         const d = evt.detail;
