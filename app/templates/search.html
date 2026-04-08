@@ -308,6 +308,17 @@
     </div>
 
     <!-- Results: toolbar + cards + pagination only (facets are above, static) -->
+    <button
+        type="button"
+        x-ref="mobileApplyTrigger"
+        class="hidden"
+        hx-get="/search"
+        hx-include=".search-param"
+        hx-vals='{"page": "1"}'
+        hx-target="#results"
+        hx-push-url="true"
+        hx-indicator="#loading"
+    ></button>
     <div id="results"></div>
 
     <a
@@ -331,7 +342,6 @@
             mobileFacetOpen: null,
             mobileSearch: { type: '', location: '', department: '', source: '' },
             mobileSelected: { type: [], location: [], department: [], source: [] },
-            facetKeys: ['type', 'location', 'department', 'source'],
 
             readSelectedFromUrl() {
                 const p = new URLSearchParams(window.location.search);
@@ -372,32 +382,20 @@
                 this.mobileSearch = { type: '', location: '', department: '', source: '' };
             },
 
+            emitFacetSync(detail) {
+                document.dispatchEvent(new CustomEvent('facets-sync', { detail }));
+            },
+
             applyMobileFilters() {
-                const p = new URLSearchParams(window.location.search);
-
-                this.facetKeys.forEach((key) => {
-                    p.delete(key);
-                    (this.mobileSelected[key] || []).forEach((value) => p.append(key, value));
+                this.emitFacetSync({
+                    type: [...this.mobileSelected.type],
+                    location: [...this.mobileSelected.location],
+                    department: [...this.mobileSelected.department],
+                    source: [...this.mobileSelected.source],
+                    view: this.view,
                 });
-
-                p.set('page', '1');
-
-                const qs = p.toString();
-                const url = '/search' + (qs ? `?${qs}` : '');
-                history.pushState(null, '', url);
                 this.closeMobileFilters();
-
-                document.dispatchEvent(new CustomEvent('facets-sync', {
-                    detail: {
-                        type: this.mobileSelected.type,
-                        location: this.mobileSelected.location,
-                        department: this.mobileSelected.department,
-                        source: this.mobileSelected.source,
-                        view: p.get('view') || 'grid',
-                    }
-                }));
-
-                htmx.ajax('GET', url, { target: '#results', swap: 'innerHTML', indicator: '#loading' });
+                this.$nextTick(() => this.$refs.mobileApplyTrigger?.click());
             },
 
             syncMobileFromDetail(detail) {
