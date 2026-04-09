@@ -1,0 +1,210 @@
+{% macro build_url(override={}) %}
+{%- set params = {} -%}
+{%- if q %}{% set _ = params.update({'q': q}) %}{% endif -%}
+{%- if label %}{% set _ = params.update({'label': label}) %}{% endif -%}
+{%- if location %}{% set _ = params.update({'location': location}) %}{% endif -%}
+{%- if date_from %}{% set _ = params.update({'date_from': date_from}) %}{% endif -%}
+{%- if date_to %}{% set _ = params.update({'date_to': date_to}) %}{% endif -%}
+{%- if sort and sort != 'date_desc' %}{% set _ = params.update({'sort': sort}) %}{% endif -%}
+{%- set _ = params.update(override) -%}
+/search?{{ params | urlencode }}
+{%- endmacro %}
+
+<div class="flex flex-col lg:flex-row gap-8">
+
+    <!-- Facets sidebar -->
+    <aside class="lg:w-64 shrink-0 space-y-6">
+
+        {% if facets.labels %}
+        <div>
+            <h3 class="text-sm font-semibold text-base-content/70 mb-2">Labels</h3>
+            <ul class="space-y-1">
+                {% for f in facets.labels %}
+                <li>
+                    <a href="{{ build_url({'label': f.title, 'page': 1}) }}"
+                       hx-get="{{ build_url({'label': f.title, 'page': 1}) }}"
+                       hx-target="#results"
+                       hx-push-url="{{ build_url({'label': f.title, 'page': 1}) }}"
+                       class="flex justify-between text-sm hover:text-primary {{ 'font-bold text-primary' if label == f.title else '' }}">
+                        <span class="truncate">{{ f.title }}</span>
+                        <span class="text-base-content/40">{{ f.count }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% if label %}
+            <a href="{{ build_url({'label': '', 'page': 1}) }}"
+               hx-get="{{ build_url({'label': '', 'page': 1}) }}"
+               hx-target="#results"
+               hx-push-url="{{ build_url({'label': '', 'page': 1}) }}"
+               class="text-xs text-primary mt-2 inline-block">Clear label filter</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if facets.locations %}
+        <div>
+            <h3 class="text-sm font-semibold text-base-content/70 mb-2">Locations</h3>
+            <ul class="space-y-1">
+                {% for f in facets.locations %}
+                <li>
+                    <a href="{{ build_url({'location': f.full_location, 'page': 1}) }}"
+                       hx-get="{{ build_url({'location': f.full_location, 'page': 1}) }}"
+                       hx-target="#results"
+                       hx-push-url="{{ build_url({'location': f.full_location, 'page': 1}) }}"
+                       class="flex justify-between text-sm hover:text-primary {{ 'font-bold text-primary' if location == f.full_location else '' }}">
+                        <span class="truncate">{{ f.full_location }}</span>
+                        <span class="text-base-content/40">{{ f.count }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% if location %}
+            <a href="{{ build_url({'location': '', 'page': 1}) }}"
+               hx-get="{{ build_url({'location': '', 'page': 1}) }}"
+               hx-target="#results"
+               hx-push-url="{{ build_url({'location': '', 'page': 1}) }}"
+               class="text-xs text-primary mt-2 inline-block">Clear location filter</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </aside>
+
+    <!-- Results -->
+    <div class="flex-1">
+
+        <!-- Header: count + sort -->
+        <div class="flex items-center justify-between mb-6">
+            <p class="text-sm text-base-content/60">
+                {% if total > 0 %}
+                    Showing {{ (page - 1) * per_page + 1 }}-{{ [page * per_page, total] | min }} of {{ total }} documents
+                {% else %}
+                    No documents found
+                {% endif %}
+            </p>
+            {% if total > 0 %}
+            <div class="flex gap-2 text-sm">
+                {% if q %}
+                <a href="{{ build_url({'sort': 'relevance', 'page': 1}) }}"
+                   hx-get="{{ build_url({'sort': 'relevance', 'page': 1}) }}"
+                   hx-target="#results"
+                   class="{{ 'font-bold text-primary' if sort == 'relevance' else 'text-base-content/50 hover:text-primary' }}">Relevance</a>
+                {% endif %}
+                <a href="{{ build_url({'sort': 'date_desc', 'page': 1}) }}"
+                   hx-get="{{ build_url({'sort': 'date_desc', 'page': 1}) }}"
+                   hx-target="#results"
+                   class="{{ 'font-bold text-primary' if sort == 'date_desc' else 'text-base-content/50 hover:text-primary' }}">Newest</a>
+                <a href="{{ build_url({'sort': 'date_asc', 'page': 1}) }}"
+                   hx-get="{{ build_url({'sort': 'date_asc', 'page': 1}) }}"
+                   hx-target="#results"
+                   class="{{ 'font-bold text-primary' if sort == 'date_asc' else 'text-base-content/50 hover:text-primary' }}">Oldest</a>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if results %}
+        <!-- Result cards grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for doc in results %}
+            <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block">
+                <div class="bg-base-100 overflow-hidden hover:shadow-md transition-shadow">
+                    <!-- Thumbnail -->
+                    {% if thumbnails.get(doc.id) %}
+                    <div class="aspect-[4/3] bg-base-200 overflow-hidden">
+                        <img src="/static/media/{{ thumbnails[doc.id].filename }}"
+                             alt="{{ doc.title }}"
+                             class="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                             loading="lazy">
+                    </div>
+                    {% else %}
+                    <div class="aspect-[4/3] bg-base-200 flex items-center justify-center">
+                        <svg class="w-12 h-12 text-base-content/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                        </svg>
+                    </div>
+                    {% endif %}
+
+                    <!-- Card body -->
+                    <div class="p-3 space-y-2">
+                        <h3 class="font-medium text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+                            {% if doc.snippet_title %}
+                                {{ doc.snippet_title | safe }}
+                            {% else %}
+                                {{ doc.title }}
+                            {% endif %}
+                        </h3>
+
+                        {% if doc.snippet_desc %}
+                        <p class="text-xs text-base-content/50 line-clamp-2">{{ doc.snippet_desc | strip_html }}</p>
+                        {% elif doc.description %}
+                        <p class="text-xs text-base-content/50 line-clamp-2">{{ doc.description | strip_html | truncate(120) }}</p>
+                        {% endif %}
+
+                        <div class="flex items-center gap-2 flex-wrap">
+                            {% if doc.publish_date %}
+                            <span class="text-xs text-base-content/40">{{ doc.publish_date[:10] }}</span>
+                            {% endif %}
+                            {% for lbl in doc_labels.get(doc.id, [])[:2] %}
+                            <span class="badge badge-sm badge-ghost">{{ lbl.title }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="flex justify-center mt-8">
+            <div class="join">
+                {% if page > 1 %}
+                <a href="{{ build_url({'page': page - 1}) }}"
+                   hx-get="{{ build_url({'page': page - 1}) }}"
+                   hx-target="#results"
+                   hx-push-url="{{ build_url({'page': page - 1}) }}"
+                   class="join-item btn btn-sm">Previous</a>
+                {% endif %}
+
+                {% for p in range(1, total_pages + 1) %}
+                    {% if p == page %}
+                    <button class="join-item btn btn-sm btn-active">{{ p }}</button>
+                    {% elif p <= 3 or p > total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+                    <a href="{{ build_url({'page': p}) }}"
+                       hx-get="{{ build_url({'page': p}) }}"
+                       hx-target="#results"
+                       hx-push-url="{{ build_url({'page': p}) }}"
+                       class="join-item btn btn-sm">{{ p }}</a>
+                    {% elif p == 4 or p == total_pages - 2 %}
+                    <button class="join-item btn btn-sm btn-disabled">...</button>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page < total_pages %}
+                <a href="{{ build_url({'page': page + 1}) }}"
+                   hx-get="{{ build_url({'page': page + 1}) }}"
+                   hx-target="#results"
+                   hx-push-url="{{ build_url({'page': page + 1}) }}"
+                   class="join-item btn btn-sm">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-20">
+            <p class="text-base-content/50">No documents match your search.</p>
+            {% if q or label or location %}
+            <a href="/"
+               hx-get="/search"
+               hx-target="#results"
+               hx-push-url="/"
+               class="text-primary text-sm mt-2 inline-block">Clear all filters</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>

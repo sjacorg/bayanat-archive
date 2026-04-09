@@ -1,4 +1,5 @@
 import os
+import re
 import sqlite3
 from datetime import datetime
 
@@ -26,6 +27,16 @@ def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-change-me")
 
+    _re_tags = re.compile(r"<[^>]+>")
+    _re_spaces = re.compile(r"\s+")
+
+    @app.template_filter("strip_html")
+    def strip_html(value):
+        if not value:
+            return ""
+        text = _re_tags.sub(" ", value)
+        return _re_spaces.sub(" ", text).strip()
+
     @app.context_processor
     def inject_template_globals():
         return {"current_year": datetime.now().year}
@@ -37,8 +48,10 @@ def create_app():
     app.cli.add_command(import_archive)
 
     from app.routes.pages import bp as pages_bp
+    from app.routes.search import bp as search_bp
 
     app.register_blueprint(pages_bp)
+    app.register_blueprint(search_bp)
 
     @app.errorhandler(404)
     def not_found(e):

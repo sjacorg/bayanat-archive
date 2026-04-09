@@ -14,7 +14,7 @@
         <p class="text-base-content/60 max-w-sm">The page you're looking for doesn't exist. Try searching the archive instead.</p>
     </div>
 
-    <form action="{{ url_for('pages.index') }}" method="get" class="w-full max-w-md" hx-boost="true">
+    <form action="{{ url_for('search.index') }}" method="get" class="w-full max-w-md" hx-boost="true">
         <label class="input w-full">
             <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                 <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
@@ -32,7 +32,7 @@
         </label>
     </form>
 
-    <a href="{{ url_for('pages.index') }}" class="btn btn-ghost btn-sm text-base-content/60">
+    <a href="{{ url_for('search.index') }}" class="btn btn-ghost btn-sm text-base-content/60">
         Back to search
     </a>
 </div>
