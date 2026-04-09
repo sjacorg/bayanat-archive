@@ -470,13 +470,15 @@
             leftSliderStyle() {
                 if (this.timelineCount <= 1) return "left:0; width:100%;";
                 const step = 100 / this.timelineCount;
-                return `left:0%; width: calc(100% - ${step}%);`;
+                const offset = 10 * 2;
+                return `left:0%; width: calc(100% - ${step}% + ${offset}px);`;
             },
 
             rightSliderStyle() {
                 if (this.timelineCount <= 1) return "left:0; width:100%;";
                 const step = 100 / this.timelineCount;
-                return `left:${step}%; width: calc(100% - ${step}%);`;
+                const offset = 10 * 2;
+                return `left:${step}%; width: calc(100% - ${step}% + ${offset}px);`;
             },
 
             selectedRangeStyle() {

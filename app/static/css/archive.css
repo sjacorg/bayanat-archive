@@ -101,6 +101,7 @@
     appearance: none;
     width: 100%;
     height: 1rem;
+    transform: translate(-10px);
     background: transparent;
     pointer-events: none;
 }
