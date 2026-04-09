@@ -1,11 +1,6 @@
-from flask import Blueprint, render_template, request, make_response
+from flask import Blueprint, make_response, render_template, request
 
 bp = Blueprint("pages", __name__)
-
-
-@bp.route("/")
-def index():
-    return render_template("search.html")
 
 
 @bp.route("/components")
