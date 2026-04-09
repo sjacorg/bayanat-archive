@@ -1,0 +1,94 @@
+{# Shared nav markup used by mobile and desktop variants. #}
+{% macro footer_nav(list_class) %}
+<nav aria-label="Footer navigation">
+    <ul class="{{ list_class }}">
+        {% for link in nav_links %}
+        <li>
+            <a href="{{ link.href }}" class="text-primary-content/85 transition-colors hover:text-primary-content">{{ link.label }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</nav>
+{% endmacro %}
+
+{# Left brand block ("Powered by"). #}
+{% macro powered_by() %}
+<section class="space-y-2">
+    <p class="text-sm font-light leading-none text-primary-content/80">Powered by</p>
+    <a
+        href="https://bayanat.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        hx-boost="false"
+        class="inline-block opacity-90 transition-opacity hover:opacity-100"
+        aria-label="Bayanat"
+    >
+        <img src="{{ url_for('static', filename='assets/bayanat-logo-lt.svg') }}" alt="Bayanat" class="h-6 w-auto">
+    </a>
+</section>
+{% endmacro %}
+
+{# Right attribution block ("A project by"). #}
+{% macro project_by() %}
+<section class="space-y-2 text-right">
+    <p class="text-sm font-light leading-none text-primary-content/80">A project by</p>
+    <a
+        href="https://syriaaccountability.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        hx-boost="false"
+        class="inline-block opacity-90 transition-opacity hover:opacity-100"
+        aria-label="Syria Justice and Accountability Centre"
+    >
+        <img src="{{ url_for('static', filename='assets/sjac-logo-lt.svg') }}" alt="Syria Justice and Accountability Centre" class="h-10 w-auto">
+    </a>
+</section>
+{% endmacro %}
+
+<footer
+    class="mt-auto border-t border-base-content/15 bg-primary text-primary-content"
+    hx-boost="true"
+    hx-target=".drawer"
+    hx-select=".drawer"
+    hx-swap="outerHTML transition:true"
+>
+    <div class="mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10">
+        {# Mobile: nav first, then both logos in one row. #}
+        <div class="md:hidden">
+            {{ footer_nav("flex flex-col gap-x-8 gap-y-3 text-sm") }}
+            <div class="mt-7 flex items-end justify-between gap-6">
+                {{ powered_by() }}
+                {{ project_by() }}
+            </div>
+        </div>
+
+        {# Desktop: logos on sides, nav centered with absolute positioning. #}
+        <div class="relative hidden min-h-[56px] md:block">
+            <div class="flex items-end justify-between gap-8">
+                <div class="flex items-center flex-row gap-14">
+                    {{ powered_by() }}
+                    {{ footer_nav("flex items-center gap-x-[40px] gap-y-3 whitespace-nowrap text-sm") }}
+                </div>
+                {{ project_by() }}
+            </div>
+            <div>
+            </div>
+        </div>
+
+        {# Legal row stays consistent across breakpoints. #}
+        <div class="mt-6 border-t border-primary-content/20 pt-4">
+            <div class="flex flex-col gap-2 text-xs text-primary-content/65 sm:flex-row sm:items-center sm:justify-between">
+                <p>
+                    &copy; {{ current_year }} Syria Justice &amp; Accountability Centre. All rights reserved.
+                </p>
+                <a
+                    href="https://syriaaccountability.org/tos/#privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    hx-boost="false"
+                    class="transition-colors hover:text-primary-content"
+                >Privacy Policy</a>
+            </div>
+        </div>
+    </div>
+</footer>
