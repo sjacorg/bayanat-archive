@@ -1,0 +1,85 @@
+<!-- Mobile-only timeline range panel (Stasi-style: bars + two edge handles). -->
+{% set timeline_years = timeline_bins | map(attribute='year') | list %}
+{% set timeline_max_count = (timeline_bins | map(attribute='count') | max) if timeline_bins else 1 %}
+{% set tick_step = ((timeline_bins | length) // 6) + 1 if (timeline_bins | length) > 7 else 1 %}
+<div
+    x-show="timePanelOpen"
+    x-cloak
+    x-transition:enter="transition ease-out duration-180"
+    x-transition:enter-start="opacity-0 -translate-y-1"
+    x-transition:enter-end="opacity-100 translate-y-0"
+    x-transition:leave="transition ease-in duration-120"
+    x-transition:leave-start="opacity-100 translate-y-0"
+    x-transition:leave-end="opacity-0 -translate-y-1"
+    class="relative left-1/2 right-1/2 mb-6 w-screen -translate-x-1/2 bg-gray-200/60"
+>
+    <div class="mx-auto w-full max-w-[1200px] px-4 pb-5 pt-4 sm:px-6">
+        <div class="border-t border-base-content/12 pt-4">
+            <div class="mb-2 flex items-center justify-between gap-3">
+                <p class="text-sm font-semibold text-primary">Select Time Period:</p>
+                <div class="flex items-center gap-2 text-primary">
+                    <input
+                        type="number"
+                        inputmode="numeric"
+                        class="h-8 w-20 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
+                        :value="yearStart"
+                        @input="setYearStart($event.target.value)"
+                    >
+                    <span class="text-xl">-</span>
+                    <input
+                        type="number"
+                        inputmode="numeric"
+                        class="h-8 w-20 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
+                        :value="yearEnd"
+                        @input="setYearEnd($event.target.value)"
+                    >
+                </div>
+            </div>
+
+            <div class="relative mt-4 h-28">
+                <div class="absolute inset-x-0 bottom-8 flex h-16 items-end gap-1">
+                    {% for bin in timeline_bins %}
+                    {% set bar_height = 8 + ((bin.count * 44) // (timeline_max_count if timeline_max_count else 1)) %}
+                    <div
+                        :class="{{ bin.year }} >= yearStart && {{ bin.year }} <= yearEnd ? 'bg-secondary' : 'bg-base-content/20'"
+                        title="{{ bin.year }}: {{ bin.count }} documents"
+                        style="height: {{ bar_height }}px;"
+                        class="flex-1 rounded-t-[1px] transition-colors"
+                    ></div>
+                    {% endfor %}
+                </div>
+
+                <div class="absolute inset-x-0 bottom-8 h-[2px] bg-primary/30"></div>
+                <div class="absolute bottom-8 h-[2px] bg-primary" :style="selectedRangeStyle()"></div>
+
+                <input
+                    type="range"
+                    class="timeline-range absolute inset-x-0 bottom-[20px]"
+                    :min="minYear"
+                    :max="maxYear"
+                    :value="yearStart"
+                    @input="setYearStart($event.target.value)"
+                >
+                <input
+                    type="range"
+                    class="timeline-range absolute inset-x-0 bottom-[20px]"
+                    :min="minYear"
+                    :max="maxYear"
+                    :value="yearEnd"
+                    @input="setYearEnd($event.target.value)"
+                >
+
+                <div
+                    class="absolute inset-x-0 bottom-0 grid gap-1 text-center text-[11px] font-semibold text-primary/80"
+                    style="grid-template-columns: repeat({{ timeline_bins | length }}, minmax(0, 1fr));"
+                >
+                    {% for year in timeline_years %}
+                    <span class="{% if loop.index0 % tick_step == 0 or loop.last %}opacity-100{% else %}opacity-0{% endif %}">
+                        {{ year }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

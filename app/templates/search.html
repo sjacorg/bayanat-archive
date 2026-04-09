@@ -8,6 +8,7 @@
     {# Bootstrap first results from URL params so direct links render immediately. #}
     x-init="
         const p = new URLSearchParams(window.location.search);
+        hydrateYearRangeFromUrl(p);
         if (p.get('q')) $refs.searchInput.value = p.get('q');
         $nextTick(() => htmx.ajax('GET', '/search?' + p.toString(), {
             target: '#results',
@@ -15,7 +16,7 @@
             indicator: '#loading'
         }));
     "
-    @keydown.escape.window="open = null; closeMobileFilters()"
+    @keydown.escape.window="open = null; closeMobileFilters(); timePanelOpen = false"
     {# Shared sync event: partial responses emit current facet/view state. #}
     @facets-sync.document="syncMobileFromDetail($event.detail)"
 >
@@ -49,9 +50,24 @@
                     hx-indicator="#loading"
                 >
             </label>
-            <button type="button" class="hidden text-5xl leading-none text-primary/80 sm:block" aria-label="Add filter">+</button>
+            <button
+                type="button"
+                class="inline-flex h-10 w-10 items-center justify-center text-5xl leading-none text-primary/80"
+                :aria-expanded="timePanelOpen ? 'true' : 'false'"
+                @click="toggleTimePanel()"
+            >
+                <span x-show="!timePanelOpen" aria-hidden="true">+</span>
+                <span x-show="timePanelOpen" x-cloak aria-hidden="true">×</span>
+                <span class="sr-only">Toggle time range</span>
+            </button>
         </div>
     </div>
+
+    <!-- Global query params that must persist across every HTMX request. -->
+    <input type="hidden" name="year_start" class="search-param" :value="yearStart">
+    <input type="hidden" name="year_end" class="search-param" :value="yearEnd">
+
+    {% include "partials/mobile_timeline_range.html" %}
 
     <!-- Facets: live outside #results so they never re-render or flash -->
     {% macro facet(key, label, items, counts) %}
@@ -301,7 +317,7 @@
         </div>
     </div>
 
-    <!-- Hidden HTMX trigger used by mobile "Apply Filter" after syncing checkboxes. -->
+    <!-- Hidden HTMX trigger used by mobile facets + timeline apply actions. -->
     <button
         type="button"
         x-ref="mobileApplyTrigger"
@@ -334,14 +350,66 @@
 
 {% block scripts %}
 <script>
+    const SEARCH_MIN_YEAR = {{ timeline_min_year }};
+    const SEARCH_MAX_YEAR = {{ timeline_max_year }};
+
     function searchPageState() {
         return {
             open: null,
             view: new URLSearchParams(window.location.search).get('view') || 'grid',
+            timePanelOpen: false,
+            minYear: SEARCH_MIN_YEAR,
+            maxYear: SEARCH_MAX_YEAR,
+            yearStart: SEARCH_MIN_YEAR,
+            yearEnd: SEARCH_MAX_YEAR,
+            timelineApplyTimer: null,
+            lastSubmittedYearRange: `${SEARCH_MIN_YEAR}-${SEARCH_MAX_YEAR}`,
             mobileDrawerOpen: false,
             mobileFacetOpen: null,
             mobileSearch: { type: '', location: '', department: '', source: '' },
             mobileSelected: { type: [], location: [], department: [], source: [] },
+
+            normalizeYear(raw, fallback) {
+                const parsed = Number.parseInt(raw, 10);
+                if (Number.isNaN(parsed)) return fallback;
+                return Math.min(this.maxYear, Math.max(this.minYear, parsed));
+            },
+
+            hydrateYearRangeFromUrl(params = new URLSearchParams(window.location.search)) {
+                this.yearStart = this.normalizeYear(params.get("year_start"), this.minYear);
+                this.yearEnd = this.normalizeYear(params.get("year_end"), this.maxYear);
+                if (this.yearStart > this.yearEnd) {
+                    [this.yearStart, this.yearEnd] = [this.yearEnd, this.yearStart];
+                }
+                this.lastSubmittedYearRange = `${this.yearStart}-${this.yearEnd}`;
+            },
+
+            setYearStart(value) {
+                const nextStart = Math.min(this.normalizeYear(value, this.yearStart), this.yearEnd);
+                if (nextStart === this.yearStart) return;
+                this.yearStart = nextStart;
+                this.scheduleTimeRangeApply();
+            },
+
+            setYearEnd(value) {
+                const nextEnd = Math.max(this.normalizeYear(value, this.yearEnd), this.yearStart);
+                if (nextEnd === this.yearEnd) return;
+                this.yearEnd = nextEnd;
+                this.scheduleTimeRangeApply();
+            },
+
+            scheduleTimeRangeApply() {
+                if (!this.timePanelOpen) return;
+                clearTimeout(this.timelineApplyTimer);
+                this.timelineApplyTimer = setTimeout(() => this.applyTimeRange(), 220);
+            },
+
+            selectedRangeStyle() {
+                const total = this.maxYear - this.minYear || 1;
+                const left = ((this.yearStart - this.minYear) / total) * 100;
+                const right = ((this.yearEnd - this.minYear) / total) * 100;
+                return `left:${left}%; width:${Math.max(1, right - left)}%;`;
+            },
 
             readSelectedFromUrl() {
                 // URL remains the source of truth; mobile drawer clones it into local draft state.
@@ -355,6 +423,7 @@
             },
 
             openMobileFilters() {
+                this.timePanelOpen = false;
                 this.mobileSelected = this.readSelectedFromUrl();
                 this.mobileDrawerOpen = true;
                 this.mobileFacetOpen = null;
@@ -383,6 +452,23 @@
                 this.mobileSearch = { type: '', location: '', department: '', source: '' };
             },
 
+            applyTimeRange() {
+                const nextRange = `${this.yearStart}-${this.yearEnd}`;
+                if (nextRange === this.lastSubmittedYearRange) return;
+                this.lastSubmittedYearRange = nextRange;
+                this.$nextTick(() => this.$refs.mobileApplyTrigger?.click());
+            },
+
+            toggleTimePanel() {
+                if (this.timePanelOpen) {
+                    this.timePanelOpen = false;
+                    this.applyTimeRange();
+                    return;
+                }
+                this.open = null;
+                this.timePanelOpen = true;
+            },
+
             emitFacetSync(detail) {
                 // Keep desktop facets, toolbar view toggle, and mobile draft in sync.
                 document.dispatchEvent(new CustomEvent('facets-sync', { detail }));
@@ -396,6 +482,8 @@
                     department: [...this.mobileSelected.department],
                     source: [...this.mobileSelected.source],
                     view: this.view,
+                    year_start: this.yearStart,
+                    year_end: this.yearEnd,
                 });
                 this.closeMobileFilters();
                 this.$nextTick(() => this.$refs.mobileApplyTrigger?.click());
@@ -409,6 +497,12 @@
                     department: detail?.department || [],
                     source: detail?.source || [],
                 };
+                this.yearStart = this.normalizeYear(detail?.year_start, this.minYear);
+                this.yearEnd = this.normalizeYear(detail?.year_end, this.maxYear);
+                if (this.yearStart > this.yearEnd) {
+                    [this.yearStart, this.yearEnd] = [this.yearEnd, this.yearStart];
+                }
+                this.lastSubmittedYearRange = `${this.yearStart}-${this.yearEnd}`;
             },
         };
     }
@@ -433,6 +527,8 @@
                 department: p.getAll('department'),
                 source:     p.getAll('source'),
                 view:       p.get('view') || 'grid',
+                year_start: Number.parseInt(p.get('year_start') || SEARCH_MIN_YEAR, 10),
+                year_end:   Number.parseInt(p.get('year_end') || SEARCH_MAX_YEAR, 10),
             }
         }));
     });

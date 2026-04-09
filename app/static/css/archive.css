@@ -95,3 +95,49 @@
     display: block;
 }
 
+/* Dual range handles for the mobile timeline filter. */
+.timeline-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 1rem;
+    background: transparent;
+    pointer-events: none;
+}
+
+.timeline-range::-webkit-slider-runnable-track {
+    height: 2px;
+    background: transparent;
+}
+
+.timeline-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 14px solid #1a4540;
+    margin-top: -10px;
+    pointer-events: auto;
+    cursor: ew-resize;
+}
+
+.timeline-range::-moz-range-track {
+    height: 2px;
+    background: transparent;
+    border: 0;
+}
+
+.timeline-range::-moz-range-thumb {
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 14px solid #1a4540;
+    border-top: 0;
+    border-radius: 0;
+    background: transparent;
+    pointer-events: auto;
+    cursor: ew-resize;
+}

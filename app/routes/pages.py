@@ -256,20 +256,42 @@ MOCK_DOCUMENTS = [
     },
 ]
 
+_DOC_YEARS = [int(d["date"][:4]) for d in MOCK_DOCUMENTS]
+_MIN_YEAR = min(_DOC_YEARS)
+_MAX_YEAR = max(_DOC_YEARS)
+_YEAR_COUNTS = Counter(_DOC_YEARS)
+_TIMELINE_BINS = [
+    {"year": year, "count": _YEAR_COUNTS.get(year, 0)}
+    for year in range(_MIN_YEAR, _MAX_YEAR + 1)
+]
+
+
+def _parse_year(value, default):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
 
 def _get_search_params():
     q = request.args.get("q", "").strip()
     selected = {key: request.args.getlist(key) for key in _FACET_KEYS}
     sort = request.args.get("sort", _DEFAULT_SORT)
     view = request.args.get("view", _DEFAULT_VIEW)
+    year_start = _parse_year(request.args.get("year_start"), _MIN_YEAR)
+    year_end = _parse_year(request.args.get("year_end"), _MAX_YEAR)
+    year_start = min(max(year_start, _MIN_YEAR), _MAX_YEAR)
+    year_end = min(max(year_end, _MIN_YEAR), _MAX_YEAR)
+    if year_start > year_end:
+        year_start, year_end = year_end, year_start
     try:
         page = max(1, int(request.args.get("page") or 1))
     except ValueError:
         page = 1
-    return q, selected, sort, view, page
+    return q, selected, sort, view, page, year_start, year_end
 
 
-def _filter_documents(documents, q, selected):
+def _filter_documents(documents, q, selected, year_start, year_end):
     q_lower = q.lower()
     docs = [
         d
@@ -281,6 +303,11 @@ def _filter_documents(documents, q, selected):
         if selected_values:
             allowed = set(selected_values)
             docs = [d for d in docs if d[key] in allowed]
+
+    docs = [
+        d for d in docs
+        if year_start <= int(d["date"][:4]) <= year_end
+    ]
     return docs
 
 
@@ -302,7 +329,7 @@ def _paginate_documents(documents, page, page_size):
     return documents[start:end], total, page, total_pages
 
 
-def _search_url(q, selected, sort, view, exclude=None):
+def _search_url(q, selected, sort, view, year_start, year_end, exclude=None):
     params = []
     if q:
         params.append(("q", q))
@@ -313,18 +340,23 @@ def _search_url(q, selected, sort, view, exclude=None):
                 continue
             params.append((key, value))
 
-    params.extend((("sort", sort), ("view", view)))
+    params.extend((
+        ("year_start", year_start),
+        ("year_end", year_end),
+        ("sort", sort),
+        ("view", view),
+    ))
     return "/search?" + urlencode(params, doseq=True)
 
 
-def _active_filters(q, selected, sort, view):
+def _active_filters(q, selected, sort, view, year_start, year_end):
     filters = []
     for key in _FACET_KEYS:
         filters.extend(
             {
                 "label": value,
                 "remove_url": _search_url(
-                    q, selected, sort, view, exclude=(key, value)
+                    q, selected, sort, view, year_start, year_end, exclude=(key, value)
                 ),
             }
             for value in selected[key]
@@ -351,6 +383,9 @@ def index():
         location_counts=facet_counts["location"],
         department_counts=facet_counts["department"],
         source_counts=facet_counts["source"],
+        timeline_bins=_TIMELINE_BINS,
+        timeline_min_year=_MIN_YEAR,
+        timeline_max_year=_MAX_YEAR,
     )
 
 
@@ -361,9 +396,9 @@ def search():
         qs = request.query_string.decode()
         return redirect(url_for("pages.index") + ("?" + qs if qs else ""))
 
-    q, selected, sort, view, page = _get_search_params()
+    q, selected, sort, view, page, year_start, year_end = _get_search_params()
 
-    docs = _filter_documents(MOCK_DOCUMENTS, q, selected)
+    docs = _filter_documents(MOCK_DOCUMENTS, q, selected, year_start, year_end)
     docs = _sort_documents(docs, sort)
     paginated, total, page, total_pages = _paginate_documents(docs, page, _PAGE_SIZE)
 
@@ -375,9 +410,11 @@ def search():
         q=q,
         sort=sort,
         view=view,
-        active_filters=_active_filters(q, selected, sort, view),
+        year_start=year_start,
+        year_end=year_end,
+        active_filters=_active_filters(q, selected, sort, view, year_start, year_end),
         clear_url=_search_url(
-            q, {key: [] for key in _FACET_KEYS}, sort, view
+            q, {key: [] for key in _FACET_KEYS}, sort, view, year_start, year_end
         ),
     )
 
