@@ -32,7 +32,12 @@ def create_app():
 
     app.teardown_appcontext(close_db)
 
+    from app.commands import import_archive
+
+    app.cli.add_command(import_archive)
+
     from app.routes.pages import bp as pages_bp
+
     app.register_blueprint(pages_bp)
 
     @app.errorhandler(404)
