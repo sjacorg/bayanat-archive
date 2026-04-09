@@ -2,6 +2,7 @@
 {% set timeline_years = timeline_bins | map(attribute='year') | list %}
 {% set timeline_max_count = (timeline_bins | map(attribute='count') | max) if timeline_bins else 1 %}
 {% set tick_step = ((timeline_bins | length) // 6) + 1 if (timeline_bins | length) > 7 else 1 %}
+{% set timeline_count = timeline_bins | length %}
 <div
     x-show="timePanelOpen"
     x-cloak
@@ -37,14 +38,22 @@
             </div>
 
             <div class="relative mt-4 h-28">
-                <div class="absolute inset-x-0 bottom-8 flex h-16 items-end gap-1">
+                <div
+                    class="absolute inset-x-0 bottom-8 grid h-16 items-end"
+                    style="grid-template-columns: repeat({{ timeline_count }}, minmax(0, 1fr));"
+                >
                     {% for bin in timeline_bins %}
                     {% set bar_height = 8 + ((bin.count * 44) // (timeline_max_count if timeline_max_count else 1)) %}
                     <div
                         :class="{{ bin.year }} >= yearStart && {{ bin.year }} <= yearEnd ? 'bg-secondary' : 'bg-base-content/20'"
+                        role="button"
+                        tabindex="0"
+                        @click="selectSingleYearIndex({{ loop.index0 }})"
+                        @keydown.enter.prevent="selectSingleYearIndex({{ loop.index0 }})"
+                        @keydown.space.prevent="selectSingleYearIndex({{ loop.index0 }})"
                         title="{{ bin.year }}: {{ bin.count }} documents"
                         style="height: {{ bar_height }}px;"
-                        class="flex-1 rounded-t-[1px] transition-colors"
+                        class="w-full cursor-pointer border border-gray-200"
                     ></div>
                     {% endfor %}
                 </div>
@@ -54,19 +63,23 @@
 
                 <input
                     type="range"
-                    class="timeline-range absolute inset-x-0 bottom-[20px]"
-                    :min="minYear"
-                    :max="maxYear"
-                    :value="yearStart"
-                    @input="setYearStart($event.target.value)"
+                    class="timeline-range absolute bottom-[20px] border-0"
+                    :style="leftSliderStyle()"
+                    min="0"
+                    :max="timelineCount - 1"
+                    step="1"
+                    :value="startIndex"
+                    @input="setStartIndex($event.target.value, $event.target)"
                 >
                 <input
                     type="range"
-                    class="timeline-range absolute inset-x-0 bottom-[20px]"
-                    :min="minYear"
-                    :max="maxYear"
-                    :value="yearEnd"
-                    @input="setYearEnd($event.target.value)"
+                    class="timeline-range absolute bottom-[20px] border-0"
+                    :style="rightSliderStyle()"
+                    min="0"
+                    :max="timelineCount - 1"
+                    step="1"
+                    :value="endIndex"
+                    @input="setEndIndex($event.target.value, $event.target)"
                 >
 
                 <div

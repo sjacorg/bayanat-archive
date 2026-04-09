@@ -352,6 +352,7 @@
 <script>
     const SEARCH_MIN_YEAR = {{ timeline_min_year }};
     const SEARCH_MAX_YEAR = {{ timeline_max_year }};
+    const SEARCH_TIMELINE_COUNT = {{ timeline_bins | length }};
 
     function searchPageState() {
         return {
@@ -360,8 +361,11 @@
             timePanelOpen: false,
             minYear: SEARCH_MIN_YEAR,
             maxYear: SEARCH_MAX_YEAR,
+            timelineCount: Math.max(SEARCH_TIMELINE_COUNT, 1),
             yearStart: SEARCH_MIN_YEAR,
             yearEnd: SEARCH_MAX_YEAR,
+            startIndex: 0,
+            endIndex: Math.max(SEARCH_TIMELINE_COUNT - 1, 0),
             timelineApplyTimer: null,
             lastSubmittedYearRange: `${SEARCH_MIN_YEAR}-${SEARCH_MAX_YEAR}`,
             mobileDrawerOpen: false,
@@ -375,12 +379,36 @@
                 return Math.min(this.maxYear, Math.max(this.minYear, parsed));
             },
 
+            yearToIndex(year) {
+                const idx = year - this.minYear;
+                return Math.min(this.timelineCount - 1, Math.max(0, idx));
+            },
+
+            indexToYear(index) {
+                const idx = Math.min(this.timelineCount - 1, Math.max(0, index));
+                return this.minYear + idx;
+            },
+
+            syncIndicesFromYears() {
+                this.startIndex = this.yearToIndex(this.yearStart);
+                this.endIndex = this.yearToIndex(this.yearEnd);
+                if (this.startIndex > this.endIndex) {
+                    this.startIndex = this.endIndex;
+                }
+            },
+
+            syncYearsFromIndices() {
+                this.yearStart = this.indexToYear(this.startIndex);
+                this.yearEnd = this.indexToYear(this.endIndex);
+            },
+
             hydrateYearRangeFromUrl(params = new URLSearchParams(window.location.search)) {
                 this.yearStart = this.normalizeYear(params.get("year_start"), this.minYear);
                 this.yearEnd = this.normalizeYear(params.get("year_end"), this.maxYear);
                 if (this.yearStart > this.yearEnd) {
                     [this.yearStart, this.yearEnd] = [this.yearEnd, this.yearStart];
                 }
+                this.syncIndicesFromYears();
                 this.lastSubmittedYearRange = `${this.yearStart}-${this.yearEnd}`;
             },
 
@@ -388,6 +416,7 @@
                 const nextStart = Math.min(this.normalizeYear(value, this.yearStart), this.yearEnd);
                 if (nextStart === this.yearStart) return;
                 this.yearStart = nextStart;
+                this.syncIndicesFromYears();
                 this.scheduleTimeRangeApply();
             },
 
@@ -395,19 +424,65 @@
                 const nextEnd = Math.max(this.normalizeYear(value, this.yearEnd), this.yearStart);
                 if (nextEnd === this.yearEnd) return;
                 this.yearEnd = nextEnd;
+                this.syncIndicesFromYears();
                 this.scheduleTimeRangeApply();
             },
 
-            scheduleTimeRangeApply() {
-                if (!this.timePanelOpen) return;
+            setStartIndex(rawValue, inputEl = null) {
+                const parsed = Number.parseInt(rawValue, 10);
+                const fallback = this.startIndex;
+                const nextStart = Number.isNaN(parsed) ? fallback : parsed;
+                const clamped = Math.min(this.endIndex, Math.max(0, nextStart));
+                if (clamped === this.startIndex) {
+                    if (inputEl) inputEl.value = String(this.startIndex);
+                    return;
+                }
+                this.startIndex = clamped;
+                this.syncYearsFromIndices();
+                this.scheduleTimeRangeApply();
+            },
+
+            setEndIndex(rawValue, inputEl = null) {
+                const parsed = Number.parseInt(rawValue, 10);
+                const fallback = this.endIndex;
+                const nextEnd = Number.isNaN(parsed) ? fallback : parsed;
+                const clampedEnd = Math.min(this.timelineCount - 1, Math.max(this.startIndex, nextEnd));
+                if (clampedEnd === this.endIndex) {
+                    if (inputEl) inputEl.value = String(this.endIndex);
+                    return;
+                }
+                this.endIndex = clampedEnd;
+                this.syncYearsFromIndices();
+                this.scheduleTimeRangeApply();
+            },
+
+            selectSingleYearIndex(rawValue) {
+                const parsed = Number.parseInt(rawValue, 10);
+                const idx = Number.isNaN(parsed) ? 0 : parsed;
+                const clamped = Math.min(this.timelineCount - 1, Math.max(0, idx));
+                this.startIndex = clamped;
+                this.endIndex = clamped;
+                this.syncYearsFromIndices();
                 clearTimeout(this.timelineApplyTimer);
-                this.timelineApplyTimer = setTimeout(() => this.applyTimeRange(), 220);
+                this.applyTimeRange();
+            },
+
+            leftSliderStyle() {
+                if (this.timelineCount <= 1) return "left:0; width:100%;";
+                const step = 100 / this.timelineCount;
+                return `left:0%; width: calc(100% - ${step}%);`;
+            },
+
+            rightSliderStyle() {
+                if (this.timelineCount <= 1) return "left:0; width:100%;";
+                const step = 100 / this.timelineCount;
+                return `left:${step}%; width: calc(100% - ${step}%);`;
             },
 
             selectedRangeStyle() {
-                const total = this.maxYear - this.minYear || 1;
-                const left = ((this.yearStart - this.minYear) / total) * 100;
-                const right = ((this.yearEnd - this.minYear) / total) * 100;
+                const total = this.timelineCount || 1;
+                const left = (this.startIndex / total) * 100;
+                const right = ((this.endIndex + 1) / total) * 100;
                 return `left:${left}%; width:${Math.max(1, right - left)}%;`;
             },
 
@@ -502,7 +577,13 @@
                 if (this.yearStart > this.yearEnd) {
                     [this.yearStart, this.yearEnd] = [this.yearEnd, this.yearStart];
                 }
+                this.syncIndicesFromYears();
                 this.lastSubmittedYearRange = `${this.yearStart}-${this.yearEnd}`;
+            },
+            scheduleTimeRangeApply() {
+                if (!this.timePanelOpen) return;
+                clearTimeout(this.timelineApplyTimer);
+                this.timelineApplyTimer = setTimeout(() => this.applyTimeRange(), 220);
             },
         };
     }
