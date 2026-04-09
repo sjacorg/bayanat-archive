@@ -23,7 +23,11 @@ def _base_query(db, q=None, label=None, location=None, date_from=None, date_to=N
     if q:
         joins.append("JOIN documents_fts f ON f.rowid = d.id")
         wheres.append("f.documents_fts MATCH ?")
-        params.append(q)
+        # Add * suffix for prefix matching (e.g. "comm" matches "communication")
+        # Escape quotes in query, wrap each token with *
+        tokens = q.split()
+        fts_query = " ".join(f'"{t}"*' for t in tokens)
+        params.append(fts_query)
         order = "f.rank"  # BM25 relevance (lower = better)
 
     if label:
