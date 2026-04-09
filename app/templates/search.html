@@ -5,6 +5,7 @@
 {% block content %}
 <div
     x-data="searchPageState()"
+    {# Bootstrap first results from URL params so direct links render immediately. #}
     x-init="
         const p = new URLSearchParams(window.location.search);
         if (p.get('q')) $refs.searchInput.value = p.get('q');
@@ -15,6 +16,7 @@
         }));
     "
     @keydown.escape.window="open = null; closeMobileFilters()"
+    {# Shared sync event: partial responses emit current facet/view state. #}
     @facets-sync.document="syncMobileFromDetail($event.detail)"
 >
 
@@ -89,8 +91,7 @@
                 {% if items %}
                     {% for item in items %}
                     <label
-                        :class='sel.includes({{ item | tojson }}) ? "bg-secondary/10" : ""'
-                        class="flex cursor-pointer items-center justify-between gap-3 px-4 py-2 transition-colors hover:bg-gray-200/50"
+                        class="flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors hover:bg-gray-200/50"
                     >
                         <input
                             type="checkbox"
@@ -113,16 +114,12 @@
                         >{{ item }} ({{ counts[item] }})</span>
                         <svg
                             :class='sel.includes({{ item | tojson }}) ? "opacity-100" : "opacity-0"'
-                            class="h-3.5 w-3.5 shrink-0 text-secondary transition-opacity duration-100"
-                            viewBox="0 0 12 12"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                            class="size-4 shrink-0 text-secondary transition-opacity duration-100"
+                            viewBox="0 0 17 17"
+                            fill="currentColor"
                             aria-hidden="true"
                         >
-                            <path d="M2 6l3 3 5-5"/>
+                            <path d="M6.37462 11.4541L3.42087 8.50038L2.41504 9.49913L6.37462 13.4587L14.8746 4.95871L13.8759 3.95996L6.37462 11.4541Z"/>
                         </svg>
                     </label>
                     {% endfor %}
@@ -194,16 +191,12 @@
                     >{{ item }} ({{ counts[item] }})</span>
                     <svg
                         :class='isMobileSelected("{{ key }}", {{ item | tojson }}) ? "opacity-100" : "opacity-0"'
-                        class="h-3.5 w-3.5 text-secondary transition-opacity duration-100"
-                        viewBox="0 0 12 12"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        class="size-4 text-secondary transition-opacity duration-100"
+                        viewBox="0 0 17 17"
+                        fill="currentColor"
                         aria-hidden="true"
                     >
-                        <path d="M2 6l3 3 5-5"/>
+                        <path d="M6.37462 11.4541L3.42087 8.50038L2.41504 9.49913L6.37462 13.4587L14.8746 4.95871L13.8759 3.95996L6.37462 11.4541Z"/>
                     </svg>
                 </label>
                 {% endfor %}
@@ -260,23 +253,25 @@
             x-transition:leave-end="translate-x-full"
         >
             <div class="flex h-full flex-col">
-                <div class="flex items-center border-b border-base-content/10 px-4 py-4">
-                    <button type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-base-content" @click="closeMobileFilters()">
-                        <span class="text-base">×</span>
+                <div class="flex items-center px-5 pt-[38px]">
+                    <button type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-base-content py-3.5" @click="closeMobileFilters()">
+                        <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
+                        </svg>
                         Close Filter
                     </button>
                 </div>
 
-                <div class="min-h-0 flex-1 overflow-y-auto px-4 py-2">
+                <div class="min-h-0 flex-1 overflow-y-auto px-5 py-2">
                     {{ mobile_facet("type",       "Document Type", all_types,       type_counts) }}
                     {{ mobile_facet("location",   "Locations",     all_locations,   location_counts) }}
                     {{ mobile_facet("department", "Departments",   all_departments, department_counts) }}
                     {{ mobile_facet("source",     "Sources",       all_sources,     source_counts) }}
                 </div>
 
-                <div class="grid grid-cols-2 gap-2 border-t border-base-content/10 bg-base-100 px-4 py-4">
-                    <button type="button" class="btn btn-ghost border border-base-content/25" @click="clearMobileFilters()">Clear Filter</button>
-                    <button type="button" class="btn btn-primary" @click="applyMobileFilters()">Apply Filter</button>
+                <div class="grid grid-cols-2 gap-2 bg-base-100 px-5 py-5">
+                    <button type="button" class="btn btn-ghost border border-primary py-6" @click="clearMobileFilters()">Clear Filter</button>
+                    <button type="button" class="btn btn-primary py-6" @click="applyMobileFilters()">Apply Filter</button>
                 </div>
             </div>
         </aside>
@@ -306,7 +301,7 @@
         </div>
     </div>
 
-    <!-- Results: toolbar + cards + pagination only (facets are above, static) -->
+    <!-- Hidden HTMX trigger used by mobile "Apply Filter" after syncing checkboxes. -->
     <button
         type="button"
         x-ref="mobileApplyTrigger"
@@ -320,6 +315,7 @@
     ></button>
     <div id="results"></div>
 
+    <!-- CSS-only sticky CTA anchored to this content container (not viewport-fixed). -->
     <div class="sticky z-50 pointer-events-none" style="bottom: 0;">
         <div class="flex justify-end">
             <a
@@ -348,6 +344,7 @@
             mobileSelected: { type: [], location: [], department: [], source: [] },
 
             readSelectedFromUrl() {
+                // URL remains the source of truth; mobile drawer clones it into local draft state.
                 const p = new URLSearchParams(window.location.search);
                 return {
                     type: p.getAll('type'),
@@ -387,10 +384,12 @@
             },
 
             emitFacetSync(detail) {
+                // Keep desktop facets, toolbar view toggle, and mobile draft in sync.
                 document.dispatchEvent(new CustomEvent('facets-sync', { detail }));
             },
 
             applyMobileFilters() {
+                // 1) broadcast draft selection, 2) close drawer, 3) fire HTMX request.
                 this.emitFacetSync({
                     type: [...this.mobileSelected.type],
                     location: [...this.mobileSelected.location],
@@ -425,6 +424,7 @@
     document.body.addEventListener('htmx:afterSettle', function (evt) {
         const d = evt.detail;
         if (!d || d.target?.id !== 'results') return;
+        // Rehydrate facet state from the canonical URL after every result swap.
         const p = new URLSearchParams(window.location.search);
         document.dispatchEvent(new CustomEvent('facets-sync', {
             detail: {

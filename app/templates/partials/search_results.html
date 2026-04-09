@@ -5,6 +5,7 @@
 #}
 
 {% macro type_badge(doc) %}
+{# Map document type text to an icon while keeping one badge component. #}
 {% set t = (doc.type or '') | lower %}
 <span class="inline-flex items-center gap-2 bg-primary px-3 py-1 text-xs font-medium text-primary-content">
     {% if 'photo' in t %}
@@ -35,6 +36,7 @@
     {% else %}{{ total }} results{% endif %}
 </p>
 
+{# OOB: active filter chips live in search.html and are refreshed from this partial. #}
 <div id="active-filters" hx-swap-oob="innerHTML">
     {% if active_filters %}
     <div class="flex justify-between md:justify-start gap-4">
@@ -77,11 +79,11 @@
 
 <div id="toolbar" hx-swap-oob="innerHTML">
 
-    {# Hidden inputs so any hx-include=".search-param" picks up sort & view #}
+    {# Canonical query params used by all HTMX controls via hx-include=".search-param". #}
     <input type="hidden" name="view" value="{{ view }}" class="search-param">
     <input type="hidden" name="sort" value="{{ sort }}" class="search-param sort-hidden">
 
-    {# Sort + view toggle #}
+    {# Uses shared Alpine "open" state so facet menus and sort menu never overlap. #}
     <div class="flex justify-between gap-4 flex-col items-end md:flex-row md:items-center">
         <div class="flex items-center gap-2.5 w-full md:max-w-[285px]">
             <div class="relative w-full" @click.outside="open = (open === 'sort') ? null : open">
