@@ -64,8 +64,8 @@
     </div>
 
     <!-- Global query params that must persist across every HTMX request. -->
-    <input type="hidden" name="year_start" class="search-param" :value="yearStart">
-    <input type="hidden" name="year_end" class="search-param" :value="yearEnd">
+    <input type="hidden" name="date_from" class="search-param" :value="yearStart > minYear ? `${yearStart}-01-01` : ''">
+    <input type="hidden" name="date_to" class="search-param" :value="yearEnd < maxYear ? `${yearEnd}-12-31` : ''">
 
     {% include "partials/mobile_timeline_range.html" %}
 
@@ -236,10 +236,8 @@
         </button>
 
         <div class="hidden flex-1 grid-cols-2 gap-5 lg:grid lg:grid-cols-4">
-            {{ facet("type",       "Document Type", all_types,       type_counts) }}
-            {{ facet("location",   "Locations",     all_locations,   location_counts) }}
-            {{ facet("department", "Departments",   all_departments, department_counts) }}
-            {{ facet("source",     "Sources",       all_sources,     source_counts) }}
+            {{ facet("label",    "Labels",    all_labels,    label_counts) }}
+            {{ facet("location", "Locations", all_locations, location_counts) }}
         </div>
     </div>
 
@@ -279,10 +277,8 @@
                 </div>
 
                 <div class="min-h-0 flex-1 overflow-y-auto px-5 py-2">
-                    {{ mobile_facet("type",       "Document Type", all_types,       type_counts) }}
-                    {{ mobile_facet("location",   "Locations",     all_locations,   location_counts) }}
-                    {{ mobile_facet("department", "Departments",   all_departments, department_counts) }}
-                    {{ mobile_facet("source",     "Sources",       all_sources,     source_counts) }}
+                    {{ mobile_facet("label",    "Labels",    all_labels,    label_counts) }}
+                    {{ mobile_facet("location", "Locations", all_locations, location_counts) }}
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 bg-base-100 px-5 py-5">
@@ -370,8 +366,8 @@
             lastSubmittedYearRange: `${SEARCH_MIN_YEAR}-${SEARCH_MAX_YEAR}`,
             mobileDrawerOpen: false,
             mobileFacetOpen: null,
-            mobileSearch: { type: '', location: '', department: '', source: '' },
-            mobileSelected: { type: [], location: [], department: [], source: [] },
+            mobileSearch: { label: '', location: '' },
+            mobileSelected: { label: [], location: [] },
 
             normalizeYear(raw, fallback) {
                 const parsed = Number.parseInt(raw, 10);
@@ -403,8 +399,10 @@
             },
 
             hydrateYearRangeFromUrl(params = new URLSearchParams(window.location.search)) {
-                this.yearStart = this.normalizeYear(params.get("year_start"), this.minYear);
-                this.yearEnd = this.normalizeYear(params.get("year_end"), this.maxYear);
+                const fromYear = (params.get("date_from") || "").slice(0, 4) || params.get("year_start");
+                const toYear = (params.get("date_to") || "").slice(0, 4) || params.get("year_end");
+                this.yearStart = this.normalizeYear(fromYear, this.minYear);
+                this.yearEnd = this.normalizeYear(toYear, this.maxYear);
                 if (this.yearStart > this.yearEnd) {
                     [this.yearStart, this.yearEnd] = [this.yearEnd, this.yearStart];
                 }
@@ -492,10 +490,8 @@
                 // URL remains the source of truth; mobile drawer clones it into local draft state.
                 const p = new URLSearchParams(window.location.search);
                 return {
-                    type: p.getAll('type'),
+                    label: p.getAll('label'),
                     location: p.getAll('location'),
-                    department: p.getAll('department'),
-                    source: p.getAll('source'),
                 };
             },
 
@@ -504,7 +500,7 @@
                 this.mobileSelected = this.readSelectedFromUrl();
                 this.mobileDrawerOpen = true;
                 this.mobileFacetOpen = null;
-                this.mobileSearch = { type: '', location: '', department: '', source: '' };
+                this.mobileSearch = { label: '', location: '' };
                 document.body.classList.add('overflow-hidden');
             },
 
@@ -525,8 +521,8 @@
             },
 
             clearMobileFilters() {
-                this.mobileSelected = { type: [], location: [], department: [], source: [] };
-                this.mobileSearch = { type: '', location: '', department: '', source: '' };
+                this.mobileSelected = { label: [], location: [] };
+                this.mobileSearch = { label: '', location: '' };
             },
 
             applyTimeRange() {
@@ -554,13 +550,11 @@
             applyMobileFilters() {
                 // 1) broadcast draft selection, 2) close drawer, 3) fire HTMX request.
                 this.emitFacetSync({
-                    type: [...this.mobileSelected.type],
+                    label: [...this.mobileSelected.label],
                     location: [...this.mobileSelected.location],
-                    department: [...this.mobileSelected.department],
-                    source: [...this.mobileSelected.source],
                     view: this.view,
-                    year_start: this.yearStart,
-                    year_end: this.yearEnd,
+                    date_from: this.yearStart > this.minYear ? `${this.yearStart}-01-01` : "",
+                    date_to: this.yearEnd < this.maxYear ? `${this.yearEnd}-12-31` : "",
                 });
                 this.closeMobileFilters();
                 this.$nextTick(() => this.$refs.mobileApplyTrigger?.click());
@@ -569,13 +563,11 @@
             syncMobileFromDetail(detail) {
                 this.view = detail?.view || 'grid';
                 this.mobileSelected = {
-                    type: detail?.type || [],
+                    label: detail?.label || [],
                     location: detail?.location || [],
-                    department: detail?.department || [],
-                    source: detail?.source || [],
                 };
-                this.yearStart = this.normalizeYear(detail?.year_start, this.minYear);
-                this.yearEnd = this.normalizeYear(detail?.year_end, this.maxYear);
+                this.yearStart = this.normalizeYear((detail?.date_from || '').slice(0, 4), this.minYear);
+                this.yearEnd = this.normalizeYear((detail?.date_to || '').slice(0, 4), this.maxYear);
                 if (this.yearStart > this.yearEnd) {
                     [this.yearStart, this.yearEnd] = [this.yearEnd, this.yearStart];
                 }
@@ -605,13 +597,11 @@
         const p = new URLSearchParams(window.location.search);
         document.dispatchEvent(new CustomEvent('facets-sync', {
             detail: {
-                type:       p.getAll('type'),
+                label:      p.getAll('label'),
                 location:   p.getAll('location'),
-                department: p.getAll('department'),
-                source:     p.getAll('source'),
                 view:       p.get('view') || 'grid',
-                year_start: Number.parseInt(p.get('year_start') || SEARCH_MIN_YEAR, 10),
-                year_end:   Number.parseInt(p.get('year_end') || SEARCH_MAX_YEAR, 10),
+                date_from:  p.get('date_from') || '',
+                date_to:    p.get('date_to') || '',
             }
         }));
     });
