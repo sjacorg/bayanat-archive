@@ -32,6 +32,36 @@
 </span>
 {% endmacro %}
 
+{% macro thumbnail_media(doc, img_class, fallback_icon_class) %}
+{% set media = thumbnails.get(doc.id) %}
+{% set labels = doc_labels.get(doc.id, []) %}
+{% set badge_value = (media.media_type if media and media.media_type else (labels[0].title if labels else "document")) | lower %}
+{% set filename = (media.filename if media and media.filename else "") | lower %}
+{% set is_pdf = "pdf" in badge_value or ".pdf" in filename %}
+{% if media and not is_pdf %}
+<img
+    src="/static/media/{{ media.filename }}"
+    alt="{{ doc.title }}"
+    class="{{ img_class }}"
+    loading="lazy"
+>
+{% elif is_pdf %}
+<div class="flex h-full w-full items-center justify-center bg-red-50">
+    <svg class="{{ fallback_icon_class }} text-red-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+        <title>file-pdf-box</title>
+        <path fill="currentColor" d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M9.5 11.5C9.5 12.3 8.8 13 8 13H7V15H5.5V9H8C8.8 9 9.5 9.7 9.5 10.5V11.5M14.5 13.5C14.5 14.3 13.8 15 13 15H10.5V9H13C13.8 9 14.5 9.7 14.5 10.5V13.5M18.5 10.5H17V11.5H18.5V13H17V15H15.5V9H18.5V10.5M12 10.5H13V13.5H12V10.5M7 10.5H8V11.5H7V10.5Z" />
+    </svg>
+</div>
+{% else %}
+<div class="flex h-full w-full items-center justify-center bg-base-300/80">
+    <svg class="{{ fallback_icon_class }} text-base-content/50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+        <title>file-download</title>
+        <path fill="currentColor" d="M14,2H6C4.89,2 4,2.89 4,4V20C4,21.11 4.89,22 6,22H18C19.11,22 20,21.11 20,20V8L14,2M12,19L8,15H10.5V12H13.5V15H16L12,19M13,9V3.5L18.5,9H13Z" />
+    </svg>
+</div>
+{% endif %}
+{% endmacro %}
+
 <p id="result-count" hx-swap-oob="innerHTML" class="pt-2 text-4xl font-semibold text-base-content lg:pt-1">
     {% if total == 0 %}0 results
     {% elif total == 1 %}1 result
@@ -205,26 +235,16 @@
     {% for doc in results %}
     <article class="group cursor-pointer border border-gray-300">
         <div class="relative h-[224px] w-full overflow-hidden bg-base-200/70">
-            {% if thumbnails.get(doc.id) %}
-            <img
-                src="/static/media/{{ thumbnails[doc.id].filename }}"
-                alt="{{ doc.title }}"
-                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                loading="lazy"
-            >
-            {% else %}
-            <div class="flex h-full w-full items-center justify-center bg-base-200">
-                <svg class="h-10 w-10 text-base-content/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            {% endif %}
+            {{ thumbnail_media(doc, "h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]", "h-12 w-12") }}
             <div class="absolute bottom-3 left-3">
                 {{ card_badge(doc.id) }}
             </div>
         </div>
         <div class="space-y-3 px-[30px] py-[20px]">
-            <h2 class="line-clamp-3 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary">
+            <h2
+                dir="auto"
+                class="line-clamp-3 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary"
+            >
                 {% if doc.snippet_title %}
                     {{ doc.snippet_title | safe }}
                 {% else %}
@@ -234,7 +254,10 @@
             <p class="line-clamp-1 text-xs text-base-content/45">
                 {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
             </p>
-            <p class="line-clamp-6 text-xs leading-relaxed text-base-content/55">
+            <p
+                dir="auto"
+                class="line-clamp-6 text-xs leading-relaxed text-base-content/55"
+            >
                 {% if doc.snippet_desc %}
                     {{ doc.snippet_desc | strip_html }}
                 {% elif doc.description %}
@@ -252,27 +275,17 @@
     {% for doc in results %}
     <article class="group flex cursor-pointer gap-4 border border-gray-300">
         <div class="relative h-[110px] w-[138px] shrink-0 overflow-hidden bg-base-200/70 md:h-[225px] md:w-[378px]">
-            {% if thumbnails.get(doc.id) %}
-            <img
-                src="/static/media/{{ thumbnails[doc.id].filename }}"
-                alt="{{ doc.title }}"
-                class="h-full w-full object-cover"
-                loading="lazy"
-            >
-            {% else %}
-            <div class="flex h-full w-full items-center justify-center bg-base-200">
-                <svg class="h-8 w-8 text-base-content/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path d="M19 14l-7 7m0 0l-7-7m7 7V3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            {% endif %}
+            {{ thumbnail_media(doc, "h-full w-full object-cover", "h-10 w-10") }}
             <div class="absolute bottom-2 left-2">
                 {{ card_badge(doc.id) }}
             </div>
         </div>
         <div class="flex w-full flex-row justify-between p-2 md:px-[30px] md:py-[50px]">
             <div class="min-w-0 flex-1">
-                <h2 class="line-clamp-1 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary md:line-clamp-2">
+                <h2
+                    dir="auto"
+                    class="line-clamp-1 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary md:line-clamp-2"
+                >
                     {% if doc.snippet_title %}
                         {{ doc.snippet_title | safe }}
                     {% else %}
@@ -282,7 +295,10 @@
                 <p class="mt-0.5 line-clamp-1 text-xs text-base-content/45">
                     {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
                 </p>
-                <p class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-base-content/60 md:line-clamp-3">
+                <p
+                    dir="auto"
+                    class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-base-content/60 md:line-clamp-3"
+                >
                     {% if doc.snippet_desc %}
                         {{ doc.snippet_desc | strip_html }}
                     {% elif doc.description %}
