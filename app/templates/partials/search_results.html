@@ -6,13 +6,28 @@
 {% macro card_badge(doc_id) %}
 {% set media = thumbnails.get(doc_id) %}
 {% set labels = doc_labels.get(doc_id, []) %}
+{% set badge_value = (media.media_type if media and media.media_type else (labels[0].title if labels else "document")) | lower %}
 <span class="inline-flex items-center gap-2 bg-primary px-3 py-1 text-xs font-medium text-primary-content">
-    {% if media and media.media_type %}
-        {{ media.media_type | title }}
-    {% elif labels %}
-        {{ labels[0].title }}
+    {% if "image" in badge_value or "photo" in badge_value or "jpeg" in badge_value or "jpg" in badge_value or "png" in badge_value or "gif" in badge_value or "webp" in badge_value %}
+    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M16.625 15.0417V3.95833C16.625 3.0875 15.9125 2.375 15.0417 2.375H3.95833C3.0875 2.375 2.375 3.0875 2.375 3.95833V15.0417C2.375 15.9125 3.0875 16.625 3.95833 16.625H15.0417C15.9125 16.625 16.625 15.9125 16.625 15.0417ZM6.72917 10.6875L8.70833 13.0704L11.4792 9.5L15.0417 14.25H3.95833L6.72917 10.6875Z" fill="white"/>
+    </svg>
+    Image
+    {% elif "video" in badge_value or "mp4" in badge_value or "mov" in badge_value or "avi" in badge_value or "webm" in badge_value %}
+    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M9.49992 1.5835C5.12992 1.5835 1.58325 5.13016 1.58325 9.50016C1.58325 13.8702 5.12992 17.4168 9.49992 17.4168C13.8699 17.4168 17.4166 13.8702 17.4166 9.50016C17.4166 5.13016 13.8699 1.5835 9.49992 1.5835ZM7.91658 13.0627V5.93766L12.6666 9.50016L7.91658 13.0627Z" fill="white"/>
+    </svg>
+    Video
+    {% elif "audio" in badge_value or "mp3" in badge_value or "wav" in badge_value or "ogg" in badge_value or "aac" in badge_value %}
+    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M9.5 0.791504C5.56542 0.791504 2.375 3.98192 2.375 7.9165V13.4582C2.375 14.7723 3.43583 15.8332 4.75 15.8332H7.125V9.49984H3.95833V7.9165C3.95833 4.85275 6.43625 2.37484 9.5 2.37484C12.5638 2.37484 15.0417 4.85275 15.0417 7.9165V9.49984H11.875V15.8332H14.25C15.5642 15.8332 16.625 14.7723 16.625 13.4582V7.9165C16.625 3.98192 13.4346 0.791504 9.5 0.791504Z" fill="white"/>
+    </svg>
+    Audio
     {% else %}
-        Document
+    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="white"/>
+    </svg>
+    Document
     {% endif %}
 </span>
 {% endmacro %}
