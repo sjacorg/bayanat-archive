@@ -72,7 +72,11 @@
     <!-- Facets: live outside #results so they never re-render or flash -->
     {% macro facet(key, label, items, counts) %}
     <div
+        {% if key == "label" %}
+        x-data="{ sel: ((new URLSearchParams(window.location.search).get('{{ key }}') || '').split(',').map(v => v.trim()).filter(Boolean)) }"
+        {% else %}
         x-data="{ sel: new URLSearchParams(window.location.search).getAll('{{ key }}') }"
+        {% endif %}
         @facets-sync.document="sel = $event.detail['{{ key }}']"
     >
         <button
@@ -349,6 +353,9 @@
     const SEARCH_MIN_YEAR = {{ timeline_min_year }};
     const SEARCH_MAX_YEAR = {{ timeline_max_year }};
     const SEARCH_TIMELINE_COUNT = {{ timeline_bins | length }};
+    function readLabelParams(params) {
+        return ((params.get('label') || '').split(',').map(v => v.trim()).filter(Boolean));
+    }
 
     function searchPageState() {
         return {
@@ -490,7 +497,7 @@
                 // URL remains the source of truth; mobile drawer clones it into local draft state.
                 const p = new URLSearchParams(window.location.search);
                 return {
-                    label: p.getAll('label'),
+                    label: readLabelParams(p),
                     location: p.getAll('location'),
                 };
             },
@@ -597,7 +604,7 @@
         const p = new URLSearchParams(window.location.search);
         document.dispatchEvent(new CustomEvent('facets-sync', {
             detail: {
-                label:      p.getAll('label'),
+                label:      readLabelParams(p),
                 location:   p.getAll('location'),
                 view:       p.get('view') || 'grid',
                 date_from:  p.get('date_from') || '',
