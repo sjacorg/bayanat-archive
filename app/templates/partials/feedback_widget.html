@@ -8,20 +8,76 @@
     aria-expanded="{{ aria_expanded }}"
     aria-controls="feedback-panel"
     @click="{{ click_action }}"
-    class="pointer-events-auto inline-flex items-center gap-3 border border-primary bg-base-200 px-4 py-3 text-xl font-semibold text-primary {{ extra_classes }}"
+    class="pointer-events-auto inline-flex items-center gap-3 border border-primary bg-base-200 px-4 py-3 text-xl font-semibold text-primary transition-colors duration-150 hover:bg-primary hover:text-white {{ extra_classes }}"
 >
     <svg class="size-4.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="{{ icon_path }}" fill="#1A4540"/>
+        <path d="{{ icon_path }}" fill="currentColor"/>
     </svg>
     <span class="text-sm font-semibold">{{ label }}</span>
 </button>
 {%- endmacro %}
 
+{% macro feedback_form_content() -%}
+{% include "partials/feedback_form.html" %}
+{%- endmacro %}
+
 <div
-    x-data="{ open: false }"
-    @keydown.escape.window="open = false"
+    x-data="{
+        open: false,
+        autoCloseTimer: null,
+        resetAfterCloseTimer: null,
+        clearAutoClose() {
+            if (!this.autoCloseTimer) return;
+
+            window.clearTimeout(this.autoCloseTimer);
+            this.autoCloseTimer = null;
+        },
+        clearResetAfterClose() {
+            if (!this.resetAfterCloseTimer) return;
+
+            window.clearTimeout(this.resetAfterCloseTimer);
+            this.resetAfterCloseTimer = null;
+        },
+        openPanel() {
+            this.clearAutoClose();
+            this.clearResetAfterClose();
+            this.open = true;
+        },
+        closePanel() {
+            this.clearAutoClose();
+            this.open = false;
+
+            this.clearResetAfterClose();
+            this.resetAfterCloseTimer = window.setTimeout(() => {
+                if (!this.open) this.resetPanel();
+                this.resetAfterCloseTimer = null;
+            }, 180);
+        },
+        scheduleAutoClose() {
+            this.clearAutoClose();
+
+            this.autoCloseTimer = window.setTimeout(() => {
+                this.closePanel();
+            }, 10000);
+        },
+        resetPanel() {
+            const panelContent = document.getElementById('feedback-panel-content');
+            const initialMarkup = this.$refs.feedbackFormTemplate?.innerHTML?.trim();
+
+            if (!panelContent || !initialMarkup) return;
+
+            panelContent.innerHTML = initialMarkup;
+            panelContent.scrollTop = 0;
+        }
+    }"
+    @keydown.escape.window="if (open) closePanel()"
+    @feedback-success="scheduleAutoClose()"
     class="pointer-events-none sticky inset-x-0 bottom-0 z-[55]"
 >
+    <template x-ref="feedbackFormTemplate">
+        {{ feedback_form_content() }}
+    </template>
+
     <div
         x-show="!open"
         x-cloak
@@ -29,7 +85,7 @@
         <div class="mx-auto flex w-full max-w-[1200px] justify-end px-4 sm:px-6 lg:px-10">
             {{ feedback_toggle_button(
                 aria_expanded='false',
-                click_action='open = true',
+                click_action='openPanel()',
                 icon_path='M9.5 6.33325L4.75 11.0833L5.86625 12.1995L9.5 8.57367L13.1338 12.1995L14.25 11.0833L9.5 6.33325Z',
                 label='Feedback Form'
             ) }}
@@ -41,9 +97,9 @@
             <div class="relative pointer-events-auto flex flex-col items-end">
                 {{ feedback_toggle_button(
                     aria_expanded='true',
-                    click_action='open = false',
+                    click_action='closePanel()',
                     icon_path='M9.5 12.6667L14.25 7.91667L13.1338 6.80042L9.5 10.4263L5.86625 6.80042L4.75 7.91667L9.5 12.6667Z',
-                    label='Close',
+                    label='Feedback Form',
                     extra_classes='absolute -top-[50px] right-0',
                     show_when_open=true
                 ) }}
@@ -61,7 +117,7 @@
                     class="w-[min(96vw,37rem)] border border-primary/40 bg-[#EFF0F1] shadow-[0_-8px_24px_rgba(15,23,42,0.14)]"
                 >
                     <div id="feedback-panel-content" class="min-h-[35rem] max-h-[calc(100vh-9rem)] overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
-                        {% include "partials/feedback_form.html" %}
+                        {{ feedback_form_content() }}
                     </div>
                 </section>
             </div>
