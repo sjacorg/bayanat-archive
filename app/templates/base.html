@@ -58,8 +58,7 @@
         <div class="drawer-content flex min-h-screen flex-col">
             {% set nav_links = [
                 {"href": url_for("search.index"), "label": "Search", "active_paths": ["/"]},
-                {"href": url_for("pages.about"), "label": "About", "active_paths": ["/about"]},
-                {"href": url_for("pages.feedback"), "label": "Feedback", "active_paths": ["/feedback"]}
+                {"href": url_for("pages.about"), "label": "About", "active_paths": ["/about"]}
             ] %}
 
             <header
@@ -111,6 +110,8 @@
                     {% block content %}{% endblock %}
                 </div>
             </main>
+
+            {% include "partials/feedback_widget.html" %}
 
             <footer
                 class="mt-auto border-t border-base-300/70 bg-base-300/40 text-base-content"

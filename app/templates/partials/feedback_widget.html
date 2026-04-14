@@ -1,0 +1,42 @@
+<div
+    x-data="{ open: false }"
+    @keydown.escape.window="open = false"
+    :class="open ? 'fixed' : 'sticky'"
+    class="pointer-events-none inset-x-0 bottom-0 z-[55]'"
+>
+    <div class="mx-auto flex w-full max-w-[1200px] justify-end px-4 sm:px-6 lg:px-10">
+        <div class="relative pointer-events-auto">
+            <button
+                type="button"
+                :aria-expanded="open ? 'true' : 'false'"
+                aria-controls="feedback-panel"
+                @click="open = !open"
+                :class="open ? 'absolute -top-[50px] right-0' : ''"
+                class="pointer-events-auto inline-flex items-center gap-3 border border-primary bg-base-200 px-4 py-3 text-xl font-semibold text-primary"
+            >
+                <svg class="size-4.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path x-show="!open" x-cloak d="M9.5 6.33325L4.75 11.0833L5.86625 12.1995L9.5 8.57367L13.1338 12.1995L14.25 11.0833L9.5 6.33325Z" fill="#1A4540"/>
+                    <path x-show="open" x-cloak d="M9.5 12.6667L14.25 7.91667L13.1338 6.80042L9.5 10.4263L5.86625 6.80042L4.75 7.91667L9.5 12.6667Z" fill="#1A4540"/>
+                </svg>
+                <span class="text-sm font-semibold">Feedback Form</span>
+            </button>
+
+            <section
+                id="feedback-panel"
+                x-show="open"
+                x-cloak
+                x-transition:enter="transition ease-out duration-180"
+                x-transition:enter-start="opacity-0 translate-y-2"
+                x-transition:enter-end="opacity-100 translate-y-0"
+                x-transition:leave="transition ease-in duration-120"
+                x-transition:leave-start="opacity-100 translate-y-0"
+                x-transition:leave-end="opacity-0 translate-y-2"
+                class="w-[min(96vw,37rem)] border border-primary/40 bg-[#EFF0F1] shadow-[0_-8px_24px_rgba(15,23,42,0.14)]"
+            >
+                <div id="feedback-panel-content" class="min-h-[35rem] max-h-[calc(100vh-9rem)] overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
+                    {% include "partials/feedback_form.html" %}
+                </div>
+            </section>
+        </div>
+    </div>
+</div>

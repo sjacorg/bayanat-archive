@@ -1,4 +1,6 @@
-from flask import Blueprint, make_response, render_template, request
+import re
+
+from flask import Blueprint, make_response, redirect, render_template, request, url_for
 
 bp = Blueprint("pages", __name__)
 
@@ -15,16 +17,29 @@ def about():
 
 @bp.route("/feedback", methods=["GET", "POST"])
 def feedback():
-    if request.method == "POST":
+    if request.method == "GET":
+        return redirect(url_for("search.index"), code=302)
+
+    try:
+        rating_raw = (request.form.get("rating") or "").strip()
+        comment = (request.form.get("comment") or "").strip()
+        email = (request.form.get("email") or "").strip()
+
         try:
-            # TODO: persist/email submission
-            _ = request.form.get("rating")
-            _ = request.form.get("comment", "").strip()
-            _ = request.form.get("email", "").strip() or None
-            return render_template("partials/feedback_success.html"), 200
-        except Exception:
+            rating = int(rating_raw)
+        except (TypeError, ValueError):
+            rating = 0
+
+        if rating < 1 or rating > 5 or not comment:
             return render_template("partials/feedback_error.html"), 200
-    return render_template("feedback.html")
+
+        if email and not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
+            return render_template("partials/feedback_error.html"), 200
+
+        # TODO: persist/email submission
+        return render_template("partials/feedback_success.html"), 200
+    except Exception:
+        return render_template("partials/feedback_error.html"), 200
 
 
 @bp.route("/health")
