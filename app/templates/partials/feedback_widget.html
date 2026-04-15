@@ -28,13 +28,11 @@
         resetAfterCloseTimer: null,
         clearAutoClose() {
             if (!this.autoCloseTimer) return;
-
             window.clearTimeout(this.autoCloseTimer);
             this.autoCloseTimer = null;
         },
         clearResetAfterClose() {
             if (!this.resetAfterCloseTimer) return;
-
             window.clearTimeout(this.resetAfterCloseTimer);
             this.resetAfterCloseTimer = null;
         },
@@ -55,13 +53,12 @@
         },
         scheduleAutoClose() {
             this.clearAutoClose();
-
             this.autoCloseTimer = window.setTimeout(() => {
                 this.closePanel();
             }, 10000);
         },
         resetPanel() {
-            const panelContent = document.getElementById('feedback-panel-content');
+            const panelContent = this.$refs.panelContent;
             const initialMarkup = this.$refs.feedbackFormTemplate?.innerHTML?.trim();
 
             if (!panelContent || !initialMarkup) return;
@@ -104,22 +101,26 @@
                     show_when_open=true
                 ) }}
 
-                <section
-                    id="feedback-panel"
-                    x-show="open"
-                    x-cloak
-                    x-transition:enter="transition ease-out duration-180"
-                    x-transition:enter-start="opacity-0 translate-y-2"
-                    x-transition:enter-end="opacity-100 translate-y-0"
-                    x-transition:leave="transition ease-in duration-120"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 translate-y-2"
-                    class="w-full sm:w-[min(96vw,37rem)] border border-primary/40 bg-[#EFF0F1] shadow-[0_-8px_24px_rgba(15,23,42,0.14)]"
-                >
-                    <div id="feedback-panel-content" class="min-h-[92dvh] max-h-[92dvh] overflow-y-auto px-4 py-5 sm:min-h-[35rem] sm:max-h-[calc(100vh-9rem)] sm:px-6 sm:py-6">
-                        {{ feedback_form_content() }}
-                    </div>
-                </section>
+                <template x-if="open">
+                    <section
+                        id="feedback-panel"
+                        x-transition:enter="transition ease-out duration-180"
+                        x-transition:enter-start="opacity-0 translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-120"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 translate-y-2"
+                        class="w-full sm:w-[min(96vw,37rem)] border border-primary/40 bg-[#EFF0F1] shadow-[0_-8px_24px_rgba(15,23,42,0.14)]"
+                    >
+                        <div
+                            x-ref="panelContent"
+                            id="feedback-panel-content"
+                            class="min-h-[92dvh] max-h-[92dvh] overflow-y-auto px-4 py-5 sm:min-h-[35rem] sm:max-h-[calc(100vh-9rem)] sm:px-6 sm:py-6"
+                        >
+                            {{ feedback_form_content() }}
+                        </div>
+                    </section>
+                </template>
             </div>
         </div>
     </div>

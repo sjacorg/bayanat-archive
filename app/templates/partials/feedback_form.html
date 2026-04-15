@@ -4,18 +4,28 @@
         rating: 0,
         comment: '',
         email: '',
+        submitting: false,
         get emailIsValid() {
             return this.email.trim() === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim());
         },
         get canSubmit() {
             return this.rating > 0 && this.comment.trim().length > 0 && this.emailIsValid;
+        },
+        async submitForm() {
+            if (!this.canSubmit) return;
+            this.submitting = true;
+            try {
+                await htmx.ajax('POST', '{{ url_for('pages.feedback') }}', {
+                    source: this.$refs.feedbackForm,
+                    target: '#feedback-panel-content',
+                    swap: 'innerHTML'
+                });
+            } finally {
+                this.submitting = false;
+            }
         }
     }"
-    @submit.prevent="if (canSubmit) htmx.trigger($refs.feedbackForm, 'validated-submit')"
-    hx-post="{{ url_for('pages.feedback') }}"
-    hx-trigger="validated-submit"
-    hx-target="#feedback-panel-content"
-    hx-swap="innerHTML"
+    @submit.prevent="submitForm()"
     novalidate
     class="space-y-5 text-base-content"
 >
@@ -29,7 +39,7 @@
             Select a score that reflects your overall experience with the archive.
         </p>
 
-        <input type="hidden" name="rating" :value="rating">
+        <input type="hidden" name="rating" x-effect="$el.value = rating">
 
         <div class="mt-3 flex items-center gap-2.5">
             <button type="button" @click="rating = 1" :class="rating === 1 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Very dissatisfied">
@@ -94,7 +104,7 @@
             Email <span class="italic font-normal text-base-content/80">(Optional)</span>
         </h3>
         <p class="text-[0.95rem] leading-relaxed text-base-content/85">
-            Provide your email if you’d like us to follow up on your feedback.
+            Provide your email if you'd like us to follow up on your feedback.
         </p>
         <input
             type="email"
@@ -108,14 +118,14 @@
     <div class="pt-1">
         <button
             type="submit"
-            :disabled="!canSubmit"
-            :class="canSubmit
+            :disabled="!canSubmit || submitting"
+            :class="canSubmit && !submitting
                 ? 'bg-primary text-primary-content shadow-[0_3px_8px_rgba(0,0,0,0.16)]'
                 : 'cursor-not-allowed bg-[#DCDDDF] text-base-content/35'"
             class="inline-flex items-center gap-2 px-5 py-2.5 text-base font-semibold transition-colors"
         >
-            <span class="loading loading-spinner loading-sm htmx-indicator"></span>
-            Submit Form
+            <span x-show="submitting" class="loading loading-spinner loading-sm"></span>
+            <span x-text="submitting ? 'Submitting...' : 'Submit Form'"></span>
         </button>
     </div>
 </form>
