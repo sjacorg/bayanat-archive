@@ -128,10 +128,13 @@
             x-model="email"
             @input="clearEmailError()"
             @blur="validateEmail()"
+            :aria-invalid="emailError ? 'true' : 'false'"
+            :aria-describedby="emailError ? 'feedback-email-error' : undefined"
             placeholder="Enter your email address"
             :class="emailError ? 'border-error focus:border-error' : 'focus:border-primary'"
             class="input input-bordered h-10 min-h-10 w-full rounded-none bg-base-100 text-[0.95rem] placeholder:text-base-content/45 focus:outline-none"
         >
+        <p id="feedback-email-error" x-show="emailError" x-text="emailError" aria-live="polite" class="sr-only"></p>
     </section>
 
     <div class="pt-1">
