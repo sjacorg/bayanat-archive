@@ -4,15 +4,30 @@
         rating: 0,
         comment: '',
         email: '',
+        emailError: '',
         submitting: false,
+        isEmailFormatValid(value) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+        },
         get emailIsValid() {
-            return this.email.trim() === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email.trim());
+            return this.email.trim() === '' || this.isEmailFormatValid(this.email);
         },
         get canSubmit() {
-            return this.rating > 0 && this.comment.trim().length > 0 && this.emailIsValid;
+            return this.rating > 0 && this.comment.trim().length > 0;
+        },
+        clearEmailError() {
+            this.emailError = '';
+        },
+        validateEmail() {
+            if (this.email.trim() !== '' && !this.emailIsValid) {
+                this.emailError = 'Please enter a valid email address';
+                return false;
+            }
+            this.emailError = '';
+            return true;
         },
         async submitForm() {
-            if (!this.canSubmit) return;
+            if (!this.validateEmail() || !this.canSubmit) return;
             this.submitting = true;
             try {
                 await htmx.ajax('POST', '{{ url_for('pages.feedback') }}', {
@@ -102,6 +117,7 @@
     <section class="space-y-2">
         <h3 class="text-[1.15rem] font-semibold">
             Email <span class="italic font-normal text-base-content/80">(Optional)</span>
+            <span x-show="emailError" x-text="emailError" class="ml-2 font-normal italic text-[#FF0000]"></span>
         </h3>
         <p class="text-[0.95rem] leading-relaxed text-base-content/85">
             Provide your email if you'd like us to follow up on your feedback.
@@ -110,8 +126,11 @@
             type="email"
             name="email"
             x-model="email"
+            @input="clearEmailError()"
+            @blur="validateEmail()"
             placeholder="Enter your email address"
-            class="input input-bordered h-10 min-h-10 w-full rounded-none bg-base-100 text-[0.95rem] placeholder:text-base-content/45 focus:border-primary focus:outline-none"
+            :class="emailError ? 'border-[#FF0000] focus:border-[#FF0000]' : 'focus:border-primary'"
+            class="input input-bordered h-10 min-h-10 w-full rounded-none bg-base-100 text-[0.95rem] placeholder:text-base-content/45 focus:outline-none"
         >
     </section>
 
