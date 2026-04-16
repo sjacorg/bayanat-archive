@@ -58,7 +58,7 @@
 
         <div class="mt-3 flex items-center gap-2.5">
             <button type="button" @click="rating = 1" :class="rating === 1 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Very dissatisfied">
-                <svg viewBox="0 0 40 40" class="h-10 w-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
                     <circle cx="20" cy="20" r="15"></circle>
                     <circle cx="14.5" cy="16" r="1.2"></circle>
                     <circle cx="25.5" cy="16" r="1.2"></circle>
@@ -66,7 +66,7 @@
                 </svg>
             </button>
             <button type="button" @click="rating = 2" :class="rating === 2 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Dissatisfied">
-                <svg viewBox="0 0 40 40" class="h-10 w-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
                     <circle cx="20" cy="20" r="15"></circle>
                     <circle cx="14.5" cy="16" r="1.2"></circle>
                     <circle cx="25.5" cy="16" r="1.2"></circle>
@@ -74,7 +74,7 @@
                 </svg>
             </button>
             <button type="button" @click="rating = 3" :class="rating === 3 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Neutral">
-                <svg viewBox="0 0 40 40" class="h-10 w-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
                     <circle cx="20" cy="20" r="15"></circle>
                     <circle cx="14.5" cy="16" r="1.2"></circle>
                     <circle cx="25.5" cy="16" r="1.2"></circle>
@@ -82,7 +82,7 @@
                 </svg>
             </button>
             <button type="button" @click="rating = 4" :class="rating === 4 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Satisfied">
-                <svg viewBox="0 0 40 40" class="h-10 w-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
                     <circle cx="20" cy="20" r="15"></circle>
                     <circle cx="14.5" cy="16" r="1.2"></circle>
                     <circle cx="25.5" cy="16" r="1.2"></circle>
@@ -90,7 +90,7 @@
                 </svg>
             </button>
             <button type="button" @click="rating = 5" :class="rating === 5 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Very satisfied">
-                <svg viewBox="0 0 40 40" class="h-10 w-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
                     <circle cx="20" cy="20" r="15"></circle>
                     <circle cx="14.5" cy="16" r="1.2"></circle>
                     <circle cx="25.5" cy="16" r="1.2"></circle>
@@ -117,7 +117,7 @@
     <section class="space-y-2">
         <h3 class="text-[1.15rem] font-semibold">
             Email <span class="italic font-normal text-base-content/80">(Optional)</span>
-            <span x-show="emailError" x-text="emailError" class="ml-2 font-normal italic text-[#FF0000]"></span>
+            <span x-show="emailError" x-text="emailError" class="ml-2 font-normal italic text-error"></span>
         </h3>
         <p class="text-[0.95rem] leading-relaxed text-base-content/85">
             Provide your email if you'd like us to follow up on your feedback.
@@ -129,7 +129,7 @@
             @input="clearEmailError()"
             @blur="validateEmail()"
             placeholder="Enter your email address"
-            :class="emailError ? 'border-[#FF0000] focus:border-[#FF0000]' : 'focus:border-primary'"
+            :class="emailError ? 'border-error focus:border-error' : 'focus:border-primary'"
             class="input input-bordered h-10 min-h-10 w-full rounded-none bg-base-100 text-[0.95rem] placeholder:text-base-content/45 focus:outline-none"
         >
     </section>
@@ -140,7 +140,7 @@
             :disabled="!canSubmit || submitting"
             :class="canSubmit && !submitting
                 ? 'bg-primary text-primary-content shadow-[0_3px_8px_rgba(0,0,0,0.16)]'
-                : 'cursor-not-allowed bg-[#DCDDDF] text-base-content/35'"
+                : 'cursor-not-allowed bg-gray-300 text-base-content/35'"
             class="inline-flex items-center gap-2 px-5 py-2.5 text-base font-semibold transition-colors"
         >
             <span x-show="submitting" class="loading loading-spinner loading-sm"></span>
