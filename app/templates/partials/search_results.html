@@ -314,7 +314,6 @@
 </div>
 {% endif %}
 
-{% if total_pages > 1 %}
 <nav class="mb-[40px] mt-[80px] flex justify-center" aria-label="Pagination">
     <div class="join border border-gray-200">
         <button
@@ -332,13 +331,15 @@
 
         {% for p in range(1, total_pages + 1) %}
         <button
-            class="join-item btn btn-sm {% if p == page %}btn-primary{% else %}btn-ghost{% endif %}"
+            class="join-item btn btn-sm {% if p == page %}btn-primary{% else %}btn-ghost{% endif %} {% if total_pages <= 1 %}btn-disabled{% endif %}"
+            {% if total_pages > 1 %}
             hx-get="/search"
             hx-include=".search-param"
             hx-vals='{"page": "{{ p }}"}'
             hx-target="#results"
             hx-push-url="true"
             hx-indicator="#loading"
+            {% endif %}
             aria-label="Page {{ p }}"
             aria-current="{{ 'page' if p == page else 'false' }}"
         >{{ p }}</button>
@@ -358,4 +359,3 @@
         >›</button>
     </div>
 </nav>
-{% endif %}
