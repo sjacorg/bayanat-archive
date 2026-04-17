@@ -9,6 +9,8 @@ from app import get_db
 bp = Blueprint("search", __name__)
 
 PER_PAGE = 20
+ALLOWED_SORTS = {"relevance", "date_desc", "date_asc"}
+ALLOWED_VIEWS = {"grid", "list"}
 
 
 def _clean_list(values):
@@ -30,13 +32,12 @@ def _default_sort_for_query(q):
 
 
 def _parse_sort(raw_sort, q):
-    allowed = {"relevance", "date_desc", "date_asc"}
     default = _default_sort_for_query(q)
-    return raw_sort if raw_sort in allowed else default
+    return raw_sort if raw_sort in ALLOWED_SORTS else default
 
 
 def _parse_view(raw_view):
-    return raw_view if raw_view in {"grid", "list"} else "grid"
+    return raw_view if raw_view in ALLOWED_VIEWS else "grid"
 
 
 def _base_query(q=None, labels=None, locations=None, date_from=None, date_to=None):
@@ -236,6 +237,48 @@ def _build_search_url(
     return "/search" + (f"?{qs}" if qs else "")
 
 
+def _parse_date_bounds(args):
+    """Parse canonical date bounds from query params.
+
+    Supports legacy params (`year_start`, `year_end`) for backward compatibility.
+    """
+    date_from = args.get("date_from", "").strip() or None
+    date_to = args.get("date_to", "").strip() or None
+
+    if not date_from:
+        year_start = args.get("year_start", "").strip()
+        if year_start.isdigit():
+            date_from = f"{year_start[:4]}-01-01"
+    if not date_to:
+        year_end = args.get("year_end", "").strip()
+        if year_end.isdigit():
+            date_to = f"{year_end[:4]}-12-31"
+
+    return date_from, date_to
+
+
+def _parse_search_request(args):
+    """Normalize request args into a canonical search payload."""
+    q = args.get("q", "").strip()
+    labels = _clean_list(args.getlist("label"))
+    locations = _clean_list(args.getlist("location"))
+    date_from, date_to = _parse_date_bounds(args)
+    sort = _parse_sort(args.get("sort", ""), q=q)
+    view = _parse_view(args.get("view", "grid"))
+    page = max(1, args.get("page", 1, type=int))
+
+    return {
+        "q": q,
+        "labels": labels,
+        "locations": locations,
+        "date_from": date_from,
+        "date_to": date_to,
+        "sort": sort,
+        "view": view,
+        "page": page,
+    }
+
+
 def _active_filters(
     q,
     labels,
@@ -375,6 +418,66 @@ def _search_shell_context(db):
     }
 
 
+def _render_results_partial_response(
+    *,
+    q,
+    labels,
+    locations,
+    date_from,
+    date_to,
+    sort,
+    view,
+    page,
+    results,
+    total,
+    total_pages,
+    facets,
+    thumbnails,
+    doc_labels,
+    active_filters,
+    clear_url,
+    timeline_min_year,
+    timeline_max_year,
+):
+    """Render HTMX results fragment and attach canonical URL push header."""
+    response = make_response(
+        render_template(
+            "partials/search_results.html",
+            results=results,
+            thumbnails=thumbnails,
+            doc_labels=doc_labels,
+            facets=facets,
+            total=total,
+            page=page,
+            total_pages=total_pages,
+            per_page=PER_PAGE,
+            q=q,
+            selected_labels=labels,
+            selected_locations=locations,
+            date_from=date_from,
+            date_to=date_to,
+            sort=sort,
+            view=view,
+            active_filters=active_filters,
+            clear_url=clear_url,
+            timeline_min_year=timeline_min_year,
+            timeline_max_year=timeline_max_year,
+        )
+    )
+    # Keep browser URL canonical when HTMX pushes history (drop empty params).
+    response.headers["HX-Push-Url"] = _build_search_url(
+        q=q,
+        labels=labels,
+        locations=locations,
+        sort=sort,
+        view=view,
+        date_from=date_from,
+        date_to=date_to,
+        page=page,
+    )
+    return response
+
+
 @bp.route("/")
 def index():
     db = get_db()
@@ -391,27 +494,15 @@ def search():
         # while HTMX requests to this endpoint still return only partial results.
         return render_template("search.html", **_search_shell_context(db))
 
-    q = request.args.get("q", "").strip()
-    labels = _clean_list(request.args.getlist("label"))
-    locations = _clean_list(request.args.getlist("location"))
-    date_from = request.args.get("date_from", "").strip() or None
-    date_to = request.args.get("date_to", "").strip() or None
-
-    # Backward compatibility with old mock-query params.
-    if not date_from:
-        year_start = request.args.get("year_start", "").strip()
-        if year_start.isdigit():
-            date_from = f"{year_start[:4]}-01-01"
-    if not date_to:
-        year_end = request.args.get("year_end", "").strip()
-        if year_end.isdigit():
-            date_to = f"{year_end[:4]}-12-31"
-
-    sort = _parse_sort(request.args.get("sort", ""), q=q)
-    view = _parse_view(request.args.get("view", "grid"))
-
-    page = request.args.get("page", 1, type=int)
-    page = max(1, page)
+    params = _parse_search_request(request.args)
+    q = params["q"]
+    labels = params["labels"]
+    locations = params["locations"]
+    date_from = params["date_from"]
+    date_to = params["date_to"]
+    sort = params["sort"]
+    view = params["view"]
+    page = params["page"]
 
     results, total, total_pages = _get_results(
         db=db,
@@ -460,40 +551,23 @@ def search():
     thumbnails = _get_document_media(db, doc_ids)
     doc_labels = _get_document_labels(db, doc_ids)
 
-    response = make_response(
-        render_template(
-            "partials/search_results.html",
-            results=results,
-            thumbnails=thumbnails,
-            doc_labels=doc_labels,
-            facets=facets,
-            total=total,
-            page=page,
-            total_pages=total_pages,
-            per_page=PER_PAGE,
-            q=q,
-            selected_labels=labels,
-            selected_locations=locations,
-            date_from=date_from,
-            date_to=date_to,
-            sort=sort,
-            view=view,
-            active_filters=active_filters,
-            clear_url=clear_url,
-            timeline_min_year=timeline_min_year,
-            timeline_max_year=timeline_max_year,
-        )
-    )
-
-    # Keep browser URL canonical when HTMX pushes history (drop empty params).
-    response.headers["HX-Push-Url"] = _build_search_url(
+    return _render_results_partial_response(
         q=q,
         labels=labels,
         locations=locations,
-        sort=sort,
-        view=view,
         date_from=date_from,
         date_to=date_to,
+        sort=sort,
+        view=view,
         page=page,
+        results=results,
+        total=total,
+        total_pages=total_pages,
+        facets=facets,
+        thumbnails=thumbnails,
+        doc_labels=doc_labels,
+        active_filters=active_filters,
+        clear_url=clear_url,
+        timeline_min_year=timeline_min_year,
+        timeline_max_year=timeline_max_year,
     )
-    return response
