@@ -80,7 +80,7 @@
     {% macro facet(key, label, items, counts) %}
     <div
         {% if key == "label" %}
-        x-data="{ sel: ((new URLSearchParams(window.location.search).get('{{ key }}') || '').split(',').map(v => v.trim()).filter(Boolean)) }"
+        x-data="{ sel: window.readLabelParams(new URLSearchParams(window.location.search)) }"
         {% else %}
         x-data="{ sel: new URLSearchParams(window.location.search).getAll('{{ key }}') }"
         {% endif %}

@@ -233,58 +233,18 @@
 {% elif view != "list" %}
 <div class="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-4">
     {% for doc in results %}
-    <article class="group cursor-pointer border border-gray-300">
-        <div class="relative h-[224px] w-full overflow-hidden bg-base-200/70">
-            {{ thumbnail_media(doc, "h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]", "h-12 w-12") }}
-            <div class="absolute bottom-3 left-3">
-                {{ card_badge(doc.id) }}
+    <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block border border-gray-300">
+        <article>
+            <div class="relative h-[224px] w-full overflow-hidden bg-base-200/70">
+                {{ thumbnail_media(doc, "h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]", "h-12 w-12") }}
+                <div class="absolute bottom-3 left-3">
+                    {{ card_badge(doc.id) }}
+                </div>
             </div>
-        </div>
-        <div class="space-y-3 px-[30px] py-[20px]">
-            <h2
-                dir="auto"
-                class="line-clamp-3 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary"
-            >
-                {% if doc.snippet_title %}
-                    {{ doc.snippet_title | safe }}
-                {% else %}
-                    {{ doc.title }}
-                {% endif %}
-            </h2>
-            <p class="line-clamp-1 text-xs text-base-content/45">
-                {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
-            </p>
-            <p
-                dir="auto"
-                class="line-clamp-6 text-xs leading-relaxed text-base-content/55"
-            >
-                {% if doc.snippet_desc %}
-                    {{ doc.snippet_desc | strip_html }}
-                {% elif doc.description %}
-                    {{ doc.description | strip_html | truncate(220) }}
-                {% else %}
-                    No description available.
-                {% endif %}
-            </p>
-        </div>
-    </article>
-    {% endfor %}
-</div>
-{% else %}
-<div class="flex flex-col gap-4">
-    {% for doc in results %}
-    <article class="group flex cursor-pointer gap-4 border border-gray-300">
-        <div class="relative h-[110px] w-[138px] shrink-0 overflow-hidden bg-base-200/70 md:h-[225px] md:w-[378px]">
-            {{ thumbnail_media(doc, "h-full w-full object-cover", "h-10 w-10") }}
-            <div class="absolute bottom-2 left-2">
-                {{ card_badge(doc.id) }}
-            </div>
-        </div>
-        <div class="flex w-full flex-row justify-between p-2 md:px-[30px] md:py-[50px]">
-            <div class="min-w-0 flex-1">
+            <div class="space-y-3 px-[30px] py-[20px]">
                 <h2
                     dir="auto"
-                    class="line-clamp-1 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary md:line-clamp-2"
+                    class="line-clamp-3 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary"
                 >
                     {% if doc.snippet_title %}
                         {{ doc.snippet_title | safe }}
@@ -292,24 +252,68 @@
                         {{ doc.title }}
                     {% endif %}
                 </h2>
-                <p class="mt-0.5 line-clamp-1 text-xs text-base-content/45">
+                <p class="line-clamp-1 text-xs text-base-content/45">
                     {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
                 </p>
                 <p
                     dir="auto"
-                    class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-base-content/60 md:line-clamp-3"
+                    class="line-clamp-6 text-xs leading-relaxed text-base-content/55"
                 >
                     {% if doc.snippet_desc %}
                         {{ doc.snippet_desc | strip_html }}
                     {% elif doc.description %}
-                        {{ doc.description | strip_html | truncate(300) }}
+                        {{ doc.description | strip_html | truncate(220) }}
                     {% else %}
                         No description available.
                     {% endif %}
                 </p>
             </div>
-        </div>
-    </article>
+        </article>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col gap-4">
+    {% for doc in results %}
+    <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block border border-gray-300">
+        <article class="flex cursor-pointer gap-4">
+            <div class="relative h-[110px] w-[138px] shrink-0 overflow-hidden bg-base-200/70 md:h-[225px] md:w-[378px]">
+                {{ thumbnail_media(doc, "h-full w-full object-cover", "h-10 w-10") }}
+                <div class="absolute bottom-2 left-2">
+                    {{ card_badge(doc.id) }}
+                </div>
+            </div>
+            <div class="flex w-full flex-row justify-between p-2 md:px-[30px] md:py-[50px]">
+                <div class="min-w-0 flex-1">
+                    <h2
+                        dir="auto"
+                        class="line-clamp-1 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary md:line-clamp-2"
+                    >
+                        {% if doc.snippet_title %}
+                            {{ doc.snippet_title | safe }}
+                        {% else %}
+                            {{ doc.title }}
+                        {% endif %}
+                    </h2>
+                    <p class="mt-0.5 line-clamp-1 text-xs text-base-content/45">
+                        {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
+                    </p>
+                    <p
+                        dir="auto"
+                        class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-base-content/60 md:line-clamp-3"
+                    >
+                        {% if doc.snippet_desc %}
+                            {{ doc.snippet_desc | strip_html }}
+                        {% elif doc.description %}
+                            {{ doc.description | strip_html | truncate(300) }}
+                        {% else %}
+                            No description available.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </article>
+    </a>
     {% endfor %}
 </div>
 {% endif %}
