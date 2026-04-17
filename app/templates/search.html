@@ -10,11 +10,6 @@
         const p = new URLSearchParams(window.location.search);
         hydrateYearRangeFromUrl(p);
         if (p.get('q')) $refs.searchInput.value = p.get('q');
-        $nextTick(() => htmx.ajax('GET', '/search?' + p.toString(), {
-            target: '#results',
-            swap: 'innerHTML',
-            indicator: '#loading'
-        }));
     "
     @keydown.escape.window="open = null; closeMobileFilters(); timePanelOpen = false"
     {# Shared sync event: partial responses emit current facet/view state. #}
@@ -42,7 +37,7 @@
                     autocomplete="off"
                     class="search-param text-base"
                     hx-get="/search"
-                    hx-trigger="keyup changed delay:500ms"
+                    hx-trigger="input changed delay:500ms, search"
                     hx-target="#results"
                     hx-push-url="true"
                     hx-include=".search-param"
@@ -329,7 +324,15 @@
         hx-push-url="true"
         hx-indicator="#loading"
     ></button>
-    <div id="results"></div>
+    <div
+        id="results"
+        hx-get="{{ url_for('search.search') }}{% if request.query_string %}?{{ request.query_string.decode('utf-8') }}{% endif %}"
+        hx-trigger="load"
+        hx-target="this"
+        hx-swap="innerHTML"
+        hx-include=".search-param"
+        hx-indicator="#loading"
+    ></div>
 
     <!-- CSS-only sticky CTA anchored to this content container (not viewport-fixed). -->
     <div class="sticky z-50 pointer-events-none" style="bottom: 0;">
@@ -346,31 +349,40 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
+<!-- Keep search-page JS inside swapped `.drawer` content so boosted nav executes it. -->
 <script>
-    const SEARCH_MIN_YEAR = {{ timeline_min_year }};
-    const SEARCH_MAX_YEAR = {{ timeline_max_year }};
-    const SEARCH_TIMELINE_COUNT = {{ timeline_bins | length }};
-    function readLabelParams(params) {
-        return ((params.get('label') || '').split(',').map(v => v.trim()).filter(Boolean));
-    }
+    window.SEARCH_MIN_YEAR = {{ timeline_min_year }};
+    window.SEARCH_MAX_YEAR = {{ timeline_max_year }};
+    window.SEARCH_TIMELINE_COUNT = {{ timeline_bins | length }};
+    window.SEARCH_TIMELINE_YEARS = {{ timeline_bins | map(attribute='year') | list | tojson }};
+    window.readLabelParams = function readLabelParams(params) {
+        const values = params.getAll('label').flatMap((raw) =>
+            String(raw || "").split(",").map((v) => v.trim()).filter(Boolean)
+        );
+        return [...new Set(values)];
+    };
 
-    function searchPageState() {
+    window.searchPageState = function searchPageState() {
         return {
             open: null,
             view: new URLSearchParams(window.location.search).get('view') || 'grid',
             timePanelOpen: false,
-            minYear: SEARCH_MIN_YEAR,
-            maxYear: SEARCH_MAX_YEAR,
-            timelineCount: Math.max(SEARCH_TIMELINE_COUNT, 1),
-            yearStart: SEARCH_MIN_YEAR,
-            yearEnd: SEARCH_MAX_YEAR,
+            minYear: window.SEARCH_MIN_YEAR,
+            maxYear: window.SEARCH_MAX_YEAR,
+            timelineYears: Array.isArray(window.SEARCH_TIMELINE_YEARS) ? window.SEARCH_TIMELINE_YEARS : [],
+            timelineCount: Math.max(
+                (Array.isArray(window.SEARCH_TIMELINE_YEARS) ? window.SEARCH_TIMELINE_YEARS.length : 0),
+                1
+            ),
+            yearStart: window.SEARCH_MIN_YEAR,
+            yearEnd: window.SEARCH_MAX_YEAR,
             startIndex: 0,
-            endIndex: Math.max(SEARCH_TIMELINE_COUNT - 1, 0),
+            endIndex: Math.max(
+                (Array.isArray(window.SEARCH_TIMELINE_YEARS) ? window.SEARCH_TIMELINE_YEARS.length : 0) - 1,
+                0
+            ),
             timelineApplyTimer: null,
-            lastSubmittedYearRange: `${SEARCH_MIN_YEAR}-${SEARCH_MAX_YEAR}`,
+            lastSubmittedYearRange: `${window.SEARCH_MIN_YEAR}-${window.SEARCH_MAX_YEAR}`,
             mobileDrawerOpen: false,
             mobileFacetOpen: null,
             mobileSearch: { label: '', location: '' },
@@ -382,22 +394,51 @@
                 return Math.min(this.maxYear, Math.max(this.minYear, parsed));
             },
 
-            yearToIndex(year) {
-                const idx = year - this.minYear;
-                return Math.min(this.timelineCount - 1, Math.max(0, idx));
+            yearToIndex(year, edge = "nearest") {
+                if (!this.timelineYears.length) return 0;
+                const target = this.normalizeYear(year, this.minYear);
+                const exactIdx = this.timelineYears.indexOf(target);
+                if (exactIdx !== -1) return exactIdx;
+
+                if (edge === "start") {
+                    for (let i = 0; i < this.timelineYears.length; i += 1) {
+                        if (this.timelineYears[i] >= target) return i;
+                    }
+                    return this.timelineYears.length - 1;
+                }
+
+                if (edge === "end") {
+                    for (let i = this.timelineYears.length - 1; i >= 0; i -= 1) {
+                        if (this.timelineYears[i] <= target) return i;
+                    }
+                    return 0;
+                }
+
+                // Fallback: nearest available year.
+                let bestIdx = 0;
+                let bestDistance = Infinity;
+                for (let i = 0; i < this.timelineYears.length; i += 1) {
+                    const distance = Math.abs(this.timelineYears[i] - target);
+                    if (distance < bestDistance) {
+                        bestDistance = distance;
+                        bestIdx = i;
+                    }
+                }
+                return bestIdx;
             },
 
             indexToYear(index) {
                 const idx = Math.min(this.timelineCount - 1, Math.max(0, index));
-                return this.minYear + idx;
+                return this.timelineYears[idx] ?? this.minYear;
             },
 
             syncIndicesFromYears() {
-                this.startIndex = this.yearToIndex(this.yearStart);
-                this.endIndex = this.yearToIndex(this.yearEnd);
+                this.startIndex = this.yearToIndex(this.yearStart, "start");
+                this.endIndex = this.yearToIndex(this.yearEnd, "end");
                 if (this.startIndex > this.endIndex) {
                     this.startIndex = this.endIndex;
                 }
+                this.syncYearsFromIndices();
             },
 
             syncYearsFromIndices() {
@@ -497,7 +538,7 @@
                 // URL remains the source of truth; mobile drawer clones it into local draft state.
                 const p = new URLSearchParams(window.location.search);
                 return {
-                    label: readLabelParams(p),
+                    label: window.readLabelParams(p),
                     location: p.getAll('location'),
                 };
             },
@@ -587,31 +628,34 @@
                 this.timelineApplyTimer = setTimeout(() => this.applyTimeRange(), 220);
             },
         };
+    };
+
+    if (!window.__searchResultsListenersBound) {
+        // Smooth crossfade on every #results swap
+        document.body.addEventListener('htmx:beforeSwap', function (evt) {
+            const d = evt.detail;
+            if (!d || d.target?.id !== 'results' || !d.swapSpec) return;
+            d.swapSpec.transition = true;
+        });
+
+        // After each swap, sync facet state from the new URL
+        document.body.addEventListener('htmx:afterSettle', function (evt) {
+            const d = evt.detail;
+            if (!d || d.target?.id !== 'results') return;
+            // Rehydrate facet state from the canonical URL after every result swap.
+            const p = new URLSearchParams(window.location.search);
+            document.dispatchEvent(new CustomEvent('facets-sync', {
+                detail: {
+                    label:      window.readLabelParams(p),
+                    location:   p.getAll('location'),
+                    view:       p.get('view') || 'grid',
+                    date_from:  p.get('date_from') || '',
+                    date_to:    p.get('date_to') || '',
+                }
+            }));
+        });
+        window.__searchResultsListenersBound = true;
     }
-
-    // Smooth crossfade on every #results swap
-    document.body.addEventListener('htmx:beforeSwap', function (evt) {
-        const d = evt.detail;
-        if (!d || d.target?.id !== 'results' || !d.swapSpec) return;
-        d.swapSpec.transition = true;
-    });
-
-    // After each swap, sync facet state from the new URL
-    document.body.addEventListener('htmx:afterSettle', function (evt) {
-        const d = evt.detail;
-        if (!d || d.target?.id !== 'results') return;
-        // Rehydrate facet state from the canonical URL after every result swap.
-        const p = new URLSearchParams(window.location.search);
-        document.dispatchEvent(new CustomEvent('facets-sync', {
-            detail: {
-                label:      readLabelParams(p),
-                location:   p.getAll('location'),
-                view:       p.get('view') || 'grid',
-                date_from:  p.get('date_from') || '',
-                date_to:    p.get('date_to') || '',
-            }
-        }));
-    });
 
 </script>
 {% endblock %}

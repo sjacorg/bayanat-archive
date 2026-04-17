@@ -2,7 +2,7 @@ import math
 from datetime import datetime
 from urllib.parse import urlencode
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, make_response, render_template, request
 
 from app import get_db
 
@@ -12,7 +12,17 @@ PER_PAGE = 20
 
 
 def _clean_list(values):
-    return [value.strip() for value in values if value and value.strip()]
+    cleaned = []
+    seen = set()
+    for value in values:
+        if not value:
+            continue
+        normalized = value.strip()
+        if not normalized or normalized in seen:
+            continue
+        seen.add(normalized)
+        cleaned.append(normalized)
+    return cleaned
 
 
 def _default_sort_for_query(q):
@@ -234,6 +244,8 @@ def _active_filters(
     view,
     date_from,
     date_to,
+    min_year,
+    max_year,
 ):
     active = []
 
@@ -274,11 +286,12 @@ def _active_filters(
         )
 
     if date_from or date_to:
-        from_year = date_from[:4] if date_from else "..."
-        to_year = date_to[:4] if date_to else "..."
+        from_year = date_from[:4] if date_from else str(min_year)
+        to_year = date_to[:4] if date_to else str(max_year)
+        range_label = from_year if from_year == to_year else f"{from_year} - {to_year}"
         active.append(
             {
-                "label": f"{from_year} - {to_year}",
+                "label": range_label,
                 "remove_url": _build_search_url(
                     q=q,
                     labels=labels,
@@ -329,9 +342,7 @@ def _get_document_labels(db, doc_ids):
     return labels
 
 
-@bp.route("/")
-def index():
-    db = get_db()
+def _search_shell_context(db):
     try:
         total = db.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
         facets = _get_facets(
@@ -352,23 +363,33 @@ def index():
         timeline_max_year = now_year
 
     all_labels, all_locations, label_counts, location_counts = _facet_options(facets)
+    return {
+        "total": total,
+        "all_labels": all_labels,
+        "all_locations": all_locations,
+        "label_counts": label_counts,
+        "location_counts": location_counts,
+        "timeline_bins": timeline_bins,
+        "timeline_min_year": timeline_min_year,
+        "timeline_max_year": timeline_max_year,
+    }
 
-    return render_template(
-        "search.html",
-        total=total,
-        all_labels=all_labels,
-        all_locations=all_locations,
-        label_counts=label_counts,
-        location_counts=location_counts,
-        timeline_bins=timeline_bins,
-        timeline_min_year=timeline_min_year,
-        timeline_max_year=timeline_max_year,
-    )
+
+@bp.route("/")
+def index():
+    db = get_db()
+    return render_template("search.html", **_search_shell_context(db))
 
 
 @bp.route("/search")
 def search():
     db = get_db()
+    is_htmx = request.headers.get("HX-Request", "").lower() == "true"
+
+    if not is_htmx:
+        # Direct loads of /search must render the full page shell (with CSS/JS assets),
+        # while HTMX requests to this endpoint still return only partial results.
+        return render_template("search.html", **_search_shell_context(db))
 
     q = request.args.get("q", "").strip()
     labels = _clean_list(request.args.getlist("label"))
@@ -421,6 +442,8 @@ def search():
         view=view,
         date_from=date_from,
         date_to=date_to,
+        min_year=timeline_min_year,
+        max_year=timeline_max_year,
     )
     clear_url = _build_search_url(
         q=q,
@@ -437,25 +460,40 @@ def search():
     thumbnails = _get_document_media(db, doc_ids)
     doc_labels = _get_document_labels(db, doc_ids)
 
-    return render_template(
-        "partials/search_results.html",
-        results=results,
-        thumbnails=thumbnails,
-        doc_labels=doc_labels,
-        facets=facets,
-        total=total,
-        page=page,
-        total_pages=total_pages,
-        per_page=PER_PAGE,
+    response = make_response(
+        render_template(
+            "partials/search_results.html",
+            results=results,
+            thumbnails=thumbnails,
+            doc_labels=doc_labels,
+            facets=facets,
+            total=total,
+            page=page,
+            total_pages=total_pages,
+            per_page=PER_PAGE,
+            q=q,
+            selected_labels=labels,
+            selected_locations=locations,
+            date_from=date_from,
+            date_to=date_to,
+            sort=sort,
+            view=view,
+            active_filters=active_filters,
+            clear_url=clear_url,
+            timeline_min_year=timeline_min_year,
+            timeline_max_year=timeline_max_year,
+        )
+    )
+
+    # Keep browser URL canonical when HTMX pushes history (drop empty params).
+    response.headers["HX-Push-Url"] = _build_search_url(
         q=q,
-        selected_labels=labels,
-        selected_locations=locations,
-        date_from=date_from,
-        date_to=date_to,
+        labels=labels,
+        locations=locations,
         sort=sort,
         view=view,
-        active_filters=active_filters,
-        clear_url=clear_url,
-        timeline_min_year=timeline_min_year,
-        timeline_max_year=timeline_max_year,
+        date_from=date_from,
+        date_to=date_to,
+        page=page,
     )
+    return response
