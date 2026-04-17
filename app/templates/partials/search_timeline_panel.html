@@ -18,7 +18,9 @@
                         inputmode="numeric"
                         class="h-8 w-20 border-x-0 border-t-0 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
                         :value="yearStart"
-                        @input="setYearStart($event.target.value)"
+                        @change="setYearStart($event.target.value)"
+                        @blur="setYearStart($event.target.value)"
+                        @keydown.enter.prevent="setYearStart($event.target.value); $event.target.blur()"
                     >
                     <span class="text-xl">-</span>
                     <input
@@ -26,7 +28,9 @@
                         inputmode="numeric"
                         class="h-8 w-20 border-x-0 border-t-0 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
                         :value="yearEnd"
-                        @input="setYearEnd($event.target.value)"
+                        @change="setYearEnd($event.target.value)"
+                        @blur="setYearEnd($event.target.value)"
+                        @keydown.enter.prevent="setYearEnd($event.target.value); $event.target.blur()"
                     >
                 </div>
             </div>
