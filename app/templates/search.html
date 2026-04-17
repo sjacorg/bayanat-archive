@@ -17,11 +17,11 @@
 >
 
     <!-- Search row -->
-    <div class="relative left-1/2 right-1/2 mb-8 w-screen -translate-x-1/2 bg-gray-200/60">
+    <div :class="timePanelOpen ? '' : 'mb-8'" class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60">
         <div class="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-4 py-6 sm:gap-8 sm:px-6 lg:px-10">
             <h1 class="hidden text-2xl font-semibold tracking-tight text-primary shrink-0 sm:block">Search</h1>
-            <label class="input w-full border-base-300 bg-base-100">
-                <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <label class="input w-full border-base-300 bg-base-100 h-[40px] md:h-[54px]">
+                <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.3-4.3"></path>
@@ -51,8 +51,20 @@
                 :aria-expanded="timePanelOpen ? 'true' : 'false'"
                 @click="toggleTimePanel()"
             >
-                <span x-show="!timePanelOpen" aria-hidden="true">+</span>
-                <span x-show="timePanelOpen" x-cloak aria-hidden="true">×</span>
+                <svg
+                    aria-hidden="true"
+                    class="size-9 origin-center transform-gpu"
+                    :class="timePanelOpen ? 'rotate-45' : 'rotate-0'"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                </svg>
                 <span class="sr-only">Toggle time range</span>
             </button>
         </div>
@@ -62,7 +74,7 @@
     <input type="hidden" name="date_from" class="search-param" :value="yearStart > minYear ? `${yearStart}-01-01` : ''">
     <input type="hidden" name="date_to" class="search-param" :value="yearEnd < maxYear ? `${yearEnd}-12-31` : ''">
 
-    {% include "partials/mobile_timeline_range.html" %}
+    {% include "partials/search_timeline_panel.html" %}
 
     <!-- Facets: live outside #results so they never re-render or flash -->
     {% macro facet(key, label, items, counts) %}

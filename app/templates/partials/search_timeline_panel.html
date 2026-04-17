@@ -6,23 +6,17 @@
 <div
     x-show="timePanelOpen"
     x-cloak
-    x-transition:enter="transition ease-out duration-180"
-    x-transition:enter-start="opacity-0 -translate-y-1"
-    x-transition:enter-end="opacity-100 translate-y-0"
-    x-transition:leave="transition ease-in duration-120"
-    x-transition:leave-start="opacity-100 translate-y-0"
-    x-transition:leave-end="opacity-0 -translate-y-1"
     class="relative left-1/2 right-1/2 mb-6 w-screen -translate-x-1/2 bg-gray-200/60"
 >
     <div class="mx-auto w-full max-w-[1200px] px-4 pb-5 pt-4 sm:px-6">
         <div class="pt-4">
-            <div class="mb-2 flex items-center justify-between gap-3">
+            <div class="mb-2 flex items-center gap-3">
                 <p class="text-sm font-semibold text-primary">Select Time Period:</p>
                 <div class="flex items-center gap-2 text-primary">
                     <input
                         type="number"
                         inputmode="numeric"
-                        class="h-8 w-20 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
+                        class="h-8 w-20 border-x-0 border-t-0 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
                         :value="yearStart"
                         @input="setYearStart($event.target.value)"
                     >
@@ -30,7 +24,7 @@
                     <input
                         type="number"
                         inputmode="numeric"
-                        class="h-8 w-20 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
+                        class="h-8 w-20 border-x-0 border-t-0 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
                         :value="yearEnd"
                         @input="setYearEnd($event.target.value)"
                     >
