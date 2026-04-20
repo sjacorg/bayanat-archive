@@ -4,7 +4,11 @@
 
 {% block content %}
 <div
-    x-data="searchPageState()"
+    x-data='searchPageState({
+        minYear: {{ timeline_min_year }},
+        maxYear: {{ timeline_max_year }},
+        timelineYears: {{ timeline_bins | map(attribute="year") | list | tojson }}
+    })'
     {# Bootstrap first results from URL params so direct links render immediately. #}
     x-init="
         const p = new URLSearchParams(window.location.search);
@@ -361,13 +365,4 @@
         </div>
     </div>
 </div>
-<!-- Keep search-page JS inside swapped `.drawer` content so boosted nav executes it. -->
-<script>
-    window.SEARCH_PAGE_CONFIG = {
-        minYear: {{ timeline_min_year }},
-        maxYear: {{ timeline_max_year }},
-        timelineYears: {{ timeline_bins | map(attribute='year') | list | tojson }},
-    };
-</script>
-<script src="{{ url_for('static', filename='js/search-page.js') }}"></script>
 {% endblock %}

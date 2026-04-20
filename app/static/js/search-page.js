@@ -22,8 +22,10 @@
         };
     }
 
-    function getTimelineConfig() {
-        const cfg = window.SEARCH_PAGE_CONFIG || {};
+    function getTimelineConfig(overrideConfig = null) {
+        const cfg = overrideConfig && typeof overrideConfig === 'object'
+            ? overrideConfig
+            : (window.SEARCH_PAGE_CONFIG || {});
         const minYear = Number.parseInt(cfg.minYear, 10);
         const maxYear = Number.parseInt(cfg.maxYear, 10);
         const timelineYears = Array.isArray(cfg.timelineYears)
@@ -46,9 +48,9 @@
     // Expose for template expressions and event listeners.
     window.readLabelParams = readLabelParams;
 
-    window.searchPageState = function searchPageState() {
+    window.searchPageState = function searchPageState(overrideConfig = null) {
         // Timeline math must use the exact years present in bins (not min+index).
-        const cfg = getTimelineConfig();
+        const cfg = getTimelineConfig(overrideConfig);
         const timelineYears = cfg.timelineYears;
         const timelineCount = Math.max(timelineYears.length, 1);
 
