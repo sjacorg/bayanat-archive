@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
+{% block description %}{{ document.description | strip_html | truncate(180) if document.description else (document.translation | truncate(180) if document.translation else 'Document detail in the Bayanat Document Archive') }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
+{% block og_description %}{{ self.description() }}{% endblock %}
+
+{% block head %}
+<link rel="canonical" href="{{ canonical_url }}">
+{% endblock %}
+
+{% block main_container_class %}w-full p-0{% endblock %}
+{% block main_class %}bg-[#dfe3e4]{% endblock %}
+{% block page_header %}{% endblock %}
+{% block page_footer %}{% endblock %}
+
+{% block content %}
+{% set media_payload = [] %}
+{% for item in media_rows %}
+    {% set _ = media_payload.append({
+        "id": item.id,
+        "media_id": item.media_id,
+        "filename": item.filename,
+        "src": url_for('static', filename='media/' ~ item.filename),
+        "title": item.title or item.title_ar or ('Page ' ~ loop.index),
+        "media_type": item.media_type or '',
+        "language": item.language or '',
+        "ocr_text": item.ocr_text or '',
+        "original_text": item.original_text or '',
+        "confidence": item.confidence,
+        "is_image": (item.media_type or '').startswith('image/'),
+        "is_pdf": (item.media_type or '') == 'application/pdf'
+    }) %}
+{% endfor %}
+
+<div
+    class="doc-detail flex h-screen min-h-screen max-h-screen flex-col bg-[#d9ddde] text-slate-800"
+    x-data='documentDetailViewer({
+        media: {{ media_payload | tojson }},
+        title: {{ document.title | tojson }},
+        id: {{ document.id | tojson }},
+        documentOcrText: {{ (document.ocr_text or '') | tojson }},
+        documentTranslation: {{ (document.translation or '') | tojson }}
+    })'
+    x-init="init()"
+>
+    <header x-ref="topHeader" class="flex items-center justify-between gap-4 bg-slate-50 px-8 py-4 max-md:flex-col max-md:items-start max-md:px-3 max-md:py-2">
+        <a href="{{ url_for('search.index') }}" class="inline-flex items-center gap-2 font-bold text-teal-800 no-underline" data-print-no-href>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-[1.15rem] w-[1.15rem]">
+                <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span>Back to Search</span>
+        </a>
+
+        <p class="m-0 max-w-[64ch] overflow-hidden text-ellipsis whitespace-nowrap text-sm text-primary max-md:max-w-full max-md:text-xs" title="{{ document.title }}">
+            <span>Search Document Library</span>
+            <span>/</span>
+            <span class="font-semibold">{{ document.title }}</span>
+        </p>
+    </header>
+
+    <section class="bg-teal-900 px-4 py-2 text-slate-100 max-md:px-2" aria-label="Document controls">
+        <div class="flex items-center justify-center gap-3 text-[1.1rem] max-md:justify-start max-md:gap-2 max-md:text-base">
+            <p x-text="`${displayPage} of ${displayTotal}`" aria-live="polite" class="m-0"></p>
+            <span class="inline-block h-4 w-px bg-white/50"></span>
+            <button type="button" @click="zoomOut()" aria-label="Zoom out" class="min-w-5 bg-transparent p-0 text-[1.35rem] leading-none text-inherit disabled:cursor-default disabled:opacity-35">-</button>
+            <p class="m-0 min-w-[3.75rem] bg-slate-100 px-2 py-0.5 text-center text-base font-semibold text-slate-600 max-md:text-sm" x-text="`${Math.round(zoom * 100)}%`"></p>
+            <button type="button" @click="zoomIn()" aria-label="Zoom in" class="min-w-5 bg-transparent p-0 text-[1.35rem] leading-none text-inherit disabled:cursor-default disabled:opacity-35">+</button>
+        </div>
+    </section>
+
+    <section class="doc-stage relative flex flex-none items-stretch" :class="activePanel ? 'is-panel-open' : ''">
+        <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+5.2rem)] z-[70] hidden w-[13.5rem] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
+            <button
+                type="button"
+                title="Info"
+                class="flex w-full items-center gap-3 border-0 border-b border-[#5AB5A9] bg-[#3D9B8F] px-4 py-3 text-left text-[0.97rem] font-bold text-white transition-colors hover:bg-[#1A4540]"
+                :class="{ 'bg-[#1A4540]': activePanel === 'info' }"
+                @click="togglePanel('info')"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-4 w-4 shrink-0">
+                    <circle cx="12" cy="12" r="8.25" stroke-width="1.9"></circle>
+                    <circle cx="12" cy="8.25" r="1.05" fill="currentColor" stroke="none"></circle>
+                    <path d="M12 11v5" stroke-width="1.9" stroke-linecap="round"></path>
+                </svg>
+                <span class="leading-none">Info</span>
+            </button>
+            <button
+                type="button"
+                title="Extract Text"
+                class="flex w-full items-center gap-3 border-0 border-b border-[#5AB5A9] bg-[#3D9B8F] px-4 py-3 text-left text-[0.97rem] font-bold text-white transition-colors hover:bg-[#1A4540]"
+                :class="{ 'bg-[#1A4540]': activePanel === 'arabic' }"
+                @click="togglePanel('arabic')"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-4 w-4 shrink-0">
+                    <path d="M4.25 8V5.25H7" stroke-width="1.9" stroke-linecap="round"></path>
+                    <path d="M16.75 5.25H19.75V8" stroke-width="1.9" stroke-linecap="round"></path>
+                    <path d="M19.75 16V18.75H17" stroke-width="1.9" stroke-linecap="round"></path>
+                    <path d="M7 18.75H4.25V16" stroke-width="1.9" stroke-linecap="round"></path>
+                </svg>
+                <span class="leading-none">Extract Text</span>
+            </button>
+            <button
+                type="button"
+                title="Translate"
+                class="flex w-full items-center gap-3 border-0 border-b border-[#5AB5A9] bg-[#3D9B8F] px-4 py-3 text-left text-[0.97rem] font-bold text-white transition-colors hover:bg-[#1A4540]"
+                :class="{ 'bg-[#1A4540]': activePanel === 'translation' }"
+                @click="togglePanel('translation')"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-4 w-4 shrink-0">
+                    <path d="M4.5 6.5H13.5" stroke-width="1.9" stroke-linecap="round"></path>
+                    <path d="M9 6.5C9 11.5 6.7 14.6 4.5 16.5" stroke-width="1.9" stroke-linecap="round"></path>
+                    <path d="M6.5 12.25C8.1 14.35 10.35 16.05 12.75 17" stroke-width="1.9" stroke-linecap="round"></path>
+                    <path d="M16 7L20.5 17.5" stroke-width="1.9" stroke-linecap="round"></path>
+                    <path d="M14.75 14.25H21.25" stroke-width="1.9" stroke-linecap="round"></path>
+                </svg>
+                <span class="leading-none">Translate</span>
+            </button>
+            <button
+                type="button"
+                title="Download"
+                class="flex w-full items-center gap-3 border-0 bg-[#3D9B8F] px-4 py-3 text-left text-[0.97rem] font-bold text-white transition-colors hover:bg-[#1A4540]"
+                @click="handleDownload"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-4 w-4 shrink-0">
+                    <path d="M12 4V14.5" stroke-width="1.9" stroke-linecap="round"></path>
+                    <path d="M9.5 12L12 14.5L14.5 12" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                    <path d="M5.25 18.75H18.75" stroke-width="1.9" stroke-linecap="round"></path>
+                </svg>
+                <span class="leading-none">Download</span>
+            </button>
+        </aside>
+
+        <div class="doc-canvas-wrap relative box-border grid min-h-full w-full place-items-center overflow-visible p-3" :class="{ 'is-pdf-mode': currentMedia && currentMedia.is_pdf }" @touchstart.passive="onTouchStart($event)" @touchmove.passive="onTouchMove($event)">
+            <template x-if="!pageCount">
+                <div class="w-full max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+                    <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">No media available</h2>
+                    <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
+                    <a href="{{ url_for('search.index') }}" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Back to Search</a>
+                </div>
+            </template>
+
+            <div
+                class="doc-canvas flex w-full items-start justify-center"
+                :class="[carouselClass, canvasCursorClass]"
+                @click="toggleZoom"
+                :style="`transform: scale(${canvasScale}); view-transition-name: doc-${docId}; --slide-direction: ${carouselDirection};`"
+            >
+                <template x-if="currentMedia && currentMedia.is_image">
+                    <img :src="currentMedia.src" :alt="`${title} page ${pageIndex + 1}`" loading="eager" class="block h-auto w-auto max-h-[70vh] max-w-[min(100%,56rem)] bg-slate-50">
+                </template>
+
+                <template x-if="currentMedia && currentMedia.is_pdf && !pdfError">
+                    <div class="doc-pdf-fallback flex min-h-[22rem] w-full flex-col items-center bg-transparent py-3 text-left">
+                        <div class="doc-pdf-scroll flex w-max min-w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="pdfDesktopList"></div>
+                    </div>
+                </template>
+
+                <template x-if="currentMedia && currentMedia.is_pdf && pdfError">
+                    <div class="w-full max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+                        <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">PDF preview unavailable</h2>
+                        <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">We could not load this PDF in the viewer. You can still download the file directly.</p>
+                        <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Download PDF</a>
+                    </div>
+                </template>
+            </div>
+
+        </div>
+
+        <button type="button" class="doc-nav-arrow fixed left-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-[#d2d7d9] bg-white/80 text-teal-900 disabled:cursor-default disabled:opacity-35 max-md:hidden" @click="prevMedia()" :disabled="!hasPrevMedia || isAnimating" aria-label="Previous media">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="mx-auto h-6 w-6">
+                <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </button>
+        <button type="button" class="doc-nav-arrow fixed right-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-[#d2d7d9] bg-white/80 text-teal-900 disabled:cursor-default disabled:opacity-35 max-md:hidden" @click="nextMedia()" :disabled="!hasNextMedia || isAnimating" aria-label="Next media">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="mx-auto h-6 w-6">
+                <path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+        </button>
+
+    </section>
+
+    <aside
+        class="fixed bottom-[var(--doc-related-toggle-height)] left-0 right-0 z-[58] bg-slate-100/90 max-md:bottom-[calc(var(--doc-related-toggle-height)+2.75rem)]"
+        x-cloak
+        x-show="activePanel"
+        x-transition.opacity
+        @keydown.escape.window="closePanel"
+        @click="closePanel"
+        :style="`top: var(--doc-header-height);`"
+    >
+        <div class="h-full overflow-auto px-4 py-5 md:pl-[13.5rem] md:pr-6 md:pt-6" @click.stop>
+            <p class="mx-auto mb-1 max-w-[64rem] text-xs font-bold uppercase tracking-[0.06em] text-slate-700">
+                Reference Number: {{ document.id }}
+            </p>
+            <div class="mx-auto flex max-w-[64rem] items-start justify-end gap-3">
+                <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex items-center gap-2 border-0 bg-transparent p-0 text-xl font-semibold leading-none text-slate-900 max-md:text-base">
+                    <span aria-hidden="true">×</span>
+                    <span class="text-xl max-md:text-sm">Close View</span>
+                </button>
+            </div>
+
+            <div class="mx-auto mt-3 max-w-[64rem] border-t border-slate-300 pt-3 text-[0.97rem] leading-6 text-slate-800 max-md:text-sm max-md:leading-5">
+                <p x-text="panelTitle" class="mb-3 inline-block bg-[#3D9B8F] px-4 py-2 text-xl font-bold leading-none text-white max-md:text-base"></p>
+                <div x-show="activePanel === 'info'">
+                    <div class="mb-2 inline-flex items-center gap-1 rounded-sm bg-slate-200 p-1">
+                        <button
+                            type="button"
+                            class="rounded-sm px-3 py-1.5 text-sm font-bold leading-none transition-colors"
+                            :class="!showDocumentDetails ? 'bg-teal-700 text-white shadow-sm' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
+                            @click="showDocumentDetails = false"
+                        >
+                            Page details
+                        </button>
+                        <button
+                            type="button"
+                            class="rounded-sm px-3 py-1.5 text-sm font-bold leading-none transition-colors"
+                            :class="showDocumentDetails ? 'bg-teal-700 text-white shadow-sm' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
+                            @click="showDocumentDetails = true"
+                        >
+                            Full document details
+                        </button>
+                    </div>
+
+                    <h1
+                        class="mb-2 mt-1 text-xl font-bold leading-tight"
+                        x-text="showDocumentDetails ? 'Full document details' : 'Page details'"
+                    ></h1>
+
+                    <table x-show="!showDocumentDetails" class="w-full border-collapse text-base max-md:text-sm">
+                        <tbody>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Page</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="`${displayPage} / ${displayTotal}`"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Filename</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top break-all" x-text="currentMedia?.filename || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Type</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.media_type || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Title</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.title || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Language</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.language || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">OCR Confidence</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.confidence !== null && currentMedia?.confidence !== undefined ? `${Number(currentMedia.confidence).toFixed(1)}%` : 'N/A'"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div x-show="showDocumentDetails" class="mt-0.5">
+                        <h2 class="m-0 text-base font-bold leading-tight">Document Details</h2>
+                        <table class="mt-1 w-full border-collapse text-sm">
+                            <tbody>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">ID</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.id }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Title</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.title }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Slug</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top break-all">{{ document.slug }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Description</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.description | strip_html if document.description else 'N/A' }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">OCR Text</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.ocr_text if document.ocr_text else 'N/A' }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Translation</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.translation if document.translation else 'N/A' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <table x-show="showDocumentDetails" class="mt-2 w-full border-collapse text-sm">
+                        <tbody>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Date</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ metadata.date or 'N/A' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="whitespace-pre-wrap text-right" x-show="activePanel === 'arabic'">
+                    <template x-if="currentArabicText">
+                        <div :dir="arabicTextDir" x-text="currentArabicText"></div>
+                    </template>
+                    <template x-if="!currentArabicText">
+                        <p>No Arabic/OCR text is available for this page.</p>
+                    </template>
+                </div>
+
+                <div class="whitespace-pre-wrap" x-show="activePanel === 'translation'">
+                    <template x-if="currentTranslationText">
+                        <div x-text="currentTranslationText"></div>
+                    </template>
+                    <template x-if="!currentTranslationText">
+                        <p>No English translation is available for this page.</p>
+                    </template>
+                </div>
+
+            </div>
+        </div>
+    </aside>
+
+    <section class="hidden min-h-0 flex-1 overflow-auto pb-[var(--doc-related-toggle-height)] max-md:block">
+        <template x-if="!pageCount">
+            <div class="mx-3 my-3 w-auto max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+                <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">No media available</h2>
+                <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
+                <a href="{{ url_for('search.index') }}" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Back to Search</a>
+            </div>
+        </template>
+
+        <template x-if="currentMedia && currentMedia.is_image">
+            <div class="grid gap-3 p-3">
+                <img :src="currentMedia.src" :alt="`${title} page ${displayPage}`" loading="lazy" class="h-auto w-full bg-white">
+            </div>
+        </template>
+
+        <template x-if="currentMedia && currentMedia.is_pdf && !pdfError">
+            <div class="grid gap-3 p-3" x-ref="pdfMobileList"></div>
+        </template>
+
+        <template x-if="currentMedia && currentMedia.is_pdf && pdfError">
+            <div class="mx-3 my-3 w-auto max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+                <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">PDF preview unavailable</h2>
+                <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">We could not load this PDF in the viewer. You can still download the file directly.</p>
+                <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Download PDF</a>
+            </div>
+        </template>
+    </section>
+
+    <nav class="sticky bottom-0 z-[35] hidden grid-cols-4 bg-[#3D9B8F] max-md:grid" aria-label="Document actions">
+        <button type="button" @click="togglePanel('info')" class="border-0 bg-transparent px-1 py-2 text-xs font-bold text-white">Info</button>
+        <button type="button" @click="togglePanel('arabic')" class="border-0 bg-transparent px-1 py-2 text-xs font-bold text-white">Extract Text</button>
+        <button type="button" @click="togglePanel('translation')" class="border-0 bg-transparent px-1 py-2 text-xs font-bold text-white">Translate</button>
+        <button type="button" @click="handleDownload" class="border-0 bg-transparent px-1 py-2 text-xs font-bold text-white">Download</button>
+    </nav>
+
+    <section class="doc-related absolute bottom-0 left-0 right-0 z-[75] flex flex-col overflow-hidden bg-transparent" :class="{ 'is-open': relatedOpen }">
+        <header class="bg-teal-900 p-0 text-slate-50">
+            <button type="button" @click="relatedOpen = !relatedOpen" class="flex min-h-[var(--doc-related-toggle-height)] w-full items-center justify-between border-0 bg-transparent px-4 py-2 text-[0.95rem] font-bold text-slate-50">
+                <span>Related Content</span>
+                <span x-text="relatedOpen ? '▾' : '▴'"></span>
+            </button>
+        </header>
+
+        <div class="doc-related__body overflow-auto border-b border-white/10 bg-[#54585f]">
+            {% if relations %}
+            <div class="grid grid-cols-4 gap-3 p-3 max-md:flex max-md:overflow-x-auto max-md:pb-4">
+                {% for related in relations %}
+                <article class="bg-[#5c6269] text-white max-md:min-w-[75%]">
+                    {% if related.related_document_id and related.slug %}
+                    <a href="/documents/{{ related.related_document_id }}/{{ related.slug }}" class="text-inherit no-underline">
+                    {% endif %}
+
+                    <div class="aspect-[4/3] bg-slate-400">
+                        {% if related.related_filename %}
+                        <img src="{{ url_for('static', filename='media/' ~ related.related_filename) }}" alt="{{ related.display_title }}" loading="lazy" class="h-full w-full object-cover">
+                        {% else %}
+                        <div class="grid h-full place-items-center bg-slate-500 text-sm">No preview</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="px-3 pb-3 pt-2">
+                        <h3 class="m-0 text-[0.96rem] leading-snug">{{ related.display_title or 'Related record' }}</h3>
+                        <p class="mt-1 text-[0.78rem] text-slate-300">{{ related.related_type | title }}{% if related.page_count %} • {{ related.page_count }} pages{% endif %}</p>
+                    </div>
+
+                    {% if related.related_document_id and related.slug %}
+                    </a>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="m-3 border border-white/15 bg-slate-900/25 p-4 text-white">
+                <h3 class="m-0 text-base font-bold">No related content yet</h3>
+                <p class="mt-2 text-sm text-slate-200">This drawer is ready. Related documents will appear here once linked.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="{{ url_for('static', filename='js/document-detail.js') }}"></script>
+{% endblock %}
