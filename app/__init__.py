@@ -47,9 +47,11 @@ def create_app():
 
     app.cli.add_command(import_archive)
 
+    from app.routes.documents import bp as documents_bp
     from app.routes.pages import bp as pages_bp
     from app.routes.search import bp as search_bp
 
+    app.register_blueprint(documents_bp)
     app.register_blueprint(pages_bp)
     app.register_blueprint(search_bp)
 
