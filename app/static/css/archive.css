@@ -84,3 +84,86 @@
 @view-transition {
     navigation: auto;
 }
+
+/* Document detail: minimal custom CSS for behaviors not practical in utility classes */
+.doc-detail {
+    --doc-header-height: 72px;
+    --doc-related-toggle-height: 2.75rem;
+    --doc-related-drawer-height: min(42vh, 24rem);
+    --doc-stage-top: 152px;
+    --doc-stage-height: calc(100vh - 152px);
+}
+
+.doc-stage {
+    height: var(--doc-stage-height);
+    min-height: var(--doc-stage-height);
+    max-height: var(--doc-stage-height);
+    padding-bottom: var(--doc-related-toggle-height);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+}
+
+.doc-canvas-wrap.is-pdf-mode {
+    place-items: start center;
+}
+
+.doc-canvas {
+    transition: transform 0.16s ease;
+    transform-origin: top center;
+    translate: 0 0;
+    opacity: 1;
+}
+
+.doc-canvas.is-sliding-out {
+    translate: calc(var(--slide-direction, 1) * -2.2rem) 0;
+    opacity: 0.06;
+    transition: translate 120ms ease, opacity 120ms ease;
+}
+
+.doc-canvas.is-sliding-in {
+    translate: calc(var(--slide-direction, 1) * 2.2rem) 0;
+    opacity: 0.06;
+    animation: doc-carousel-in 180ms ease forwards;
+}
+
+@keyframes doc-carousel-in {
+    from {
+        translate: calc(var(--slide-direction, 1) * 2.2rem) 0;
+        opacity: 0.06;
+    }
+    to {
+        translate: 0 0;
+        opacity: 1;
+    }
+}
+
+.doc-pdf-canvas,
+.doc-mobile-pdf-canvas {
+    display: block;
+    margin-inline: auto;
+    max-width: none;
+    height: auto;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+}
+
+.doc-related__body {
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 240ms ease, opacity 160ms ease;
+}
+
+.doc-related.is-open .doc-related__body {
+    max-height: var(--doc-related-drawer-height);
+    opacity: 1;
+}
+
+@media (max-width: 900px) {
+    .doc-stage {
+        min-height: 0;
+    }
+
+    .doc-related.is-open .doc-related__body {
+        max-height: min(52vh, 28rem);
+    }
+}
