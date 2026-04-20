@@ -107,7 +107,7 @@
         <!-- Result cards grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {% for doc in results %}
-            <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block">
+            <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block" style="view-transition-name: doc-{{ doc.id }};">
                 <div class="bg-base-100 overflow-hidden hover:shadow-md transition-shadow">
                     <!-- Thumbnail -->
                     {% if thumbnails.get(doc.id) %}
