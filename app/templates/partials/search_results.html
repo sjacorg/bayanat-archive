@@ -32,6 +32,29 @@
 </span>
 {% endmacro %}
 
+{% macro document_label_chips(doc_id) %}
+{% set labels = doc_labels.get(doc_id, []) %}
+{% if labels %}
+<div class="flex flex-wrap gap-1.5">
+    <span class="inline-flex h-5 items-center bg-base-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] leading-none text-base-content/70">
+        {{ labels[0].title }}
+    </span>
+    {% if labels|length > 1 %}
+    {% set overflow_titles = labels[1:] | map(attribute='title') | join(', ') %}
+    <div class="tooltip tooltip-top inline-flex" data-tip="{{ overflow_titles }}">
+        <span
+            class="inline-flex h-5 items-center bg-base-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] leading-none text-base-content/60"
+            tabindex="0"
+            aria-label="More labels: {{ overflow_titles }}"
+        >
+            +{{ labels|length - 1 }}
+        </span>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
 {% macro thumbnail_media(doc, img_class, fallback_icon_class) %}
 {% set media = thumbnails.get(doc.id) %}
 {% set labels = doc_labels.get(doc.id, []) %}
@@ -267,6 +290,7 @@
                         No description available.
                     {% endif %}
                 </p>
+                {{ document_label_chips(doc.id) }}
             </div>
         </article>
     </a>
@@ -310,6 +334,9 @@
                             No description available.
                         {% endif %}
                     </p>
+                    <div class="mt-1">
+                        {{ document_label_chips(doc.id) }}
+                    </div>
                 </div>
             </div>
         </article>
