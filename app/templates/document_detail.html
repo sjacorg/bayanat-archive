@@ -192,13 +192,17 @@
         :style="`top: var(--doc-header-height);`"
     >
         <div class="h-full overflow-auto px-4 py-5 md:pl-[13.5rem] md:pr-6 md:pt-6" @click.stop>
-            <p class="mx-auto mb-1 max-w-[64rem] text-xs font-bold uppercase tracking-[0.06em] text-slate-700">
-                Reference Number: {{ document.id }}
-            </p>
-            <div class="mx-auto flex max-w-[64rem] items-start justify-end gap-3">
-                <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex items-center gap-2 border-0 bg-transparent p-0 text-xl font-semibold leading-none text-slate-900 max-md:text-base">
-                    <span aria-hidden="true">×</span>
-                    <span class="text-xl max-md:text-sm">Close View</span>
+            <div class="mx-auto flex max-w-[64rem] items-center justify-between gap-3">
+                <p class="mb-1 max-w-[64rem] text-xs font-bold uppercase tracking-[0.06em] text-slate-700">
+                    Reference Number: {{ document.id }}
+                </p>
+                <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex items-center gap-2 border-0 bg-transparent p-0 text-xl font-bold leading-none text-slate-900">
+                    <span aria-hidden="true">
+                        <svg class="size-5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
+                        </svg>
+                    </span>
+                    <span class="text-base">Close View</span>
                 </button>
             </div>
 
