@@ -141,7 +141,7 @@
                 <button
                     type="button"
                     @click.stop="open = (open === 'sort') ? null : 'sort'"
-                    class="flex h-[29px] w-full select-none items-center justify-between gap-2 bg-primary px-4 text-sm font-medium text-primary-content transition-colors hover:bg-primary/90"
+                    class="flex h-[40px] md:h-[29px] w-full select-none items-center justify-between gap-2 bg-primary px-4 text-sm font-medium text-primary-content transition-colors hover:bg-primary/90"
                     aria-haspopup="listbox"
                     :aria-expanded="open === 'sort'"
                 >
@@ -161,14 +161,14 @@
                     x-transition:enter="transition ease-out duration-100"
                     x-transition:enter-start="opacity-0 -translate-y-0.5"
                     x-transition:enter-end="opacity-100 translate-y-0"
-                    class="absolute right-0 top-full z-30 min-w-40 border border-base-content/12 bg-base-100 py-1 shadow-ambient"
+                    class="absolute right-0 top-[120%] z-30 min-w-40 border border-gray-200 bg-base-100 py-1 shadow-ambient w-full"
                     role="listbox"
                 >
                     {% for value, label in [("date_desc", "Date (newest)"), ("date_asc", "Date (oldest)"), ("relevance", "Relevance")] %}
                     {% if value != "relevance" or q %}
                     <button
                         type="button"
-                        class="flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-base-200/70 {% if sort == value %}font-medium text-primary{% else %}text-base-content/80{% endif %}"
+                        class="flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-gray-200/50 {% if sort == value %}font-medium text-secondary{% else %}text-base-content/80{% endif %}"
                         @click="
                             open = null;
                             document.querySelector('.sort-hidden').value = '{{ value }}';
@@ -180,11 +180,14 @@
                         hx-push-url="true"
                         hx-indicator="#loading"
                     >
-                        {% if sort == value %}
-                        <svg class="h-3.5 w-3.5 shrink-0 text-primary" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M2 6l3 3 5-5"/>
+                        <svg
+                            class="size-4 shrink-0 text-secondary transition-opacity duration-100 {% if sort == value %}opacity-100{% else %}opacity-0{% endif %}"
+                            viewBox="0 0 17 17"
+                            fill="currentColor"
+                            aria-hidden="true"
+                        >
+                            <path d="M6.37462 11.4541L3.42087 8.50038L2.41504 9.49913L6.37462 13.4587L14.8746 4.95871L13.8759 3.95996L6.37462 11.4541Z"/>
                         </svg>
-                        {% endif %}
                         <span>{{ label }}</span>
                     </button>
                     {% endif %}
@@ -195,7 +198,7 @@
 
         <div class="flex items-center gap-3">
             <span class="text-xs font-semibold uppercase tracking-[0.1em] text-base-content/70">Display in</span>
-            <div class="flex border border-base-content/15" role="group" aria-label="View as">
+            <div class="flex border border-base-300" role="group" aria-label="View as">
                 <button
                     type="button"
                     aria-label="Grid view"
@@ -275,9 +278,6 @@
                         {{ doc.title }}
                     {% endif %}
                 </h2>
-                <p class="line-clamp-1 text-xs text-base-content/45">
-                    {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
-                </p>
                 <p
                     dir="auto"
                     class="line-clamp-6 text-xs leading-relaxed text-base-content/55"
@@ -290,7 +290,12 @@
                         No description available.
                     {% endif %}
                 </p>
+                <p class="mt-5 line-clamp-1 text-xs text-base-content/45">
+                    {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
+                </p>
+                <div class="mt-1">
                 {{ document_label_chips(doc.id) }}
+                </div>
             </div>
         </article>
     </a>
@@ -319,9 +324,6 @@
                             {{ doc.title }}
                         {% endif %}
                     </h2>
-                    <p class="mt-0.5 line-clamp-1 text-xs text-base-content/45">
-                        {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
-                    </p>
                     <p
                         dir="auto"
                         class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-base-content/60 md:line-clamp-3"
@@ -334,7 +336,10 @@
                             No description available.
                         {% endif %}
                     </p>
-                    <div class="mt-1">
+                    <p class="mt-2 line-clamp-1 text-xs text-base-content/45">
+                        {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
+                    </p>
+                    <div class="mt-2">
                         {{ document_label_chips(doc.id) }}
                     </div>
                 </div>
