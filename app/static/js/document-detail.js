@@ -335,6 +335,10 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       const token = ++rawPdfRenderToken;
       const pdfDoc = rawPdfDoc;
       await this.$nextTick();
+      if (this.isMobile) {
+        await this.renderPdfMobilePages(pdfDoc, token);
+        return;
+      }
       await this.renderPdfDesktopPages(pdfDoc, token);
     },
 

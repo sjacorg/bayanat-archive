@@ -10,8 +10,8 @@
 <link rel="canonical" href="{{ canonical_url }}">
 {% endblock %}
 
-{% block main_container_class %}w-full p-0{% endblock %}
-{% block main_class %}bg-[#dfe3e4]{% endblock %}
+{% block main_container_class %}h-full w-full overflow-hidden p-0{% endblock %}
+{% block main_class %}h-[100dvh] overflow-hidden bg-[#dfe3e4]{% endblock %}
 {% block page_header %}{% endblock %}
 {% block page_footer %}{% endblock %}
 
@@ -36,7 +36,7 @@
 {% endfor %}
 
 <div
-    class="doc-detail flex h-screen min-h-screen max-h-screen flex-col bg-[#d9ddde] text-slate-800"
+    class="doc-detail flex h-full min-h-0 flex-col overflow-hidden bg-[#d9ddde] text-slate-800"
     x-data='documentDetailViewer({
         media: {{ media_payload | tojson }},
         title: {{ document.title | tojson }},
@@ -71,7 +71,7 @@
         </div>
     </section>
 
-    <section class="doc-stage relative flex flex-none items-stretch" :class="activePanel ? 'is-panel-open' : ''">
+    <section class="doc-stage relative flex flex-none items-stretch max-md:hidden" :class="activePanel ? 'is-panel-open' : ''">
         <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+5.2rem)] z-[70] hidden w-[13.5rem] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
             <button
                 type="button"
@@ -183,7 +183,7 @@
     </section>
 
     <aside
-        class="fixed bottom-[var(--doc-related-toggle-height)] left-0 right-0 z-[58] bg-slate-100/90 max-md:bottom-[calc(var(--doc-related-toggle-height)+2.75rem)]"
+        class="fixed bottom-[var(--doc-related-toggle-height)] left-0 right-0 z-[58] bg-slate-100/90 max-md:bottom-[calc(var(--doc-related-toggle-height)+var(--doc-mobile-actions-height))]"
         x-cloak
         x-show="activePanel"
         x-transition.opacity
@@ -412,7 +412,7 @@
         </div>
     </aside>
 
-    <section class="hidden min-h-0 flex-1 overflow-auto pb-[var(--doc-related-toggle-height)] max-md:block">
+    <section class="doc-mobile-scroll hidden min-h-0 flex-1 overflow-auto pb-[var(--doc-related-toggle-height)] max-md:block max-md:pb-[calc(var(--doc-related-toggle-height)+var(--doc-mobile-actions-height))]">
         <template x-if="!pageCount">
             <div class="mx-3 my-3 w-auto max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
                 <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">No media available</h2>
@@ -427,16 +427,72 @@
             </div>
         </template>
 
+        <template x-if="currentMedia && currentMedia.is_pdf && !pdfError">
+            <div class="doc-pdf-fallback flex min-h-[16rem] w-full flex-col items-center bg-transparent px-2 py-3 text-left">
+                <div class="doc-pdf-scroll flex w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="pdfMobileList"></div>
+            </div>
+        </template>
+
+        <template x-if="currentMedia && currentMedia.is_pdf && pdfError">
+            <div class="mx-3 my-3 w-auto max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+                <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">PDF preview unavailable</h2>
+                <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">We could not load this PDF in the viewer. You can still download the file directly.</p>
+                <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Download PDF</a>
+            </div>
+        </template>
+
     </section>
 
-    <nav class="sticky bottom-0 z-[35] hidden grid-cols-4 bg-[#3D9B8F] max-md:grid" aria-label="Document actions">
-        <button type="button" @click="togglePanel('info')" class="border-0 bg-transparent px-1 py-2 text-xs font-bold text-white">Info</button>
-        <button type="button" @click="togglePanel('arabic')" class="border-0 bg-transparent px-1 py-2 text-xs font-bold text-white">Extract Text</button>
-        <button type="button" @click="togglePanel('translation')" class="border-0 bg-transparent px-1 py-2 text-xs font-bold text-white">Translate</button>
-        <button type="button" @click="handleDownload" class="border-0 bg-transparent px-1 py-2 text-xs font-bold text-white">Download</button>
+    <button type="button" class="fixed left-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-teal-900 disabled:cursor-default disabled:opacity-35 max-md:block" @click="prevMedia()" :disabled="!hasPrevMedia || isAnimating" aria-label="Previous media">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="mx-auto h-6 w-6">
+            <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    </button>
+    <button type="button" class="fixed right-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-teal-900 disabled:cursor-default disabled:opacity-35 max-md:block" @click="nextMedia()" :disabled="!hasNextMedia || isAnimating" aria-label="Next media">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="mx-auto h-6 w-6">
+            <path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    </button>
+
+    <nav class="doc-mobile-actions hidden max-md:grid" aria-label="Document actions">
+        <button type="button" @click="togglePanel('info')" class="doc-mobile-action-btn" :class="{ 'is-active': activePanel === 'info' }">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <circle cx="12" cy="12" r="8.25" stroke-width="1.9"></circle>
+                <circle cx="12" cy="8.25" r="1.05" fill="currentColor" stroke="none"></circle>
+                <path d="M12 11v5" stroke-width="1.9" stroke-linecap="round"></path>
+            </svg>
+            <span>Info</span>
+        </button>
+        <button type="button" @click="togglePanel('arabic')" class="doc-mobile-action-btn" :class="{ 'is-active': activePanel === 'arabic' }">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M4.25 8V5.25H7" stroke-width="1.9" stroke-linecap="round"></path>
+                <path d="M16.75 5.25H19.75V8" stroke-width="1.9" stroke-linecap="round"></path>
+                <path d="M19.75 16V18.75H17" stroke-width="1.9" stroke-linecap="round"></path>
+                <path d="M7 18.75H4.25V16" stroke-width="1.9" stroke-linecap="round"></path>
+            </svg>
+            <span>Extract Text</span>
+        </button>
+        <button type="button" @click="togglePanel('translation')" class="doc-mobile-action-btn" :class="{ 'is-active': activePanel === 'translation' }">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M4.5 6.5H13.5" stroke-width="1.9" stroke-linecap="round"></path>
+                <path d="M9 6.5C9 11.5 6.7 14.6 4.5 16.5" stroke-width="1.9" stroke-linecap="round"></path>
+                <path d="M6.5 12.25C8.1 14.35 10.35 16.05 12.75 17" stroke-width="1.9" stroke-linecap="round"></path>
+                <path d="M16 7L20.5 17.5" stroke-width="1.9" stroke-linecap="round"></path>
+                <path d="M14.75 14.25H21.25" stroke-width="1.9" stroke-linecap="round"></path>
+            </svg>
+            <span>Translate</span>
+        </button>
+        <button type="button" @click="handleDownload" class="doc-mobile-action-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path d="M12 4V14.5" stroke-width="1.9" stroke-linecap="round"></path>
+                <path d="M9.5 12L12 14.5L14.5 12" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M5.25 18.75H18.75" stroke-width="1.9" stroke-linecap="round"></path>
+            </svg>
+            <span>Download</span>
+        </button>
     </nav>
 
-    <section class="doc-related absolute bottom-0 left-0 right-0 z-[75] flex flex-col overflow-hidden bg-transparent" :class="{ 'is-open': relatedOpen }">
+    <section class="doc-related fixed -bottom-px left-0 right-0 z-[75] flex flex-col overflow-hidden bg-transparent" :class="{ 'is-open': relatedOpen }">
         <header class="bg-teal-900 p-0 text-slate-50">
             <button type="button" @click="relatedOpen = !relatedOpen" class="flex min-h-[var(--doc-related-toggle-height)] w-full items-center justify-between border-0 bg-transparent px-4 py-2 text-[0.95rem] font-bold text-slate-50">
                 <span>Related Content</span>
