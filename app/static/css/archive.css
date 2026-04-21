@@ -95,6 +95,11 @@
     overscroll-behavior: none;
 }
 
+.doc-mobile-scroll {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
 .doc-canvas {
     transition: transform 0.16s ease;
     transform-origin: top center;

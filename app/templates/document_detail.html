@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block main_container_class %}h-full min-h-0 w-full overflow-hidden p-0{% endblock %}
-{% block main_class %}h-[100dvh] max-h-[100dvh] min-h-0 overflow-hidden bg-[#dfe3e4]{% endblock %}
+{% block main_class %}h-dvh max-h-dvh min-h-0 overflow-hidden bg-[#dfe3e4]{% endblock %}
 {% block page_header %}{% endblock %}
 {% block page_footer %}{% endblock %}
 
@@ -36,7 +36,7 @@
 {% endfor %}
 
 <div
-    class="doc-detail flex h-[100dvh] max-h-[100dvh] min-h-0 flex-col overflow-hidden bg-[#d9ddde] text-slate-800"
+    class="doc-detail flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[#d9ddde] text-slate-800"
     x-data='documentDetailViewer({
         media: {{ media_payload | tojson }},
         title: {{ document.title | tojson }},
@@ -48,13 +48,13 @@
 >
     <header x-ref="topHeader" class="flex items-center justify-between gap-4 bg-slate-50 px-8 py-4 max-md:flex-col max-md:items-start max-md:px-3 max-md:py-2">
         <a href="{{ url_for('search.index') }}" class="inline-flex items-center gap-2 font-bold text-teal-800 no-underline" data-print-no-href>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-[1.15rem] w-[1.15rem]">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-5 w-5">
                 <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
             <span>Back to Search</span>
         </a>
 
-        <p class="m-0 max-w-[64ch] overflow-hidden text-ellipsis whitespace-nowrap text-sm text-primary max-md:max-w-full max-md:text-xs" title="{{ document.title }}">
+        <p class="m-0 max-w-prose overflow-hidden text-ellipsis whitespace-nowrap text-sm text-primary max-md:max-w-full max-md:text-xs" title="{{ document.title }}">
             <span>Search Document Library</span>
             <span>/</span>
             <span class="font-semibold">{{ document.title }}</span>
@@ -62,21 +62,21 @@
     </header>
 
     <section class="bg-teal-900 px-4 py-2 text-slate-100 max-md:px-2" aria-label="Document controls">
-        <div class="flex items-center justify-center gap-3 text-[1.1rem] max-md:justify-start max-md:gap-2 max-md:text-base">
+        <div class="flex items-center justify-center gap-3 text-lg">
             <p x-text="`${displayPage} of ${displayTotal}`" aria-live="polite" class="m-0"></p>
             <span class="inline-block h-4 w-px bg-white/50"></span>
-            <button type="button" @click="zoomOut()" aria-label="Zoom out" class="min-w-5 bg-transparent p-0 text-[1.35rem] leading-none text-inherit disabled:cursor-default disabled:opacity-35">-</button>
-            <p class="m-0 min-w-[3.75rem] bg-slate-100 px-2 py-0.5 text-center text-base font-semibold text-slate-600 max-md:text-sm" x-text="`${Math.round(zoom * 100)}%`"></p>
-            <button type="button" @click="zoomIn()" aria-label="Zoom in" class="min-w-5 bg-transparent p-0 text-[1.35rem] leading-none text-inherit disabled:cursor-default disabled:opacity-35">+</button>
+            <button type="button" @click="zoomOut()" aria-label="Zoom out" class="min-w-5 bg-transparent p-0 text-xl leading-none text-inherit disabled:cursor-default disabled:opacity-35">-</button>
+            <p class="m-0 min-w-16 bg-slate-100 px-2 py-0.5 text-center text-base font-semibold text-slate-600 max-md:text-sm" x-text="`${Math.round(zoom * 100)}%`"></p>
+            <button type="button" @click="zoomIn()" aria-label="Zoom in" class="min-w-5 bg-transparent p-0 text-xl leading-none text-inherit disabled:cursor-default disabled:opacity-35">+</button>
         </div>
     </section>
 
-    <section class="relative flex flex-none items-stretch max-md:hidden h-[var(--doc-stage-height)] min-h-[var(--doc-stage-height)] max-h-[var(--doc-stage-height)] overflow-x-hidden overflow-y-auto [scrollbar-gutter:stable] pb-[var(--doc-related-toggle-height)]" :class="activePanel ? 'is-panel-open' : ''">
+    <section class="relative flex flex-none items-stretch max-md:hidden h-[var(--doc-stage-height)] min-h-[var(--doc-stage-height)] max-h-[var(--doc-stage-height)] overflow-x-auto overflow-y-auto [scrollbar-gutter:stable] pb-[var(--doc-related-toggle-height)]" :class="activePanel ? 'is-panel-open' : ''">
         <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+5.2rem)] z-[70] hidden w-[13.5rem] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
             <button
                 type="button"
                 title="Info"
-                class="flex w-full items-center gap-3 border-0 border-b border-[#5AB5A9] bg-[#3D9B8F] px-4 py-3 text-left text-[0.97rem] font-bold text-white transition-colors hover:bg-[#1A4540]"
+                class="flex w-full items-center gap-3 border-0 border-b border-[#5AB5A9] bg-[#3D9B8F] px-4 py-3 text-left text-base font-bold text-white transition-colors hover:bg-[#1A4540]"
                 :class="{ 'bg-[#1A4540]': activePanel === 'info' }"
                 @click="togglePanel('info')"
             >
@@ -90,7 +90,7 @@
             <button
                 type="button"
                 title="Extract Text"
-                class="flex w-full items-center gap-3 border-0 border-b border-[#5AB5A9] bg-[#3D9B8F] px-4 py-3 text-left text-[0.97rem] font-bold text-white transition-colors hover:bg-[#1A4540]"
+                class="flex w-full items-center gap-3 border-0 border-b border-[#5AB5A9] bg-[#3D9B8F] px-4 py-3 text-left text-base font-bold text-white transition-colors hover:bg-[#1A4540]"
                 :class="{ 'bg-[#1A4540]': activePanel === 'arabic' }"
                 @click="togglePanel('arabic')"
             >
@@ -105,7 +105,7 @@
             <button
                 type="button"
                 title="Translate"
-                class="flex w-full items-center gap-3 border-0 border-b border-[#5AB5A9] bg-[#3D9B8F] px-4 py-3 text-left text-[0.97rem] font-bold text-white transition-colors hover:bg-[#1A4540]"
+                class="flex w-full items-center gap-3 border-0 border-b border-[#5AB5A9] bg-[#3D9B8F] px-4 py-3 text-left text-base font-bold text-white transition-colors hover:bg-[#1A4540]"
                 :class="{ 'bg-[#1A4540]': activePanel === 'translation' }"
                 @click="togglePanel('translation')"
             >
@@ -121,7 +121,7 @@
             <button
                 type="button"
                 title="Download"
-                class="flex w-full items-center gap-3 border-0 bg-[#3D9B8F] px-4 py-3 text-left text-[0.97rem] font-bold text-white transition-colors hover:bg-[#1A4540]"
+                class="flex w-full items-center gap-3 border-0 bg-[#3D9B8F] px-4 py-3 text-left text-base font-bold text-white transition-colors hover:bg-[#1A4540]"
                 @click="handleDownload"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-4 w-4 shrink-0">
@@ -135,10 +135,10 @@
 
         <div class="relative box-border grid min-h-full w-full place-items-center overflow-visible p-3" :class="{ 'place-items-start': currentMedia && currentMedia.is_pdf }" @touchstart.passive="onTouchStart($event)" @touchmove.passive="onTouchMove($event)">
             <template x-if="!pageCount">
-                <div class="w-full max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-                    <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">No media available</h2>
-                    <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
-                    <a href="{{ url_for('search.index') }}" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Back to Search</a>
+                <div class="w-full max-w-2xl border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+                    <h2 class="m-0 text-lg font-bold text-slate-900">No media available</h2>
+                    <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
+                    <a href="{{ url_for('search.index') }}" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-sm font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Back to Search</a>
                 </div>
             </template>
 
@@ -153,16 +153,16 @@
                 </template>
 
                 <template x-if="currentMedia && currentMedia.is_pdf && !pdfError">
-                    <div class="doc-pdf-fallback flex min-h-[22rem] w-full flex-col items-center bg-transparent py-3 text-left">
+                    <div class="doc-pdf-fallback flex min-h-96 w-full flex-col items-center bg-transparent py-3 text-left">
                         <div class="doc-pdf-scroll flex w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="pdfDesktopList"></div>
                     </div>
                 </template>
 
                 <template x-if="currentMedia && currentMedia.is_pdf && pdfError">
-                    <div class="w-full max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-                        <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">PDF preview unavailable</h2>
-                        <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">We could not load this PDF in the viewer. You can still download the file directly.</p>
-                        <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Download PDF</a>
+                    <div class="w-full max-w-2xl border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+                        <h2 class="m-0 text-lg font-bold text-slate-900">PDF preview unavailable</h2>
+                        <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">We could not load this PDF in the viewer. You can still download the file directly.</p>
+                        <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-sm font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Download PDF</a>
                     </div>
                 </template>
             </div>
@@ -191,9 +191,9 @@
         @click="closePanel"
         :style="`top: var(--doc-header-height);`"
     >
-        <div class="h-full overflow-auto px-4 py-5 md:pl-[13.5rem] md:pr-6 md:pt-6" @click.stop>
-            <div class="mx-auto flex max-w-[64rem] items-center justify-between gap-3">
-                <p class="mb-1 max-w-[64rem] text-xs font-bold uppercase tracking-[0.06em] text-slate-700">
+        <div class="h-full overflow-auto px-4 py-5 md:pl-56 md:pr-6 md:pt-6" @click.stop>
+            <div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
+                <p class="mb-1 max-w-5xl text-xs font-bold uppercase tracking-wider text-slate-700">
                     Reference Number: {{ document.id }}
                 </p>
                 <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex items-center gap-2 border-0 bg-transparent p-0 text-xl font-bold leading-none text-slate-900">
@@ -206,7 +206,7 @@
                 </button>
             </div>
 
-            <div class="mx-auto mt-3 max-w-[64rem] border-t border-slate-300 pt-3 text-[0.97rem] leading-6 text-slate-800 max-md:text-sm max-md:leading-5">
+            <div class="mx-auto mt-3 max-w-5xl border-t border-slate-300 pt-3 text-base leading-6 text-slate-800 max-md:text-sm max-md:leading-5">
                 <p x-text="panelTitle" class="mb-3 inline-block bg-[#3D9B8F] px-4 py-2 text-xl font-bold leading-none text-white max-md:text-base"></p>
                 <div x-show="activePanel === 'info'">
                     <div class="mb-2 inline-flex items-center gap-1 rounded-sm bg-slate-200 p-1">
@@ -412,12 +412,12 @@
         </div>
     </aside>
 
-    <section class="hidden min-h-0 flex-1 overflow-auto [overscroll-behavior:contain] [-webkit-overflow-scrolling:touch] pb-[var(--doc-related-toggle-height)] max-md:block max-md:pb-[calc(var(--doc-related-toggle-height)+var(--doc-mobile-actions-height))]">
+    <section class="doc-mobile-scroll hidden min-h-0 flex-1 overflow-auto pb-[var(--doc-related-toggle-height)] max-md:block max-md:pb-[calc(var(--doc-related-toggle-height)+var(--doc-mobile-actions-height))]">
         <template x-if="!pageCount">
-            <div class="mx-3 my-3 w-auto max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-                <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">No media available</h2>
-                <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
-                <a href="{{ url_for('search.index') }}" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Back to Search</a>
+            <div class="mx-3 my-3 w-auto max-w-2xl border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+                <h2 class="m-0 text-lg font-bold text-slate-900">No media available</h2>
+                <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
+                <a href="{{ url_for('search.index') }}" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-sm font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Back to Search</a>
             </div>
         </template>
 
@@ -428,16 +428,16 @@
         </template>
 
         <template x-if="currentMedia && currentMedia.is_pdf && !pdfError">
-            <div class="doc-pdf-fallback flex min-h-[16rem] w-full flex-col items-center bg-transparent px-2 py-3 text-left">
+            <div class="doc-pdf-fallback flex min-h-64 w-full flex-col items-center bg-transparent px-2 py-3 text-left">
                 <div class="doc-pdf-scroll flex w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="pdfMobileList"></div>
             </div>
         </template>
 
         <template x-if="currentMedia && currentMedia.is_pdf && pdfError">
-            <div class="mx-3 my-3 w-auto max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-                <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">PDF preview unavailable</h2>
-                <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">We could not load this PDF in the viewer. You can still download the file directly.</p>
-                <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Download PDF</a>
+            <div class="mx-3 my-3 w-auto max-w-2xl border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+                <h2 class="m-0 text-lg font-bold text-slate-900">PDF preview unavailable</h2>
+                <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">We could not load this PDF in the viewer. You can still download the file directly.</p>
+                <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-sm font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Download PDF</a>
             </div>
         </template>
 
@@ -455,16 +455,16 @@
     </button>
 
     <nav class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-cols-4 border-t border-t-[rgba(26,69,64,0.35)] bg-[#3D9B8F] max-md:grid" aria-label="Document actions">
-        <button type="button" @click="togglePanel('info')" class="inline-flex flex-col items-center justify-center gap-[0.45rem] border-0 border-r border-r-[rgba(26,69,64,0.25)] rounded-none bg-transparent text-[0.95rem] font-bold leading-none text-white" :class="{ 'bg-[#1A4540]': activePanel === 'info' }">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-[1.45rem] w-[1.45rem] shrink-0">
+        <button type="button" @click="togglePanel('info')" class="inline-flex flex-col items-center justify-center gap-2 border-0 border-r border-r-[rgba(26,69,64,0.25)] rounded-none bg-transparent text-base font-bold leading-none text-white" :class="{ 'bg-[#1A4540]': activePanel === 'info' }">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-6 w-6 shrink-0">
                 <circle cx="12" cy="12" r="8.25" stroke-width="1.9"></circle>
                 <circle cx="12" cy="8.25" r="1.05" fill="currentColor" stroke="none"></circle>
                 <path d="M12 11v5" stroke-width="1.9" stroke-linecap="round"></path>
             </svg>
             <span>Info</span>
         </button>
-        <button type="button" @click="togglePanel('arabic')" class="inline-flex flex-col items-center justify-center gap-[0.45rem] border-0 border-r border-r-[rgba(26,69,64,0.25)] rounded-none bg-transparent text-[0.95rem] font-bold leading-none text-white" :class="{ 'bg-[#1A4540]': activePanel === 'arabic' }">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-[1.45rem] w-[1.45rem] shrink-0">
+        <button type="button" @click="togglePanel('arabic')" class="inline-flex flex-col items-center justify-center gap-2 border-0 border-r border-r-[rgba(26,69,64,0.25)] rounded-none bg-transparent text-base font-bold leading-none text-white" :class="{ 'bg-[#1A4540]': activePanel === 'arabic' }">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-6 w-6 shrink-0">
                 <path d="M4.25 8V5.25H7" stroke-width="1.9" stroke-linecap="round"></path>
                 <path d="M16.75 5.25H19.75V8" stroke-width="1.9" stroke-linecap="round"></path>
                 <path d="M19.75 16V18.75H17" stroke-width="1.9" stroke-linecap="round"></path>
@@ -472,8 +472,8 @@
             </svg>
             <span>Extract Text</span>
         </button>
-        <button type="button" @click="togglePanel('translation')" class="inline-flex flex-col items-center justify-center gap-[0.45rem] border-0 border-r border-r-[rgba(26,69,64,0.25)] rounded-none bg-transparent text-[0.95rem] font-bold leading-none text-white" :class="{ 'bg-[#1A4540]': activePanel === 'translation' }">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-[1.45rem] w-[1.45rem] shrink-0">
+        <button type="button" @click="togglePanel('translation')" class="inline-flex flex-col items-center justify-center gap-2 border-0 border-r border-r-[rgba(26,69,64,0.25)] rounded-none bg-transparent text-base font-bold leading-none text-white" :class="{ 'bg-[#1A4540]': activePanel === 'translation' }">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-6 w-6 shrink-0">
                 <path d="M4.5 6.5H13.5" stroke-width="1.9" stroke-linecap="round"></path>
                 <path d="M9 6.5C9 11.5 6.7 14.6 4.5 16.5" stroke-width="1.9" stroke-linecap="round"></path>
                 <path d="M6.5 12.25C8.1 14.35 10.35 16.05 12.75 17" stroke-width="1.9" stroke-linecap="round"></path>
@@ -482,8 +482,8 @@
             </svg>
             <span>Translate</span>
         </button>
-        <button type="button" @click="handleDownload" class="inline-flex flex-col items-center justify-center gap-[0.45rem] border-0 rounded-none bg-transparent text-[0.95rem] font-bold leading-none text-white">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-[1.45rem] w-[1.45rem] shrink-0">
+        <button type="button" @click="handleDownload" class="inline-flex flex-col items-center justify-center gap-2 border-0 rounded-none bg-transparent text-base font-bold leading-none text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-6 w-6 shrink-0">
                 <path d="M12 4V14.5" stroke-width="1.9" stroke-linecap="round"></path>
                 <path d="M9.5 12L12 14.5L14.5 12" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
                 <path d="M5.25 18.75H18.75" stroke-width="1.9" stroke-linecap="round"></path>
@@ -494,14 +494,14 @@
 
     <section class="doc-related fixed -bottom-px left-0 right-0 z-[75] flex flex-col overflow-hidden bg-transparent" :class="{ 'is-open': relatedOpen }">
         <header class="bg-teal-900 p-0 text-slate-50">
-            <button type="button" @click="relatedOpen = !relatedOpen" class="flex min-h-[var(--doc-related-toggle-height)] w-full items-center justify-between border-0 bg-transparent px-4 py-2 text-[0.95rem] font-bold text-slate-50">
+            <button type="button" @click="relatedOpen = !relatedOpen" class="flex min-h-[var(--doc-related-toggle-height)] w-full items-center justify-between border-0 bg-transparent px-4 py-2 text-base font-bold text-slate-50">
                 <span>Related Content</span>
                 <span x-text="relatedOpen ? '▾' : '▴'"></span>
             </button>
         </header>
 
         <div
-            class="overflow-auto border-b border-white/10 bg-[#54585f] transition-[max-height,opacity] duration-200 ease-out max-h-0 opacity-0"
+            class="overflow-auto border-b border-white/10 bg-[#54585f] transition-all duration-200 ease-out max-h-0 opacity-0"
             :class="relatedOpen ? 'max-h-[min(42vh,24rem)] opacity-100 max-md:max-h-[min(52vh,28rem)]' : 'max-h-0 opacity-0'"
         >
             {% if relations %}
@@ -521,8 +521,8 @@
                     </div>
 
                     <div class="px-3 pb-3 pt-2">
-                        <h3 class="m-0 text-[0.96rem] leading-snug">{{ related.display_title or 'Related record' }}</h3>
-                        <p class="mt-1 text-[0.78rem] text-slate-300">{{ related.related_type | title }}{% if related.page_count %} • {{ related.page_count }} pages{% endif %}</p>
+                        <h3 class="m-0 text-base leading-snug">{{ related.display_title or 'Related record' }}</h3>
+                        <p class="mt-1 text-xs text-slate-300">{{ related.related_type | title }}{% if related.page_count %} • {{ related.page_count }} pages{% endif %}</p>
                     </div>
 
                     {% if related.related_document_id and related.slug %}
