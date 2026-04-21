@@ -154,7 +154,7 @@
 
                 <template x-if="currentMedia && currentMedia.is_pdf && !pdfError">
                     <div class="doc-pdf-fallback flex min-h-[22rem] w-full flex-col items-center bg-transparent py-3 text-left">
-                        <div class="doc-pdf-scroll flex w-max min-w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="pdfDesktopList"></div>
+                        <div class="doc-pdf-scroll flex w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="pdfDesktopList"></div>
                     </div>
                 </template>
 
@@ -169,12 +169,12 @@
 
         </div>
 
-        <button type="button" class="doc-nav-arrow fixed left-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-[#d2d7d9] bg-white/80 text-teal-900 disabled:cursor-default disabled:opacity-35 max-md:hidden" @click="prevMedia()" :disabled="!hasPrevMedia || isAnimating" aria-label="Previous media">
+        <button type="button" class="doc-nav-arrow fixed left-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-[#d2d7d9] bg-white/80 text-teal-900 disabled:cursor-default disabled:opacity-35" @click="prevMedia()" :disabled="!hasPrevMedia || isAnimating" aria-label="Previous media">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="mx-auto h-6 w-6">
                 <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
         </button>
-        <button type="button" class="doc-nav-arrow fixed right-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-[#d2d7d9] bg-white/80 text-teal-900 disabled:cursor-default disabled:opacity-35 max-md:hidden" @click="nextMedia()" :disabled="!hasNextMedia || isAnimating" aria-label="Next media">
+        <button type="button" class="doc-nav-arrow fixed right-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-[#d2d7d9] bg-white/80 text-teal-900 disabled:cursor-default disabled:opacity-35" @click="nextMedia()" :disabled="!hasNextMedia || isAnimating" aria-label="Next media">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="mx-auto h-6 w-6">
                 <path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
@@ -427,17 +427,6 @@
             </div>
         </template>
 
-        <template x-if="currentMedia && currentMedia.is_pdf && !pdfError">
-            <div class="grid gap-3 p-3" x-ref="pdfMobileList"></div>
-        </template>
-
-        <template x-if="currentMedia && currentMedia.is_pdf && pdfError">
-            <div class="mx-3 my-3 w-auto max-w-[40rem] border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-                <h2 class="m-0 text-[1.05rem] font-bold text-slate-900">PDF preview unavailable</h2>
-                <p class="my-[0.6rem] mb-[0.95rem] text-[0.9rem] leading-normal text-slate-600">We could not load this PDF in the viewer. You can still download the file directly.</p>
-                <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-[0.85rem] font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Download PDF</a>
-            </div>
-        </template>
     </section>
 
     <nav class="sticky bottom-0 z-[35] hidden grid-cols-4 bg-[#3D9B8F] max-md:grid" aria-label="Document actions">

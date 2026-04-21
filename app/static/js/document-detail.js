@@ -17,7 +17,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     relatedOpen: false,
     pinchStartDistance: null,
     pinchStartZoom: 1,
-    isMobile: window.matchMedia("(max-width: 900px)").matches,
+    isMobile: window.matchMedia("(max-width: 767px)").matches,
     pdfTotalPages: 1,
     pdfStatusText: "",
     pdfError: false,
@@ -133,7 +133,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     updateViewportMode() {
-      this.isMobile = window.matchMedia("(max-width: 900px)").matches;
+      this.isMobile = window.matchMedia("(max-width: 767px)").matches;
     },
 
     syncLayoutMetrics() {
@@ -336,9 +336,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       const pdfDoc = rawPdfDoc;
       await this.$nextTick();
       await this.renderPdfDesktopPages(pdfDoc, token);
-      if (this.isMobile) {
-        await this.renderPdfMobilePages(pdfDoc, token);
-      }
     },
 
     async renderPdfDesktopPages(pdfDoc, token) {
@@ -350,7 +347,11 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
         const page = await pdfDoc.getPage(pageNumber);
         if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-        const cssScale = (this.isMobile ? 1.15 : 1.45) * this.zoom;
+        const baseViewport = page.getViewport({ scale: 1 });
+        const availableWidth = Math.max((container.clientWidth || 0) - 12, 280);
+        const fitScale = availableWidth / Math.max(baseViewport.width, 1);
+        const preferredScale = 1.35;
+        const cssScale = Math.min(preferredScale, fitScale) * this.zoom;
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const viewport = page.getViewport({ scale: cssScale });
         const renderViewport = page.getViewport({ scale: cssScale * dpr });
@@ -376,7 +377,11 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
         const page = await pdfDoc.getPage(pageNumber);
         if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-        const cssScale = 1.2 * this.zoom;
+        const baseViewport = page.getViewport({ scale: 1 });
+        const availableWidth = Math.max((container.clientWidth || 0) - 8, 220);
+        const fitScale = availableWidth / Math.max(baseViewport.width, 1);
+        const preferredScale = 1.1;
+        const cssScale = Math.max(0.35, Math.min(preferredScale, fitScale)) * this.zoom;
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const viewport = page.getViewport({ scale: cssScale });
         const renderViewport = page.getViewport({ scale: cssScale * dpr });

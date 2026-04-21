@@ -142,7 +142,7 @@
 .doc-mobile-pdf-canvas {
     display: block;
     margin-inline: auto;
-    max-width: none;
+    max-width: 100%;
     height: auto;
     box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
 }
@@ -161,6 +161,11 @@
 @media (max-width: 900px) {
     .doc-stage {
         min-height: 0;
+    }
+
+    .doc-mobile-pdf-canvas {
+        max-width: 100%;
+        width: 100% !important;
     }
 
     .doc-related.is-open .doc-related__body {
