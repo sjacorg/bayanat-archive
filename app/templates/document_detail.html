@@ -24,6 +24,7 @@
         "filename": item.filename,
         "src": url_for('static', filename='media/' ~ item.filename),
         "title": item.title or item.title_ar or ('Page ' ~ loop.index),
+        "title_ar": item.title_ar or '',
         "media_type": item.media_type or '',
         "language": item.language or '',
         "ocr_text": item.ocr_text or '',
@@ -239,6 +240,10 @@
                                 <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top break-all" x-text="currentMedia?.filename || 'N/A'"></td>
                             </tr>
                             <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Media ID</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.media_id || 'N/A'"></td>
+                            </tr>
+                            <tr>
                                 <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Type</th>
                                 <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.media_type || 'N/A'"></td>
                             </tr>
@@ -247,8 +252,20 @@
                                 <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.title || 'N/A'"></td>
                             </tr>
                             <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Arabic Title</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.title_ar || 'N/A'"></td>
+                            </tr>
+                            <tr>
                                 <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Language</th>
                                 <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.language || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Has OCR Text</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.ocr_text ? 'Yes' : 'No'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Has Original Text</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.original_text ? 'Yes' : 'No'"></td>
                             </tr>
                             <tr>
                                 <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">OCR Confidence</th>
@@ -268,6 +285,10 @@
                                 <tr>
                                     <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Title</th>
                                     <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.title }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Arabic Title</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.title_ar if document.title_ar else 'N/A' }}</td>
                                 </tr>
                                 <tr>
                                     <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Slug</th>
@@ -292,8 +313,74 @@
                     <table x-show="showDocumentDetails" class="mt-2 w-full border-collapse text-sm">
                         <tbody>
                             <tr>
-                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Date</th>
-                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ metadata.date or 'N/A' }}</td>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Published Date</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.publish_date if document.publish_date else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Documentation Date</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.documentation_date if document.documentation_date else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Labels</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {% if document_labels %}
+                                        {{ document_labels | join(', ') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Locations</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {% if document_locations %}
+                                        {{ document_locations | join(', ') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Sources</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {% if document_sources %}
+                                        {{ document_sources | join(', ') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Events</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {% if document_events %}
+                                        <ul class="m-0 list-disc pl-4">
+                                            {% for event in document_events %}
+                                                <li>
+                                                    {{ event.title or 'Untitled event' }}
+                                                    {% if event.event_type %} ({{ event.event_type }}){% endif %}
+                                                    {% if event.from_date or event.to_date %}
+                                                        — {{ event.from_date or '?' }} to {{ event.to_date or '?' }}
+                                                    {% endif %}
+                                                    {% if event.location %} — {{ event.location }}{% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Media Summary</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {{ media_summary.total }} total
+                                    ({{ media_summary.images }} images, {{ media_summary.pdfs }} PDFs{% if media_summary.other %}, {{ media_summary.other }} other{% endif %})
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Related Items</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ related_count }}</td>
                             </tr>
                         </tbody>
                     </table>
