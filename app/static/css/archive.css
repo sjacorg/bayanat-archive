@@ -90,29 +90,9 @@
     --doc-header-height: 72px;
     --doc-related-toggle-height: 2.75rem;
     --doc-mobile-actions-height: 5.2rem;
-    --doc-related-drawer-height: min(42vh, 24rem);
     --doc-stage-top: 152px;
     --doc-stage-height: calc(100vh - 152px);
     overscroll-behavior: none;
-}
-
-.doc-mobile-scroll {
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-}
-
-.doc-stage {
-    height: var(--doc-stage-height);
-    min-height: var(--doc-stage-height);
-    max-height: var(--doc-stage-height);
-    padding-bottom: var(--doc-related-toggle-height);
-    overflow-y: auto;
-    overflow-x: hidden;
-    scrollbar-gutter: stable;
-}
-
-.doc-canvas-wrap.is-pdf-mode {
-    place-items: start center;
 }
 
 .doc-canvas {
@@ -154,76 +134,9 @@
     box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
 }
 
-.doc-related__body {
-    max-height: 0;
-    opacity: 0;
-    transition: max-height 240ms ease, opacity 160ms ease;
-}
-
-.doc-related.is-open .doc-related__body {
-    max-height: var(--doc-related-drawer-height);
-    opacity: 1;
-}
-
-.doc-mobile-actions {
-    position: fixed;
-    bottom: var(--doc-related-toggle-height);
-    left: 0;
-    right: 0;
-    z-index: 60;
-    height: var(--doc-mobile-actions-height);
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    border-top: 1px solid rgba(26, 69, 64, 0.35);
-    background: #3D9B8F;
-}
-
-.doc-mobile-action-btn {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border: 0;
-    border-right: 1px solid rgba(26, 69, 64, 0.25);
-    border-radius: 0;
-    background: transparent;
-    color: #ffffff;
-    font-size: 0.95rem;
-    font-weight: 700;
-    line-height: 1;
-}
-
-.doc-mobile-action-btn:last-child {
-    border-right: 0;
-}
-
-.doc-mobile-action-btn svg {
-    width: 1.45rem;
-    height: 1.45rem;
-    flex-shrink: 0;
-}
-
-.doc-mobile-action-btn.is-active {
-    background: #1A4540;
-}
-
 @media (max-width: 900px) {
-    .doc-detail {
-        height: 100dvh;
-        max-height: 100dvh;
-    }
-
-    .doc-stage {
-        min-height: 0;
-        padding-bottom: calc(var(--doc-related-toggle-height) + var(--doc-mobile-actions-height));
-    }
-
     .doc-mobile-pdf-canvas {
         max-width: 100%;
         width: 100% !important;
-    }
-
-    .doc-related.is-open .doc-related__body {
-        max-height: min(52vh, 28rem);
     }
 }
