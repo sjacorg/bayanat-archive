@@ -147,7 +147,7 @@
         </div>
     </section>
 
-    <section class="relative flex flex-none items-stretch max-md:hidden h-[var(--doc-stage-height)] min-h-[var(--doc-stage-height)] max-h-[var(--doc-stage-height)] overflow-x-auto overflow-y-auto [scrollbar-gutter:stable] pb-[var(--doc-related-toggle-height)]" :class="activePanel ? 'is-panel-open' : ''">
+    <section class="relative flex flex-none items-stretch overflow-x-hidden max-md:hidden h-[var(--doc-stage-height)] min-h-[var(--doc-stage-height)] max-h-[var(--doc-stage-height)] overflow-y-auto [scrollbar-gutter:stable] pb-[var(--doc-related-toggle-height)]" :class="activePanel ? 'is-panel-open' : ''">
         <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+5.2rem)] z-[70] hidden w-[13.5rem] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
             {{ action_button('info', 'Info', 'info', 'desktop') }}
             {{ action_button('arabic', 'Extract Text', 'arabic', 'desktop') }}
