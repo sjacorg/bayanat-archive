@@ -1,0 +1,11 @@
+<div class="grid w-full place-items-center px-3 md:px-0 {{ loading_stage_class | default('min-h-[42vh]') }}">
+    <div class="mx-auto w-full border border-slate-300 bg-slate-50 p-4 {{ loading_max_class | default('max-w-2xl') }}">
+        <div class="animate-pulse space-y-3">
+            <div class="h-4 w-2/5 bg-slate-300/80"></div>
+            <div class="h-3 w-full bg-slate-200"></div>
+            <div class="h-3 w-4/5 bg-slate-200"></div>
+            <div class="{{ loading_frame_class | default('h-56') }} w-full border border-slate-300 bg-white"></div>
+        </div>
+        <p class="mt-3 text-xs text-slate-600">{{ loading_text | default('Loading preview...') }}</p>
+    </div>
+</div>

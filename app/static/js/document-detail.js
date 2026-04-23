@@ -1,6 +1,388 @@
 window.documentDetailViewer = function documentDetailViewer(payload) {
+  const LOG_PREFIX = "[document-detail]";
   let rawPdfDoc = null;
   let rawPdfRenderToken = 0;
+  let rawDocxBuffer = null;
+  let rawDocxRenderToken = 0;
+
+  const pdfModule = {
+    reset(viewer) {
+      rawPdfRenderToken += 1;
+      if (rawPdfDoc && typeof rawPdfDoc.destroy === "function") {
+        try {
+          rawPdfDoc.destroy();
+        } catch (error) {
+          // Best-effort cleanup only.
+        }
+      }
+      rawPdfDoc = null;
+      viewer.pdfReady = false;
+      viewer.pdfTotalPages = 1;
+      viewer.pdfStatusText = "";
+      viewer.pdfError = false;
+    },
+
+    async openPdfDocument(input) {
+      const loadingTask = window.pdfjsLib.getDocument(input);
+      return loadingTask.promise;
+    },
+
+    sleep(ms) {
+      return new Promise((resolve) => {
+        window.setTimeout(resolve, ms);
+      });
+    },
+
+    async loadWithAttempts(viewer, src) {
+      const urlAttempts = [
+        { label: "url-worker", input: src },
+        { label: "url-no-worker", input: { url: src, disableWorker: true } },
+      ];
+
+      for (let i = 0; i < urlAttempts.length; i += 1) {
+        const attempt = urlAttempts[i];
+        try {
+          viewer.logDebug("PDF load attempt started.", { attempt: attempt.label, src });
+          return await this.openPdfDocument(attempt.input);
+        } catch (error) {
+          viewer.logError("PDF load attempt failed.", error, { attempt: attempt.label, src });
+        }
+      }
+
+      try {
+        const response = await fetch(src, { credentials: "same-origin", cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch PDF (${response.status})`);
+        }
+        const data = await response.arrayBuffer();
+        const dataAttempts = [
+          { label: "data-no-worker", input: { data, disableWorker: true } },
+          { label: "data-worker", input: { data } },
+        ];
+        for (let i = 0; i < dataAttempts.length; i += 1) {
+          const attempt = dataAttempts[i];
+          try {
+            viewer.logDebug("PDF data attempt started.", { attempt: attempt.label, src });
+            return await this.openPdfDocument(attempt.input);
+          } catch (error) {
+            viewer.logError("PDF data attempt failed.", error, { attempt: attempt.label, src });
+          }
+        }
+      } catch (error) {
+        viewer.logError("PDF fetch fallback failed.", error, { src });
+      }
+
+      return null;
+    },
+
+    async resolveContainer(viewer) {
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        await viewer.$nextTick();
+        const container = viewer.isMobile ? viewer.$refs.pdfMobileList : viewer.$refs.pdfDesktopList;
+        if (!container) {
+          await new Promise((resolve) => window.setTimeout(resolve, 16));
+          continue;
+        }
+        const width = container.clientWidth || container.getBoundingClientRect().width || 0;
+        if (width > 40) return container;
+        await new Promise((resolve) => window.setTimeout(resolve, 16));
+      }
+      return viewer.isMobile ? viewer.$refs.pdfMobileList : viewer.$refs.pdfDesktopList;
+    },
+
+    async load(viewer, src) {
+      if (!window.pdfjsLib) {
+        viewer.pdfError = true;
+        viewer.pdfStatusText = "PDF viewer failed to load.";
+        return;
+      }
+
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+      viewer.pdfStatusText = "Loading PDF...";
+      rawPdfDoc = await this.loadWithAttempts(viewer, src);
+      if (rawPdfDoc) {
+        viewer.pdfTotalPages = rawPdfDoc.numPages || 1;
+        viewer.pdfError = false;
+        viewer.pdfStatusText = `${viewer.pdfTotalPages} page PDF`;
+        return;
+      }
+
+      rawPdfDoc = null;
+      viewer.pdfError = true;
+      viewer.pdfReady = false;
+      viewer.pdfStatusText = "Unable to render PDF.";
+    },
+
+    async render(viewer) {
+      if (!rawPdfDoc) return;
+      const token = ++rawPdfRenderToken;
+      const pdfDoc = rawPdfDoc;
+      viewer.pdfReady = false;
+      const container = await this.resolveContainer(viewer);
+      if (!container) {
+        if (token === rawPdfRenderToken && pdfDoc === rawPdfDoc) {
+          viewer.logError("PDF render skipped: container ref unavailable.", null, {
+            isMobile: viewer.isMobile,
+          });
+          viewer.pdfError = true;
+          viewer.pdfStatusText = "Unable to render PDF.";
+        }
+        return;
+      }
+
+      try {
+        let renderedPages = 0;
+        if (viewer.isMobile) {
+          renderedPages = await this.renderPages(viewer, pdfDoc, token, container, {
+            className: "doc-mobile-pdf-canvas",
+            gutter: 8,
+            minWidth: 220,
+            preferredScale: 1.1,
+            minScale: 0.35,
+          });
+        } else {
+          renderedPages = await this.renderPages(viewer, pdfDoc, token, container, {
+            className: "doc-pdf-canvas",
+            gutter: 12,
+            minWidth: 280,
+            preferredScale: 1.35,
+            minScale: 0,
+          });
+        }
+
+        if (token === rawPdfRenderToken && pdfDoc === rawPdfDoc) {
+          if (renderedPages > 0) {
+            viewer.pdfReady = true;
+          } else {
+            viewer.logDebug("PDF render produced zero pages; retrying once.", {
+              pageCount: viewer.pdfTotalPages,
+              zoom: viewer.zoom,
+              isMobile: viewer.isMobile,
+            });
+            await this.sleep(120);
+            if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
+            const retryContainer = await this.resolveContainer(viewer);
+            const retryRenderedPages = await this.renderPages(viewer, pdfDoc, token, retryContainer, viewer.isMobile
+              ? {
+                className: "doc-mobile-pdf-canvas",
+                gutter: 8,
+                minWidth: 220,
+                preferredScale: 1.1,
+                minScale: 0.35,
+              }
+              : {
+                className: "doc-pdf-canvas",
+                gutter: 12,
+                minWidth: 280,
+                preferredScale: 1.35,
+                minScale: 0,
+              });
+            if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
+            if (retryRenderedPages > 0) {
+              viewer.pdfReady = true;
+              return;
+            }
+            viewer.pdfError = true;
+            viewer.pdfReady = false;
+            viewer.pdfStatusText = "Unable to render PDF.";
+          }
+        }
+      } catch (error) {
+        if (token === rawPdfRenderToken && pdfDoc === rawPdfDoc) {
+          viewer.logError("PDF render failed.", error, {
+            pageCount: viewer.pdfTotalPages,
+            zoom: viewer.zoom,
+            isMobile: viewer.isMobile,
+          });
+          viewer.pdfError = true;
+          viewer.pdfReady = false;
+          viewer.pdfStatusText = "Unable to render PDF.";
+        }
+      }
+    },
+
+    async renderPages(viewer, pdfDoc, token, container, opts) {
+      if (!container || !pdfDoc) return 0;
+
+      container.innerHTML = "";
+      let renderedPages = 0;
+      for (let pageNumber = 1; pageNumber <= viewer.pdfTotalPages; pageNumber += 1) {
+        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return renderedPages;
+
+        const page = await pdfDoc.getPage(pageNumber);
+        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return renderedPages;
+
+        const baseViewport = page.getViewport({ scale: 1 });
+        const availableWidth = Math.max((container.clientWidth || 0) - opts.gutter, opts.minWidth);
+        const fitScale = availableWidth / Math.max(baseViewport.width, 1);
+        const scaled = Math.min(opts.preferredScale, fitScale) * viewer.zoom;
+        const cssScale = Math.max(opts.minScale || 0, scaled);
+
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const viewport = page.getViewport({ scale: cssScale });
+        const renderViewport = page.getViewport({ scale: cssScale * dpr });
+        const canvas = document.createElement("canvas");
+        canvas.className = opts.className;
+        canvas.width = Math.floor(renderViewport.width);
+        canvas.height = Math.floor(renderViewport.height);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = "auto";
+
+        const context = canvas.getContext("2d", { alpha: false });
+        if (!context) {
+          throw new Error("Unable to initialize PDF canvas context.");
+        }
+        await page.render({ canvasContext: context, viewport: renderViewport }).promise;
+
+        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return renderedPages;
+        container.appendChild(canvas);
+        renderedPages += 1;
+      }
+      return renderedPages;
+    },
+  };
+
+  const docxModule = {
+    reset(viewer) {
+      rawDocxRenderToken += 1;
+      rawDocxBuffer = null;
+      viewer.docxReady = false;
+      viewer.docxError = false;
+    },
+
+    getRenderer() {
+      if (window.docx && typeof window.docx.renderAsync === "function") {
+        return window.docx.renderAsync;
+      }
+      if (window.docxPreview && typeof window.docxPreview.renderAsync === "function") {
+        return window.docxPreview.renderAsync;
+      }
+      if (typeof window.renderAsync === "function") {
+        return window.renderAsync;
+      }
+      return null;
+    },
+
+    async resolveContainer(viewer) {
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        await viewer.$nextTick();
+        const container = viewer.isMobile ? viewer.$refs.docxMobileList : viewer.$refs.docxDesktopList;
+        if (!container) {
+          await new Promise((resolve) => window.setTimeout(resolve, 16));
+          continue;
+        }
+        return container;
+      }
+      return viewer.isMobile ? viewer.$refs.docxMobileList : viewer.$refs.docxDesktopList;
+    },
+
+    async load(viewer, src) {
+      const docxRenderer = this.getRenderer();
+      if (!docxRenderer) {
+        viewer.docxError = true;
+        return;
+      }
+
+      try {
+        const response = await fetch(src, { credentials: "same-origin" });
+        if (!response.ok) {
+          throw new Error(`Failed to load DOCX (${response.status})`);
+        }
+
+        rawDocxBuffer = await response.arrayBuffer();
+        const header = new Uint8Array(rawDocxBuffer.slice(0, 4));
+        const isZip =
+          header.length === 4 &&
+          header[0] === 0x50 &&
+          header[1] === 0x4b &&
+          (header[2] === 0x03 || header[2] === 0x05 || header[2] === 0x07) &&
+          (header[3] === 0x04 || header[3] === 0x06 || header[3] === 0x08);
+
+        if (!isZip) {
+          throw new Error("Loaded file is not a valid DOCX package.");
+        }
+
+        viewer.docxError = false;
+      } catch (error) {
+        viewer.logError("DOCX load failed.", error, { src });
+        rawDocxBuffer = null;
+        viewer.docxError = true;
+        viewer.docxReady = false;
+      }
+    },
+
+    async render(viewer) {
+      if (!rawDocxBuffer || viewer.docxError) return;
+
+      const docxRenderer = this.getRenderer();
+      if (!docxRenderer) {
+        viewer.docxError = true;
+        viewer.docxReady = false;
+        return;
+      }
+
+      const token = ++rawDocxRenderToken;
+      const container = await this.resolveContainer(viewer);
+      if (!container) {
+        if (token === rawDocxRenderToken) {
+          viewer.logError("DOCX render skipped: container ref unavailable.", null, {
+            isMobile: viewer.isMobile,
+          });
+          viewer.docxError = true;
+          viewer.docxReady = false;
+        }
+        return;
+      }
+
+      container.innerHTML = "";
+      viewer.docxReady = false;
+      try {
+        await docxRenderer(rawDocxBuffer, container, container, {
+          className: "docx-preview",
+          inWrapper: false,
+          breakPages: true,
+          ignoreWidth: false,
+          ignoreHeight: false,
+          renderHeaders: true,
+          renderFooters: true,
+          renderFootnotes: true,
+          renderEndnotes: true,
+          useBase64URL: true,
+        });
+        if (token !== rawDocxRenderToken) return;
+        viewer.docxReady = true;
+      } catch (error) {
+        viewer.logError("DOCX render failed (arrayBuffer), trying blob fallback.", error);
+        try {
+          const blob = new Blob(
+            [rawDocxBuffer],
+            { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
+          );
+          await docxRenderer(blob, container, container, {
+            className: "docx-preview",
+            inWrapper: false,
+            breakPages: true,
+            ignoreWidth: false,
+            ignoreHeight: false,
+            renderHeaders: true,
+            renderFooters: true,
+            renderFootnotes: true,
+            renderEndnotes: true,
+            useBase64URL: true,
+          });
+          if (token !== rawDocxRenderToken) return;
+          viewer.docxReady = true;
+        } catch (fallbackError) {
+          if (token !== rawDocxRenderToken) return;
+          viewer.logError("DOCX render failed (blob fallback).", fallbackError);
+          viewer.docxError = true;
+          viewer.docxReady = false;
+        }
+      }
+    },
+  };
 
   return {
     media: payload.media || [],
@@ -21,24 +403,35 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     pdfTotalPages: 1,
     pdfStatusText: "",
     pdfError: false,
+    pdfReady: false,
+    docxError: false,
+    docxReady: false,
+    mediaErrors: {},
+    mediaReady: {},
+    isMediaLoading: false,
+    mediaLoadingKind: "",
+    mediaLoadToken: 0,
     requestedDisplayPage: null,
     isAnimating: false,
     carouselPhase: null,
     carouselDirection: 1,
     keydownHandler: null,
+    resizeHandler: null,
+    pagehideHandler: null,
+    resizeDebounceTimer: null,
+    logPrefix: LOG_PREFIX,
 
     async init() {
       this.updateViewportMode();
       this.syncLayoutMetrics();
+
       this.keydownHandler = this.onKeydown.bind(this);
+      this.resizeHandler = this.onResize.bind(this);
+      this.pagehideHandler = this.destroy.bind(this);
+
       window.addEventListener("keydown", this.keydownHandler);
-      window.addEventListener("resize", () => {
-        this.updateViewportMode();
-        this.syncLayoutMetrics();
-        if (this.currentMedia && this.currentMedia.is_pdf) {
-          this.renderCurrentPdf();
-        }
-      });
+      window.addEventListener("resize", this.resizeHandler);
+      window.addEventListener("pagehide", this.pagehideHandler);
 
       const url = new URL(window.location.href);
       const requestedPage = Number(url.searchParams.get("page") || 1);
@@ -54,6 +447,25 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       });
 
       await this.loadCurrentMedia();
+    },
+
+    destroy() {
+      if (this.keydownHandler) {
+        window.removeEventListener("keydown", this.keydownHandler);
+        this.keydownHandler = null;
+      }
+      if (this.resizeHandler) {
+        window.removeEventListener("resize", this.resizeHandler);
+        this.resizeHandler = null;
+      }
+      if (this.pagehideHandler) {
+        window.removeEventListener("pagehide", this.pagehideHandler);
+        this.pagehideHandler = null;
+      }
+      if (this.resizeDebounceTimer) {
+        window.clearTimeout(this.resizeDebounceTimer);
+        this.resizeDebounceTimer = null;
+      }
     },
 
     get pageCount() {
@@ -124,12 +536,113 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     get canvasCursorClass() {
       if (!this.currentMedia) return "cursor-default";
+      if (!this.isZoomableMedia()) return "cursor-default";
       return this.zoom > 1 ? "cursor-zoom-out" : "cursor-zoom-in";
     },
 
     get canvasScale() {
-      if (this.currentMedia && this.currentMedia.is_pdf) return 1;
+      if (!this.isZoomableMedia()) return 1;
+      if (this.isPdfMedia()) return 1;
       return this.zoom;
+    },
+
+    isPdfMedia(item = this.currentMedia) {
+      return item?.media_kind === "pdf";
+    },
+
+    isImageMedia(item = this.currentMedia) {
+      return item?.media_kind === "image";
+    },
+
+    isDocxMedia(item = this.currentMedia) {
+      return item?.media_kind === "docx";
+    },
+
+    isZoomableMedia(item = this.currentMedia) {
+      return this.isImageMedia(item) || this.isPdfMedia(item) || this.isDocxMedia(item);
+    },
+
+    clearMediaErrors() {
+      this.mediaErrors = {};
+    },
+
+    clearMediaReady() {
+      this.mediaReady = {};
+    },
+
+    setMediaReady(kind) {
+      if (!kind) return;
+      this.mediaReady = { ...this.mediaReady, [kind]: true };
+      if (this.currentMedia?.media_kind === kind) {
+        this.isMediaLoading = false;
+      }
+    },
+
+    setMediaError(kind) {
+      if (!kind) return;
+      this.logError("Media element signaled an error event.", null, {
+        kind,
+        mediaId: this.currentMedia?.media_id || null,
+        filename: this.currentMedia?.filename || null,
+        src: this.currentMedia?.src || null,
+      });
+      this.mediaErrors = { ...this.mediaErrors, [kind]: true };
+      this.mediaReady = { ...this.mediaReady, [kind]: false };
+      if (this.currentMedia?.media_kind === kind) {
+        this.isMediaLoading = false;
+      }
+    },
+
+    logDebug(message, meta = null) {
+      if (meta) {
+        console.debug(this.logPrefix, message, meta);
+        return;
+      }
+      console.debug(this.logPrefix, message);
+    },
+
+    logError(message, error = null, meta = null) {
+      if (meta) {
+        console.error(this.logPrefix, message, meta);
+      } else {
+        console.error(this.logPrefix, message);
+      }
+      if (error) {
+        console.error(error);
+      }
+    },
+
+    isKindLoading(kind) {
+      return this.isMediaLoading && this.mediaLoadingKind === kind;
+    },
+
+    hasKindError(kind) {
+      if (kind === "pdf") return this.pdfError;
+      if (kind === "docx") return this.docxError;
+      return Boolean(this.mediaErrors[kind]);
+    },
+
+    isKindReady(kind) {
+      if (!this.currentMedia || this.currentMedia.media_kind !== kind) return false;
+      if (kind === "pdf") return this.pdfReady && !this.pdfError;
+      if (kind === "docx") return this.docxReady && !this.docxError;
+      if (kind === "other") return !this.isKindLoading(kind);
+      return !this.hasKindError(kind);
+    },
+
+    onResize() {
+      if (this.resizeDebounceTimer) {
+        window.clearTimeout(this.resizeDebounceTimer);
+      }
+      this.resizeDebounceTimer = window.setTimeout(() => {
+        this.updateViewportMode();
+        this.syncLayoutMetrics();
+        if (this.isPdfMedia() && !this.pdfError) {
+          pdfModule.render(this);
+        } else if (this.isDocxMedia() && !this.docxError) {
+          docxModule.render(this);
+        }
+      }, 120);
     },
 
     updateViewportMode() {
@@ -146,17 +659,44 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     async loadCurrentMedia() {
-      rawPdfRenderToken += 1;
-      rawPdfDoc = null;
-      this.pdfTotalPages = 1;
-      this.pdfStatusText = "";
-      this.pdfError = false;
+      const token = ++this.mediaLoadToken;
+      this.isMediaLoading = true;
+      this.mediaLoadingKind = this.currentMedia?.media_kind || "";
+      this.clearMediaErrors();
+      this.clearMediaReady();
 
-      if (!this.currentMedia) return;
-      if (!this.currentMedia.is_pdf) return;
+      pdfModule.reset(this);
+      docxModule.reset(this);
 
-      await this.loadPdfDocument(this.currentMedia.src);
-      await this.renderCurrentPdf();
+      try {
+        if (!this.currentMedia) return;
+
+        if (this.isPdfMedia()) {
+          await pdfModule.load(this, this.currentMedia.src);
+          if (token !== this.mediaLoadToken) return;
+          await pdfModule.render(this);
+          return;
+        }
+
+        if (this.isDocxMedia()) {
+          await docxModule.load(this, this.currentMedia.src);
+          if (token !== this.mediaLoadToken) return;
+          await docxModule.render(this);
+          return;
+        }
+
+        if (this.currentMedia?.media_kind === "other") {
+          this.setMediaReady("other");
+          return;
+        }
+
+        // Give Alpine a tick so non-async media can show the normalized states cleanly.
+        await this.$nextTick();
+      } finally {
+        if (token === this.mediaLoadToken) {
+          this.isMediaLoading = false;
+        }
+      }
     },
 
     async prevPage() {
@@ -200,7 +740,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         this.carouselPhase = "in";
         await this.sleep(180);
       } catch (error) {
-        // Prevent Alpine click expression crashes from bubbling to UI.
         console.error("Carousel transition failed", error);
       } finally {
         this.carouselPhase = null;
@@ -222,23 +761,26 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     zoomIn() {
+      if (!this.isZoomableMedia()) return;
       this.zoom = Math.min(this.maxZoom, this.zoom + 0.1);
-      if (this.currentMedia && this.currentMedia.is_pdf && !this.pdfError) {
-        this.renderCurrentPdf();
+      if (this.isPdfMedia() && !this.pdfError) {
+        pdfModule.render(this);
       }
     },
 
     zoomOut() {
+      if (!this.isZoomableMedia()) return;
       this.zoom = Math.max(this.minZoom, this.zoom - 0.1);
-      if (this.currentMedia && this.currentMedia.is_pdf && !this.pdfError) {
-        this.renderCurrentPdf();
+      if (this.isPdfMedia() && !this.pdfError) {
+        pdfModule.render(this);
       }
     },
 
     toggleZoom() {
+      if (!this.isZoomableMedia()) return;
       this.zoom = this.zoom > 1 ? 1 : 1.4;
-      if (this.currentMedia && this.currentMedia.is_pdf && !this.pdfError) {
-        this.renderCurrentPdf();
+      if (this.isPdfMedia() && !this.pdfError) {
+        pdfModule.render(this);
       }
     },
 
@@ -277,7 +819,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     onTouchMove(event) {
       if (event.touches.length !== 2 || !this.pinchStartDistance) return;
-      if (this.currentMedia && this.currentMedia.is_pdf) return;
+      if (!this.isImageMedia() && !this.isDocxMedia()) return;
       const currentDistance = this.touchDistance(event.touches[0], event.touches[1]);
       const scale = currentDistance / this.pinchStartDistance;
       const nextZoom = this.pinchStartZoom * scale;
@@ -306,100 +848,5 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         this.nextPage();
       }
     },
-
-    async loadPdfDocument(src) {
-      if (!window.pdfjsLib) {
-        this.pdfError = true;
-        this.pdfStatusText = "PDF viewer failed to load.";
-        return;
-      }
-
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-      try {
-        this.pdfStatusText = "Loading PDF...";
-        const loadingTask = window.pdfjsLib.getDocument(src);
-        rawPdfDoc = await loadingTask.promise;
-        this.pdfTotalPages = rawPdfDoc.numPages || 1;
-        this.pdfError = false;
-        this.pdfStatusText = `${this.pdfTotalPages} page PDF`;
-      } catch (error) {
-        rawPdfDoc = null;
-        this.pdfError = true;
-        this.pdfStatusText = "Unable to render PDF.";
-      }
-    },
-
-    async renderCurrentPdf() {
-      if (!rawPdfDoc) return;
-      const token = ++rawPdfRenderToken;
-      const pdfDoc = rawPdfDoc;
-      await this.$nextTick();
-      if (this.isMobile) {
-        await this.renderPdfMobilePages(pdfDoc, token);
-        return;
-      }
-      await this.renderPdfDesktopPages(pdfDoc, token);
-    },
-
-    async renderPdfDesktopPages(pdfDoc, token) {
-      const container = this.$refs.pdfDesktopList;
-      if (!container || !pdfDoc) return;
-
-      container.innerHTML = "";
-      for (let pageNumber = 1; pageNumber <= this.pdfTotalPages; pageNumber += 1) {
-        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-        const page = await pdfDoc.getPage(pageNumber);
-        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-        const baseViewport = page.getViewport({ scale: 1 });
-        const availableWidth = Math.max((container.clientWidth || 0) - 12, 280);
-        const fitScale = availableWidth / Math.max(baseViewport.width, 1);
-        const preferredScale = 1.35;
-        const cssScale = Math.min(preferredScale, fitScale) * this.zoom;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const viewport = page.getViewport({ scale: cssScale });
-        const renderViewport = page.getViewport({ scale: cssScale * dpr });
-        const canvas = document.createElement("canvas");
-        canvas.className = "doc-pdf-canvas";
-        canvas.width = Math.floor(renderViewport.width);
-        canvas.height = Math.floor(renderViewport.height);
-        canvas.style.width = `${Math.floor(viewport.width)}px`;
-        canvas.style.height = "auto";
-        const context = canvas.getContext("2d", { alpha: false });
-        await page.render({ canvasContext: context, viewport: renderViewport }).promise;
-        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-        container.appendChild(canvas);
-      }
-    },
-
-    async renderPdfMobilePages(pdfDoc, token) {
-      const container = this.$refs.pdfMobileList;
-      if (!container || !pdfDoc) return;
-
-      container.innerHTML = "";
-      for (let pageNumber = 1; pageNumber <= this.pdfTotalPages; pageNumber += 1) {
-        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-        const page = await pdfDoc.getPage(pageNumber);
-        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-        const baseViewport = page.getViewport({ scale: 1 });
-        const availableWidth = Math.max((container.clientWidth || 0) - 8, 220);
-        const fitScale = availableWidth / Math.max(baseViewport.width, 1);
-        const preferredScale = 1.1;
-        const cssScale = Math.max(0.35, Math.min(preferredScale, fitScale)) * this.zoom;
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const viewport = page.getViewport({ scale: cssScale });
-        const renderViewport = page.getViewport({ scale: cssScale * dpr });
-        const canvas = document.createElement("canvas");
-        canvas.className = "doc-mobile-pdf-canvas";
-        canvas.width = Math.floor(renderViewport.width);
-        canvas.height = Math.floor(renderViewport.height);
-        canvas.style.width = `${Math.floor(viewport.width)}px`;
-        canvas.style.height = "auto";
-        const context = canvas.getContext("2d", { alpha: false });
-        await page.render({ canvasContext: context, viewport: renderViewport }).promise;
-        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-        container.appendChild(canvas);
-      }
-    }
   };
 };

@@ -87,11 +87,13 @@
 
 /* Document detail: minimal custom CSS for behaviors not practical in utility classes */
 .doc-detail {
-    --doc-header-height: 72px;
-    --doc-related-toggle-height: 2.75rem;
-    --doc-mobile-actions-height: 5.2rem;
-    --doc-stage-top: 152px;
-    --doc-stage-height: calc(100vh - 152px);
+    --doc-header-height: 64px;
+    --doc-zoom-bar-height: 56px;
+    --doc-related-toggle-height: 56px;
+    --doc-mobile-actions-height: 64px;
+    --doc-desktop-actions-width: 194px;
+    --doc-stage-top: calc(var(--doc-header-height) + var(--doc-zoom-bar-height));
+    --doc-stage-height: calc(100vh - var(--doc-stage-top));
     overscroll-behavior: none;
 }
 
@@ -144,4 +146,16 @@
         max-width: 100%;
         width: 100% !important;
     }
+}
+
+.doc-audio-wave-bg {
+    background:
+        repeating-linear-gradient(
+            90deg,
+            rgba(61, 155, 143, 0.18) 0,
+            rgba(61, 155, 143, 0.18) 6px,
+            rgba(15, 23, 42, 0.06) 6px,
+            rgba(15, 23, 42, 0.06) 10px
+        ),
+        linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
 }

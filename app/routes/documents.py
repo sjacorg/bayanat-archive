@@ -70,6 +70,9 @@ def _media_summary(media_rows):
         "total": len(media_rows),
         "images": 0,
         "pdfs": 0,
+        "videos": 0,
+        "audios": 0,
+        "docx": 0,
         "other": 0,
     }
     for row in media_rows:
@@ -78,6 +81,15 @@ def _media_summary(media_rows):
             summary["images"] += 1
         elif media_type == "application/pdf":
             summary["pdfs"] += 1
+        elif media_type.startswith("video/"):
+            summary["videos"] += 1
+        elif media_type.startswith("audio/"):
+            summary["audios"] += 1
+        elif media_type in {
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword",
+        }:
+            summary["docx"] += 1
         else:
             summary["other"] += 1
     return summary

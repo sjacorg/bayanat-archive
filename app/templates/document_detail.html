@@ -18,6 +18,19 @@
 {% block content %}
 {% set media_payload = [] %}
 {% for item in media_rows %}
+    {% set media_type = (item.media_type or '') | lower %}
+    {% set media_kind = 'other' %}
+    {% if media_type.startswith('image/') %}
+        {% set media_kind = 'image' %}
+    {% elif media_type == 'application/pdf' %}
+        {% set media_kind = 'pdf' %}
+    {% elif media_type.startswith('video/') %}
+        {% set media_kind = 'video' %}
+    {% elif media_type.startswith('audio/') %}
+        {% set media_kind = 'audio' %}
+    {% elif media_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'] %}
+        {% set media_kind = 'docx' %}
+    {% endif %}
     {% set _ = media_payload.append({
         "id": item.id,
         "media_id": item.media_id,
@@ -30,38 +43,27 @@
         "ocr_text": item.ocr_text or '',
         "original_text": item.original_text or '',
         "confidence": item.confidence,
-        "is_image": (item.media_type or '').startswith('image/'),
-        "is_pdf": (item.media_type or '') == 'application/pdf'
+        "media_kind": media_kind
     }) %}
 {% endfor %}
 
 {% macro action_icon(kind, classes) -%}
     {% if kind == 'info' %}
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="{{ classes }}">
-        <circle cx="12" cy="12" r="8.25" stroke-width="1.9"></circle>
-        <circle cx="12" cy="8.25" r="1.05" fill="currentColor" stroke="none"></circle>
-        <path d="M12 11v5" stroke-width="1.9" stroke-linecap="round"></path>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
+        <path d="M7.79163 12.042H9.20829V7.79199H7.79163V12.042ZM8.49996 1.41699C4.58996 1.41699 1.41663 4.59033 1.41663 8.50033C1.41663 12.4103 4.58996 15.5837 8.49996 15.5837C12.41 15.5837 15.5833 12.4103 15.5833 8.50033C15.5833 4.59033 12.41 1.41699 8.49996 1.41699ZM8.49996 14.167C5.37621 14.167 2.83329 11.6241 2.83329 8.50033C2.83329 5.37658 5.37621 2.83366 8.49996 2.83366C11.6237 2.83366 14.1666 5.37658 14.1666 8.50033C14.1666 11.6241 11.6237 14.167 8.49996 14.167ZM7.79163 6.37533H9.20829V4.95866H7.79163V6.37533Z" fill="white"/>
     </svg>
     {% elif kind == 'arabic' %}
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="{{ classes }}">
-        <path d="M4.25 8V5.25H7" stroke-width="1.9" stroke-linecap="round"></path>
-        <path d="M16.75 5.25H19.75V8" stroke-width="1.9" stroke-linecap="round"></path>
-        <path d="M19.75 16V18.75H17" stroke-width="1.9" stroke-linecap="round"></path>
-        <path d="M7 18.75H4.25V16" stroke-width="1.9" stroke-linecap="round"></path>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
+        <path d="M12.0416 15.5837V14.167H14.1666V12.042H15.5833V14.5212C15.5833 14.7974 15.47 15.0453 15.2575 15.2578C15.045 15.4703 14.797 15.5837 14.5208 15.5837H12.0416ZM4.95829 15.5837H2.47913C2.20288 15.5837 1.95496 15.4703 1.74246 15.2578C1.52996 15.0453 1.41663 14.7974 1.41663 14.5212V12.042H2.83329V14.167H4.95829V15.5837ZM12.0416 1.41699H14.5208C14.797 1.41699 15.045 1.53033 15.2575 1.74283C15.47 1.95533 15.5833 2.20324 15.5833 2.47949V4.95866H14.1666V2.83366H12.0416V1.41699ZM4.95829 1.41699V2.83366H2.83329V4.95866H1.41663V2.47949C1.41663 2.20324 1.52996 1.95533 1.74246 1.74283C1.95496 1.53033 2.20288 1.41699 2.47913 1.41699H4.95829Z" fill="white"/>
+        <path d="M8.14587 7.4375H7.08337V6.375H10.2709V7.4375H9.20837V10.625H8.14587V7.4375Z" fill="white"/>
     </svg>
     {% elif kind == 'translation' %}
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="{{ classes }}">
-        <path d="M4.5 6.5H13.5" stroke-width="1.9" stroke-linecap="round"></path>
-        <path d="M9 6.5C9 11.5 6.7 14.6 4.5 16.5" stroke-width="1.9" stroke-linecap="round"></path>
-        <path d="M6.5 12.25C8.1 14.35 10.35 16.05 12.75 17" stroke-width="1.9" stroke-linecap="round"></path>
-        <path d="M16 7L20.5 17.5" stroke-width="1.9" stroke-linecap="round"></path>
-        <path d="M14.75 14.25H21.25" stroke-width="1.9" stroke-linecap="round"></path>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
+        <path d="M9.11629 10.6749L7.31712 8.89699L7.33837 8.87574C8.57087 7.50158 9.44921 5.92199 9.96629 4.25033H12.0417V2.83366H7.08337V1.41699H5.66671V2.83366H0.708374V4.24324H8.62046C8.14587 5.61033 7.39504 6.90658 6.37504 8.03991C5.71629 7.31033 5.17087 6.50991 4.73879 5.66699H3.32212C3.83921 6.82158 4.54754 7.91241 5.43296 8.89699L1.82754 12.4528L2.83337 13.4587L6.37504 9.91699L8.57796 12.1199L9.11629 10.6749ZM13.1042 7.08366H11.6875L8.50004 15.5837H9.91671L10.71 13.4587H14.0746L14.875 15.5837H16.2917L13.1042 7.08366ZM11.2484 12.042L12.3959 8.97491L13.5434 12.042H11.2484V12.042Z" fill="white"/>
     </svg>
     {% elif kind == 'download' %}
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="{{ classes }}">
-        <path d="M12 4V14.5" stroke-width="1.9" stroke-linecap="round"></path>
-        <path d="M9.5 12L12 14.5L14.5 12" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"></path>
-        <path d="M5.25 18.75H18.75" stroke-width="1.9" stroke-linecap="round"></path>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
+        <path d="M11.3334 9.20833H9.20837V2.125H7.79171V9.20833H5.66671L8.50004 12.0417L11.3334 9.20833ZM2.83337 13.4583V14.875H14.1667V13.4583H2.83337Z" fill="white"/>
     </svg>
     {% endif %}
 {%- endmacro %}
@@ -70,9 +72,9 @@
     <button
         type="button"
         title="{{ label }}"
-        class="{% if layout == 'desktop' %}flex w-full items-center gap-3 px-4 py-3 text-left{% else %}inline-flex flex-col items-center justify-center gap-2{% endif %} border-0 {% if layout == 'desktop' and not is_last %}border-b border-[#5AB5A9]{% endif %}{% if layout == 'mobile' and has_divider %}border-r border-r-[rgba(26,69,64,0.25)]{% endif %} rounded-none bg-[#3D9B8F] text-base font-bold leading-none text-white transition-colors hover:bg-[#1A4540]"
+        class="{% if layout == 'desktop' %}flex w-full items-center gap-3 px-4 py-3 text-left text-sm{% else %}text-xs inline-flex flex-col items-center justify-center gap-2{% endif %} border-0 {% if layout == 'desktop' and not is_last %}border-b border-[#5AB5A9]{% endif %}{% if layout == 'mobile' and has_divider %}border-r border-r-[rgba(26,69,64,0.25)]{% endif %} rounded-none bg-secondary text-base font-semibold leading-none text-white transition-colors hover:bg-primary"
         {% if panel %}
-        :class="{ 'bg-[#1A4540]': activePanel === '{{ panel }}' }"
+        :class="{ 'bg-primary': activePanel === '{{ panel }}' }"
         @click="togglePanel('{{ panel }}')"
         {% else %}
         @click="handleDownload"
@@ -84,19 +86,31 @@
 {%- endmacro %}
 
 {% macro empty_media_card(wrapper_classes='w-full') -%}
-    <div class="{{ wrapper_classes }} max-w-2xl border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-        <h2 class="m-0 text-lg font-bold text-slate-900">No media available</h2>
-        <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
-        <a href="{{ url_for('search.index') }}" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-sm font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Back to Search</a>
+    <div class="flex min-h-[42vh] w-full items-center justify-center">
+        <div class="{{ wrapper_classes }} mx-auto w-full max-w-2xl border border-slate-300 border-l-4 border-l-primary bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+            <h2 class="m-0 text-lg font-semibold text-slate-900">No media available</h2>
+            <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
+            <a href="{{ url_for('search.index') }}" class="inline-block border border-primary bg-primary px-3 py-1.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-white hover:text-primary">Back to Search</a>
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro preview_unavailable_card(title, message, cta_label='Download file', wrapper_classes='w-full') -%}
+    <div class="flex min-h-[42vh] w-full items-center justify-center">
+        <div class="{{ wrapper_classes }} mx-auto w-full max-w-2xl border border-slate-300 border-l-4 border-l-primary bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+            <h2 class="m-0 text-lg font-semibold text-slate-900">{{ title }}</h2>
+            <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">{{ message }}</p>
+            <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-primary bg-primary px-3 py-1.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-white hover:text-primary">{{ cta_label }}</a>
+        </div>
     </div>
 {%- endmacro %}
 
 {% macro pdf_error_card(wrapper_classes='w-full') -%}
-    <div class="{{ wrapper_classes }} max-w-2xl border border-slate-300 border-l-4 border-l-teal-700 bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-        <h2 class="m-0 text-lg font-bold text-slate-900">PDF preview unavailable</h2>
-        <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">We could not load this PDF in the viewer. You can still download the file directly.</p>
-        <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-teal-700 bg-teal-700 px-3 py-1.5 text-sm font-bold text-white no-underline transition-colors hover:bg-white hover:text-teal-700">Download PDF</a>
-    </div>
+    {{ preview_unavailable_card('PDF preview unavailable', 'We could not load this PDF in the viewer. You can still download the file directly.', 'Download PDF', wrapper_classes) }}
+{%- endmacro %}
+
+{% macro docx_error_card(wrapper_classes='w-full') -%}
+    {{ preview_unavailable_card('DOCX preview unavailable', 'We could not load this DOCX in the viewer. You can still download the file directly.', 'Download DOCX', wrapper_classes) }}
 {%- endmacro %}
 
 {% macro media_nav_arrow(direction, classes) -%}
@@ -120,10 +134,10 @@
         documentOcrText: {{ (document.ocr_text or '') | tojson }},
         documentTranslation: {{ (document.translation or '') | tojson }}
     })'
-    x-init="init()"
+    x-init="init(); return () => destroy()"
 >
-    <header x-ref="topHeader" class="flex items-center justify-between gap-4 bg-slate-50 px-8 py-4 max-md:flex-col max-md:items-start max-md:px-3 max-md:py-2">
-        <a href="{{ url_for('search.index') }}" class="inline-flex items-center gap-2 font-bold text-teal-800 no-underline" data-print-no-href>
+    <header x-ref="topHeader" class="flex min-h-16 items-center justify-between gap-4 bg-slate-50 px-8 py-3 max-md:flex-col max-md:items-start max-md:px-3 max-md:py-2">
+        <a href="{{ url_for('search.index') }}" class="inline-flex items-center gap-2 font-semibold no-underline" data-print-no-href>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-5 w-5">
                 <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
@@ -137,25 +151,33 @@
         </p>
     </header>
 
-    <section class="bg-teal-900 px-4 py-2 text-slate-100 max-md:px-2" aria-label="Document controls">
-        <div class="flex items-center justify-center gap-3 text-lg">
+    <section class="h-[var(--doc-zoom-bar-height)] bg-primary px-4 text-slate-100 max-md:px-2" aria-label="Document controls">
+        <div class="flex h-full items-center justify-center gap-3">
             <p x-text="`${displayPage} of ${displayTotal}`" aria-live="polite" class="m-0"></p>
             <span class="inline-block h-4 w-px bg-white/50"></span>
-            <button type="button" @click="zoomOut()" aria-label="Zoom out" class="min-w-5 bg-transparent p-0 text-xl leading-none text-inherit disabled:cursor-default disabled:opacity-35">-</button>
+            <button type="button" @click="zoomOut()" aria-label="Zoom out" class="inline-flex min-w-5 items-center justify-center bg-transparent p-0 leading-none text-inherit disabled:cursor-default disabled:opacity-35">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M15.8334 10.8337H4.16669V9.16699H15.8334V10.8337Z" fill="white"/>
+                </svg>
+            </button>
             <p class="m-0 min-w-16 bg-slate-100 px-2 py-0.5 text-center text-base font-semibold text-slate-600 max-md:text-sm" x-text="`${Math.round(zoom * 100)}%`"></p>
-            <button type="button" @click="zoomIn()" aria-label="Zoom in" class="min-w-5 bg-transparent p-0 text-xl leading-none text-inherit disabled:cursor-default disabled:opacity-35">+</button>
+            <button type="button" @click="zoomIn()" aria-label="Zoom in" class="inline-flex min-w-5 items-center justify-center bg-transparent p-0 leading-none text-inherit disabled:cursor-default disabled:opacity-35">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M15.8334 10.8337H10.8334V15.8337H9.16669V10.8337H4.16669V9.16699H9.16669V4.16699H10.8334V9.16699H15.8334V10.8337Z" fill="white"/>
+                </svg>
+            </button>
         </div>
     </section>
 
     <section class="relative flex flex-none items-stretch overflow-x-hidden max-md:hidden h-[var(--doc-stage-height)] min-h-[var(--doc-stage-height)] max-h-[var(--doc-stage-height)] overflow-y-auto [scrollbar-gutter:stable] pb-[var(--doc-related-toggle-height)]" :class="activePanel ? 'is-panel-open' : ''">
-        <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+5.2rem)] z-[70] hidden w-[13.5rem] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
+        <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+var(--doc-mobile-actions-height))] z-[70] hidden w-[var(--doc-desktop-actions-width)] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
             {{ action_button('info', 'Info', 'info', 'desktop') }}
             {{ action_button('arabic', 'Extract Text', 'arabic', 'desktop') }}
             {{ action_button('translation', 'Translate', 'translation', 'desktop') }}
             {{ action_button('download', 'Download', none, 'desktop', false, true) }}
         </aside>
 
-        <div class="relative box-border grid min-h-full w-full place-items-center overflow-visible p-3" :class="{ 'place-items-start': currentMedia && currentMedia.is_pdf }" @touchstart.passive="onTouchStart($event)" @touchmove.passive="onTouchMove($event)">
+        <div class="relative box-border grid min-h-full w-full place-items-center overflow-visible p-3" :class="{ 'place-items-start': isKindReady('pdf') || isKindReady('docx') }" @touchstart.passive="onTouchStart($event)" @touchmove.passive="onTouchMove($event)">
             <template x-if="!pageCount">
                 {{ empty_media_card() }}
             </template>
@@ -166,25 +188,19 @@
                 @click="toggleZoom"
                 :style="`transform: scale(${canvasScale}); view-transition-name: doc-${docId}; --slide-direction: ${carouselDirection};`"
             >
-                <template x-if="currentMedia && currentMedia.is_image">
-                    <img :src="currentMedia.src" :alt="`${title} page ${pageIndex + 1}`" loading="eager" class="block h-auto w-auto max-h-[70vh] max-w-[min(100%,56rem)] bg-slate-50">
-                </template>
-
-                <template x-if="currentMedia && currentMedia.is_pdf && !pdfError">
-                    <div class="doc-pdf-fallback flex min-h-96 w-full flex-col items-center bg-transparent py-3 text-left">
-                        <div class="doc-pdf-scroll flex w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="pdfDesktopList"></div>
-                    </div>
-                </template>
-
-                <template x-if="currentMedia && currentMedia.is_pdf && pdfError">
-                    {{ pdf_error_card() }}
-                </template>
+                {% set mode = 'desktop' %}
+                {% include 'partials/media/renderers/image.html' %}
+                {% include 'partials/media/renderers/pdf.html' %}
+                {% include 'partials/media/renderers/video.html' %}
+                {% include 'partials/media/renderers/audio.html' %}
+                {% include 'partials/media/renderers/docx.html' %}
+                {% include 'partials/media/renderers/other.html' %}
             </div>
 
         </div>
 
-        {{ media_nav_arrow('prev', 'doc-nav-arrow fixed left-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-[#d2d7d9] bg-white/80 text-teal-900 disabled:cursor-default disabled:opacity-35') }}
-        {{ media_nav_arrow('next', 'doc-nav-arrow fixed right-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-[#d2d7d9] bg-white/80 text-teal-900 disabled:cursor-default disabled:opacity-35') }}
+        {{ media_nav_arrow('prev', 'doc-nav-arrow fixed left-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-primary bg-white/80 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400') }}
+        {{ media_nav_arrow('next', 'doc-nav-arrow fixed right-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-primary bg-white/80 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400') }}
 
     </section>
 
@@ -197,12 +213,12 @@
         @click="closePanel"
         :style="`top: var(--doc-header-height);`"
     >
-        <div class="h-full overflow-auto px-4 py-5 md:pl-56 md:pr-6 md:pt-6" @click.stop>
+        <div class="h-full overflow-auto px-4 py-5 md:pl-[calc(var(--doc-desktop-actions-width)+2rem)] md:pr-6 md:pt-6" @click.stop>
             <div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
-                <p class="mb-1 max-w-5xl text-xs font-bold uppercase tracking-wider text-slate-700">
+                <p class="mb-1 max-w-5xl text-xs font-semibold uppercase tracking-wider text-slate-700">
                     Reference Number: {{ document.id }}
                 </p>
-                <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex items-center gap-2 border-0 bg-transparent p-0 text-xl font-bold leading-none text-slate-900">
+                <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex items-center gap-2 border-0 bg-transparent p-0 text-xl font-semibold leading-none text-slate-900">
                     <span aria-hidden="true">
                         <svg class="size-5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
@@ -213,21 +229,21 @@
             </div>
 
             <div class="mx-auto mt-3 max-w-5xl border-t border-slate-300 pt-3 text-base leading-6 text-slate-800 max-md:text-sm max-md:leading-5">
-                <p x-text="panelTitle" class="mb-3 inline-block bg-[#3D9B8F] px-4 py-2 text-xl font-bold leading-none text-white max-md:text-base"></p>
+                <p x-text="panelTitle" class="mb-3 inline-block bg-[#3D9B8F] px-4 py-2 text-xl font-semibold leading-none text-white max-md:text-base"></p>
                 <div x-show="activePanel === 'info'">
                     <div class="mb-2 inline-flex items-center gap-1 rounded-sm bg-slate-200 p-1">
                         <button
                             type="button"
-                            class="rounded-sm px-3 py-1.5 text-sm font-bold leading-none transition-colors"
-                            :class="!showDocumentDetails ? 'bg-teal-700 text-white shadow-sm' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
+                            class="rounded-sm px-3 py-1.5 text-sm font-semibold leading-none transition-colors"
+                            :class="!showDocumentDetails ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
                             @click="showDocumentDetails = false"
                         >
                             Page details
                         </button>
                         <button
                             type="button"
-                            class="rounded-sm px-3 py-1.5 text-sm font-bold leading-none transition-colors"
-                            :class="showDocumentDetails ? 'bg-teal-700 text-white shadow-sm' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
+                            class="rounded-sm px-3 py-1.5 text-sm font-semibold leading-none transition-colors"
+                            :class="showDocumentDetails ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
                             @click="showDocumentDetails = true"
                         >
                             Full document details
@@ -235,7 +251,7 @@
                     </div>
 
                     <h1
-                        class="mb-2 mt-1 text-xl font-bold leading-tight"
+                        class="mb-2 mt-1 text-xl font-semibold leading-tight"
                         x-text="showDocumentDetails ? 'Full document details' : 'Page details'"
                     ></h1>
 
@@ -285,7 +301,7 @@
                     </table>
 
                     <div x-show="showDocumentDetails" class="mt-0.5">
-                        <h2 class="m-0 text-base font-bold leading-tight">Document Details</h2>
+                        <h2 class="m-0 text-base font-semibold leading-tight">Document Details</h2>
                         <table class="mt-1 w-full border-collapse text-sm">
                             <tbody>
                                 <tr>
@@ -385,7 +401,7 @@
                                 <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Media Summary</th>
                                 <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
                                     {{ media_summary.total }} total
-                                    ({{ media_summary.images }} images, {{ media_summary.pdfs }} PDFs{% if media_summary.other %}, {{ media_summary.other }} other{% endif %})
+                                    ({{ media_summary.images }} images, {{ media_summary.pdfs }} PDFs{% if media_summary.videos %}, {{ media_summary.videos }} videos{% endif %}{% if media_summary.audios %}, {{ media_summary.audios }} audio{% if media_summary.audios != 1 %}s{% endif %}{% endif %}{% if media_summary.docx %}, {{ media_summary.docx }} DOCX{% endif %}{% if media_summary.other %}, {{ media_summary.other }} other{% endif %})
                                 </td>
                             </tr>
                             <tr>
@@ -423,28 +439,20 @@
             {{ empty_media_card('mx-3 my-3 w-auto') }}
         </template>
 
-        <template x-if="currentMedia && currentMedia.is_image">
-            <div class="grid gap-3 p-3">
-                <img :src="currentMedia.src" :alt="`${title} page ${displayPage}`" loading="lazy" class="h-auto w-full bg-white">
-            </div>
-        </template>
-
-        <template x-if="currentMedia && currentMedia.is_pdf && !pdfError">
-            <div class="doc-pdf-fallback flex min-h-64 w-full flex-col items-center bg-transparent px-2 py-3 text-left">
-                <div class="doc-pdf-scroll flex w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="pdfMobileList"></div>
-            </div>
-        </template>
-
-        <template x-if="currentMedia && currentMedia.is_pdf && pdfError">
-            {{ pdf_error_card('mx-3 my-3 w-auto') }}
-        </template>
+        {% set mode = 'mobile' %}
+        {% include 'partials/media/renderers/image.html' %}
+        {% include 'partials/media/renderers/pdf.html' %}
+        {% include 'partials/media/renderers/video.html' %}
+        {% include 'partials/media/renderers/audio.html' %}
+        {% include 'partials/media/renderers/docx.html' %}
+        {% include 'partials/media/renderers/other.html' %}
 
     </section>
 
-    {{ media_nav_arrow('prev', 'fixed left-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-teal-900 disabled:cursor-default disabled:opacity-35 max-md:block') }}
-    {{ media_nav_arrow('next', 'fixed right-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-teal-900 disabled:cursor-default disabled:opacity-35 max-md:block') }}
+    {{ media_nav_arrow('prev', 'fixed left-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400 max-md:block') }}
+    {{ media_nav_arrow('next', 'fixed right-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400 max-md:block') }}
 
-    <nav class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-cols-4 border-t border-t-[rgba(26,69,64,0.35)] bg-[#3D9B8F] max-md:grid" aria-label="Document actions">
+    <nav class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-cols-4 max-md:grid" aria-label="Document actions">
         {{ action_button('info', 'Info', 'info', 'mobile', true) }}
         {{ action_button('arabic', 'Extract Text', 'arabic', 'mobile', true) }}
         {{ action_button('translation', 'Translate', 'translation', 'mobile', true) }}
@@ -452,10 +460,12 @@
     </nav>
 
     <section class="doc-related fixed -bottom-px left-0 right-0 z-[75] flex flex-col overflow-hidden bg-transparent" :class="{ 'is-open': relatedOpen }">
-        <header class="bg-teal-900 p-0 text-slate-50">
-            <button type="button" @click="relatedOpen = !relatedOpen" class="flex min-h-[var(--doc-related-toggle-height)] w-full items-center justify-between border-0 bg-transparent px-4 py-2 text-base font-bold text-slate-50">
+        <header class="bg-primary hover:bg-secondary p-0 text-slate-50">
+            <button type="button" @click="relatedOpen = !relatedOpen" class="flex min-h-[var(--doc-related-toggle-height)] w-full items-center gap-2 border-0 bg-transparent px-4 py-2 text-base font-semibold text-slate-50">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="size-4" :class="relatedOpen ? '-rotate-90' : 'rotate-90'">
+                    <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
                 <span>Related Content</span>
-                <span x-text="relatedOpen ? '▾' : '▴'"></span>
             </button>
         </header>
 
@@ -492,7 +502,7 @@
             </div>
             {% else %}
             <div class="m-3 border border-white/15 bg-slate-900/25 p-4 text-white">
-                <h3 class="m-0 text-base font-bold">No related content yet</h3>
+                <h3 class="m-0 text-base font-semibold">No related content yet</h3>
                 <p class="mt-2 text-sm text-slate-200">This drawer is ready. Related documents will appear here once linked.</p>
             </div>
             {% endif %}
@@ -503,5 +513,7 @@
 
 {% block scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://unpkg.com/docx-preview@0.3.6/dist/docx-preview.js"></script>
 <script src="{{ url_for('static', filename='js/document-detail.js') }}"></script>
 {% endblock %}
