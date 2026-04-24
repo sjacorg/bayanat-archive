@@ -15,5 +15,5 @@
 </template>
 
 <div x-show="currentMedia && currentMedia.media_kind === 'docx' && !hasKindError('docx')" class="flex min-h-64 w-full flex-col items-center bg-transparent px-2 py-3 text-left {% if mode == 'desktop' %}min-h-96 px-0 py-3{% endif %}" :class="isKindLoading('docx') ? 'invisible pointer-events-none absolute inset-0' : ''">
-    <div class="doc-docx-scope flex w-full flex-col items-center gap-3 bg-transparent py-2 [&_.docx-preview]:w-full [&_.docx-preview]:!rounded-none [&_.docx-preview]:!bg-slate-50 [&_.docx-preview]:p-6 [&_.docx-preview_p]:my-4 [&_.docx]:!bg-white [&_.docx]:shadow-[0_2px_12px_rgba(15,23,42,0.08)] [&_.docx]:!rounded-none [&_.docx]:!mb-6 max-md:[&_.docx-preview]:p-3 max-md:[&_.docx]:!mb-3" x-ref="{{ 'docxDesktopList' if mode == 'desktop' else 'docxMobileList' }}"></div>
+    <div class="doc-docx-scope flex w-full flex-col items-center gap-3 bg-transparent py-2 [&_.docx-preview]:!rounded-none [&_.docx-preview]:!bg-slate-50 [&_.docx-preview]:p-6 [&_.docx-preview_p]:my-4 [&_.docx]:!bg-white [&_.docx]:shadow-[0_2px_12px_rgba(15,23,42,0.08)] [&_.docx]:!rounded-none [&_.docx]:!mb-6 max-md:[&_.docx-preview]:p-3 max-md:[&_.docx]:!mb-3" x-ref="{{ 'docxDesktopList' if mode == 'desktop' else 'docxMobileList' }}"></div>
 </div>

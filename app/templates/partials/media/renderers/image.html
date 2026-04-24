@@ -16,10 +16,12 @@
 
 <template x-if="currentMedia && currentMedia.media_kind === 'image' && isKindReady('image')">
     {% if mode == 'desktop' %}
-    <img :src="currentMedia.src" :alt="`${title} page ${pageIndex + 1}`" loading="eager" @load="setMediaReady('image')" @error="setMediaError('image')" class="block h-auto w-auto max-h-[70vh] max-w-[min(100%,56rem)] bg-slate-50">
+    <div class="doc-image-scroll flex w-full justify-center py-2" x-ref="imageDesktopList">
+        <img :src="currentMedia.src" :alt="`${title} page ${pageIndex + 1}`" loading="eager" draggable="false" @dragstart.prevent @load="setMediaReady('image')" @error="setMediaError('image')" class="block h-auto w-auto max-h-[70vh] max-w-[min(100%,56rem)] select-none bg-slate-50">
+    </div>
     {% else %}
-    <div class="grid gap-3 p-3">
-        <img :src="currentMedia.src" :alt="`${title} page ${displayPage}`" loading="lazy" @load="setMediaReady('image')" @error="setMediaError('image')" class="h-auto w-full bg-white">
+    <div class="doc-image-scroll grid gap-3 p-3" x-ref="imageMobileList">
+        <img :src="currentMedia.src" :alt="`${title} page ${displayPage}`" loading="lazy" draggable="false" @dragstart.prevent @load="setMediaReady('image')" @error="setMediaError('image')" class="h-auto w-full select-none bg-white">
     </div>
     {% endif %}
 </template>

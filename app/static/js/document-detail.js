@@ -155,6 +155,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         if (token === rawPdfRenderToken && pdfDoc === rawPdfDoc) {
           if (renderedPages > 0) {
             viewer.pdfReady = true;
+            viewer.rememberRenderedWidth("pdf", container);
           } else {
             viewer.logDebug("PDF render produced zero pages; retrying once.", {
               pageCount: viewer.pdfTotalPages,
@@ -182,6 +183,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
             if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
             if (retryRenderedPages > 0) {
               viewer.pdfReady = true;
+              viewer.rememberRenderedWidth("pdf", retryContainer || container);
               return;
             }
             viewer.pdfError = true;
@@ -217,7 +219,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         const baseViewport = page.getViewport({ scale: 1 });
         const availableWidth = Math.max((container.clientWidth || 0) - opts.gutter, opts.minWidth);
         const fitScale = availableWidth / Math.max(baseViewport.width, 1);
-        const scaled = Math.min(opts.preferredScale, fitScale) * viewer.zoom;
+        const scaled = Math.min(opts.preferredScale, fitScale);
         const cssScale = Math.max(opts.minScale || 0, scaled);
 
         const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -353,6 +355,9 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         });
         if (token !== rawDocxRenderToken) return;
         viewer.docxReady = true;
+        await viewer.$nextTick();
+        viewer.syncDocxBaseWidth(container);
+        viewer.rememberRenderedWidth("docx", container);
       } catch (error) {
         viewer.logError("DOCX render failed (arrayBuffer), trying blob fallback.", error);
         try {
@@ -374,6 +379,9 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
           });
           if (token !== rawDocxRenderToken) return;
           viewer.docxReady = true;
+          await viewer.$nextTick();
+          viewer.syncDocxBaseWidth(container);
+          viewer.rememberRenderedWidth("docx", container);
         } catch (fallbackError) {
           if (token !== rawDocxRenderToken) return;
           viewer.logError("DOCX render failed (blob fallback).", fallbackError);
@@ -392,8 +400,11 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     documentTranslation: payload.documentTranslation || "",
     pageIndex: 0,
     zoom: 1,
-    minZoom: 1,
-    maxZoom: 2.5,
+    minZoom: 0.75,
+    maxZoom: 2,
+    zoomStep: 0.25,
+    imageClickZoomStep: 0.15,
+    pinchZoomStep: 0.05,
     activePanel: null,
     showDocumentDetails: false,
     relatedOpen: false,
@@ -419,6 +430,16 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     resizeHandler: null,
     pagehideHandler: null,
     resizeDebounceTimer: null,
+    pendingScrollRestore: null,
+    scrollRestoreRafId: null,
+    renderWidths: {
+      pdf: { desktop: 0, mobile: 0 },
+      docx: { desktop: 0, mobile: 0 },
+    },
+    nativeCssZoomSupported:
+      typeof window.CSS !== "undefined" &&
+      typeof window.CSS.supports === "function" &&
+      window.CSS.supports("zoom", "2"),
     logPrefix: LOG_PREFIX,
 
     async init() {
@@ -465,6 +486,10 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       if (this.resizeDebounceTimer) {
         window.clearTimeout(this.resizeDebounceTimer);
         this.resizeDebounceTimer = null;
+      }
+      if (this.scrollRestoreRafId !== null) {
+        window.cancelAnimationFrame(this.scrollRestoreRafId);
+        this.scrollRestoreRafId = null;
       }
     },
 
@@ -537,13 +562,30 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     get canvasCursorClass() {
       if (!this.currentMedia) return "cursor-default";
       if (!this.isZoomableMedia()) return "cursor-default";
-      return this.zoom > 1 ? "cursor-zoom-out" : "cursor-zoom-in";
+      if (!this.canZoomIn && this.canZoomOut) return "cursor-zoom-out";
+      return this.canZoomIn ? "cursor-zoom-in" : "cursor-default";
     },
 
-    get canvasScale() {
-      if (!this.isZoomableMedia()) return 1;
-      if (this.isPdfMedia()) return 1;
-      return this.zoom;
+    get canZoomIn() {
+      if (!this.isZoomableMedia()) return false;
+      return this.zoom < this.currentMaxZoom - 0.001;
+    },
+
+    get canZoomOut() {
+      if (!this.isZoomableMedia()) return false;
+      return this.zoom > this.currentMinZoom + 0.001;
+    },
+
+    get currentMinZoom() {
+      if (this.isImageMedia()) return this.minZoom;
+      if (this.isPdfMedia() || this.isDocxMedia()) return 1;
+      return 1;
+    },
+
+    get currentMaxZoom() {
+      if (this.isImageMedia()) return this.maxZoom;
+      if (this.isPdfMedia() || this.isDocxMedia()) return this.maxZoom;
+      return 1;
     },
 
     isPdfMedia(item = this.currentMedia) {
@@ -560,6 +602,15 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     isZoomableMedia(item = this.currentMedia) {
       return this.isImageMedia(item) || this.isPdfMedia(item) || this.isDocxMedia(item);
+    },
+
+    shouldIgnoreZoomInteraction(target) {
+      if (!target || typeof target.closest !== "function") return false;
+      return Boolean(
+        target.closest(
+          "a, button, input, textarea, select, label, summary, iframe, video, audio, [contenteditable='true'], [data-no-zoom]",
+        ),
+      );
     },
 
     clearMediaErrors() {
@@ -635,12 +686,27 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         window.clearTimeout(this.resizeDebounceTimer);
       }
       this.resizeDebounceTimer = window.setTimeout(() => {
+        const wasMobile = this.isMobile;
         this.updateViewportMode();
         this.syncLayoutMetrics();
-        if (this.isPdfMedia() && !this.pdfError) {
-          pdfModule.render(this);
+        if (this.isImageMedia() && !this.hasKindError("image")) {
+          this.applyImageZoom();
+        } else if (this.isPdfMedia() && !this.pdfError) {
+          if (this.shouldRerenderOnResize("pdf", wasMobile)) {
+            pdfModule.render(this).then(() => {
+              this.applyPdfZoom();
+            });
+          } else {
+            this.applyPdfZoom();
+          }
         } else if (this.isDocxMedia() && !this.docxError) {
-          docxModule.render(this);
+          if (this.shouldRerenderOnResize("docx", wasMobile)) {
+            docxModule.render(this).then(() => {
+              this.applyDocxZoom();
+            });
+          } else {
+            this.applyDocxZoom();
+          }
         }
       }, 120);
     },
@@ -656,6 +722,71 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       const root = this.$root;
       if (!root || !Number.isFinite(headerHeight) || headerHeight <= 0) return;
       root.style.setProperty("--doc-header-height", `${headerHeight}px`);
+    },
+
+    getViewportSlot(isMobile = this.isMobile) {
+      return isMobile ? "mobile" : "desktop";
+    },
+
+    getMediaContainer(kind, isMobile = this.isMobile) {
+      if (kind === "pdf") {
+        return isMobile ? this.$refs.pdfMobileList : this.$refs.pdfDesktopList;
+      }
+      if (kind === "docx") {
+        return isMobile ? this.$refs.docxMobileList : this.$refs.docxDesktopList;
+      }
+      if (kind === "image") {
+        return isMobile ? this.$refs.imageMobileList : this.$refs.imageDesktopList;
+      }
+      return null;
+    },
+
+    measureContainerWidth(kind, isMobile = this.isMobile) {
+      const container = this.getMediaContainer(kind, isMobile);
+      if (!container) return 0;
+      const rectWidth = container.getBoundingClientRect?.().width || 0;
+      const width = Math.round(Math.max(container.clientWidth || 0, rectWidth));
+      return width > 0 ? width : 0;
+    },
+
+    getStoredRenderWidth(kind, isMobile = this.isMobile) {
+      const slot = this.getViewportSlot(isMobile);
+      return this.renderWidths?.[kind]?.[slot] || 0;
+    },
+
+    rememberRenderedWidth(kind, container = null, isMobile = this.isMobile) {
+      if (!this.renderWidths[kind]) {
+        this.renderWidths[kind] = { desktop: 0, mobile: 0 };
+      }
+      const targetContainer = container || this.getMediaContainer(kind, isMobile);
+      if (!targetContainer) return;
+      const rectWidth = targetContainer.getBoundingClientRect?.().width || 0;
+      const width = Math.round(Math.max(targetContainer.clientWidth || 0, rectWidth));
+      if (!Number.isFinite(width) || width <= 0) return;
+      const slot = this.getViewportSlot(isMobile);
+      this.renderWidths[kind][slot] = width;
+    },
+
+    shouldRerenderOnResize(kind, wasMobile) {
+      if (wasMobile !== this.isMobile) return true;
+      const currentWidth = this.measureContainerWidth(kind, this.isMobile);
+      if (currentWidth <= 0) return false;
+      const storedWidth = this.getStoredRenderWidth(kind, this.isMobile);
+      if (storedWidth <= 0) return true;
+      return Math.abs(currentWidth - storedWidth) >= 24;
+    },
+
+    syncDocxBaseWidth(container = null) {
+      const target = container || this.getDocxContainer();
+      if (!target) return;
+      const root = this.$root;
+      if (!root) return;
+      const page = target.querySelector(".docx-wrapper .docx, .docx");
+      if (!page) return;
+      const pageRectWidth = page.getBoundingClientRect?.().width || 0;
+      const width = Math.round(Math.max(pageRectWidth, page.offsetWidth || 0));
+      if (!Number.isFinite(width) || width < 220) return;
+      root.style.setProperty("--doc-docx-page-max-width", `${width}px`);
     },
 
     async loadCurrentMedia() {
@@ -696,6 +827,10 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         if (token === this.mediaLoadToken) {
           this.isMediaLoading = false;
         }
+        await this.$nextTick();
+        this.applyImageZoom();
+        this.applyPdfZoom();
+        this.applyDocxZoom();
       }
     },
 
@@ -712,7 +847,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       if (!this.hasPrevMedia || this.isAnimating) return;
       await this.runCarouselTransition("prev", async () => {
         this.pageIndex -= 1;
-        this.zoom = 1;
+        this.resetZoomState();
         await this.loadCurrentMedia();
         this.persistPageInUrl();
       });
@@ -723,7 +858,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       if (!this.hasNextMedia || this.isAnimating) return;
       await this.runCarouselTransition("next", async () => {
         this.pageIndex += 1;
-        this.zoom = 1;
+        this.resetZoomState();
         await this.loadCurrentMedia();
         this.persistPageInUrl();
       });
@@ -760,28 +895,194 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       window.history.replaceState({}, "", url);
     },
 
+    resetZoomState() {
+      this.zoom = 1;
+      this.pinchStartDistance = null;
+      this.pinchStartZoom = this.zoom;
+      this.pendingScrollRestore = null;
+      if (this.scrollRestoreRafId !== null) {
+        window.cancelAnimationFrame(this.scrollRestoreRafId);
+        this.scrollRestoreRafId = null;
+      }
+      this.applyImageZoom();
+      this.applyPdfZoom();
+      this.applyDocxZoom();
+    },
+
+    getImageContainer() {
+      return this.isMobile ? this.$refs.imageMobileList : this.$refs.imageDesktopList;
+    },
+
+    applyZoomToContainer(container, isActive) {
+      if (!container) return;
+      if (!isActive) {
+        container.classList.remove("is-zoomed");
+        container.style.zoom = "";
+        container.style.transform = "";
+        container.style.transformOrigin = "";
+        container.style.width = "";
+        return;
+      }
+      container.classList.toggle("is-zoomed", this.zoom > 1.001);
+      if (this.nativeCssZoomSupported) {
+        container.style.zoom = String(this.zoom);
+        container.style.transform = "";
+        container.style.transformOrigin = "";
+        container.style.width = "";
+      } else {
+        container.style.zoom = "";
+        container.style.transform = `scale(${this.zoom})`;
+        container.style.transformOrigin = "top center";
+        container.style.width = `${(100 / this.zoom).toFixed(4)}%`;
+      }
+    },
+
+    applyImageZoom() {
+      const container = this.getImageContainer();
+      this.applyZoomToContainer(container, this.isImageMedia());
+    },
+
+    getPdfContainer() {
+      return this.isMobile ? this.$refs.pdfMobileList : this.$refs.pdfDesktopList;
+    },
+
+    applyPdfZoom() {
+      const container = this.getPdfContainer();
+      this.applyZoomToContainer(container, this.isPdfMedia());
+    },
+
+    getScrollPane() {
+      return this.isMobile ? this.$refs.mobileScrollPane : this.$refs.desktopScrollPane;
+    },
+
+    captureScrollForZoom(currentZoom, nextZoom, anchor = null) {
+      if (nextZoom <= 0 || currentZoom <= 0) {
+        this.pendingScrollRestore = null;
+        return;
+      }
+      const pane = this.getScrollPane();
+      if (!pane) {
+        this.pendingScrollRestore = null;
+        return;
+      }
+      const rect = pane.getBoundingClientRect();
+      const localX = anchor ? anchor.clientX - rect.left : (pane.clientWidth / 2);
+      const localY = anchor ? anchor.clientY - rect.top : (pane.clientHeight / 2);
+      const worldX = pane.scrollLeft + localX;
+      const worldY = pane.scrollTop + localY;
+      const ratio = nextZoom / currentZoom;
+      this.pendingScrollRestore = {
+        left: (worldX * ratio) - localX,
+        top: (worldY * ratio) - localY,
+      };
+    },
+
+    restoreScrollAfterZoom() {
+      if (!this.pendingScrollRestore) return;
+      if (this.scrollRestoreRafId !== null) {
+        window.cancelAnimationFrame(this.scrollRestoreRafId);
+        this.scrollRestoreRafId = null;
+      }
+      const restore = this.pendingScrollRestore;
+      this.pendingScrollRestore = null;
+      this.scrollRestoreRafId = window.requestAnimationFrame(() => {
+        this.scrollRestoreRafId = null;
+        const pane = this.getScrollPane();
+        if (!pane) return;
+        const maxLeft = Math.max((pane.scrollWidth || 0) - pane.clientWidth, 0);
+        const maxTop = Math.max((pane.scrollHeight || 0) - pane.clientHeight, 0);
+        pane.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
+        pane.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
+      });
+    },
+
+    getDocxContainer() {
+      return this.isMobile ? this.$refs.docxMobileList : this.$refs.docxDesktopList;
+    },
+
+    applyDocxZoom() {
+      const container = this.getDocxContainer();
+      if (!container) return;
+
+      const preview = container.querySelector(".docx-preview");
+      const wrapper = container.querySelector(".docx-wrapper");
+      if (!this.isDocxMedia()) {
+        this.applyZoomToContainer(container, false);
+        if (preview && preview !== container) {
+          this.applyZoomToContainer(preview, false);
+        }
+        if (wrapper && wrapper !== preview && wrapper !== container) {
+          this.applyZoomToContainer(wrapper, false);
+        }
+        return;
+      }
+
+      // Keep container/preview neutral and scale only the DOCX wrapper surface to preserve page proportions.
+      container.classList.remove("is-zoomed");
+      container.style.zoom = "";
+      container.style.transform = "";
+      container.style.transformOrigin = "";
+      container.style.width = "";
+      if (preview && preview !== container) {
+        preview.classList.remove("is-zoomed");
+        preview.style.zoom = "";
+        preview.style.transform = "";
+        preview.style.transformOrigin = "";
+        preview.style.width = "";
+      }
+
+      this.applyZoomToContainer(wrapper || preview || container, true);
+    },
+
+    setZoom(nextZoom, options = {}) {
+      if (!this.isZoomableMedia()) return;
+      const current = this.zoom;
+      const minAllowed = this.currentMinZoom;
+      const maxAllowed = this.currentMaxZoom;
+      const clamped = Math.max(minAllowed, Math.min(maxAllowed, nextZoom));
+      if (Math.abs(clamped - current) < 0.001) return;
+
+      const anchor = options.anchor || null;
+      if (this.isImageMedia() || this.isPdfMedia() || this.isDocxMedia()) {
+        this.captureScrollForZoom(current, clamped, anchor);
+      } else {
+        this.pendingScrollRestore = null;
+      }
+
+      this.zoom = clamped;
+
+      if (this.isImageMedia()) {
+        this.applyImageZoom();
+        this.restoreScrollAfterZoom();
+      } else if (this.isPdfMedia()) {
+        this.applyPdfZoom();
+        this.restoreScrollAfterZoom();
+      } else if (this.isDocxMedia()) {
+        this.applyDocxZoom();
+        this.restoreScrollAfterZoom();
+      }
+    },
+
+    snapZoomToStep(value, step) {
+      if (!Number.isFinite(value)) return this.zoom;
+      if (!Number.isFinite(step) || step <= 0) return value;
+      return Math.round(value / step) * step;
+    },
+
     zoomIn() {
       if (!this.isZoomableMedia()) return;
-      this.zoom = Math.min(this.maxZoom, this.zoom + 0.1);
-      if (this.isPdfMedia() && !this.pdfError) {
-        pdfModule.render(this);
-      }
+      this.setZoom(this.zoom + this.zoomStep);
     },
 
     zoomOut() {
       if (!this.isZoomableMedia()) return;
-      this.zoom = Math.max(this.minZoom, this.zoom - 0.1);
-      if (this.isPdfMedia() && !this.pdfError) {
-        pdfModule.render(this);
-      }
+      this.setZoom(this.zoom - this.zoomStep);
     },
 
-    toggleZoom() {
+    toggleZoom(event = null) {
       if (!this.isZoomableMedia()) return;
-      this.zoom = this.zoom > 1 ? 1 : 1.4;
-      if (this.isPdfMedia() && !this.pdfError) {
-        pdfModule.render(this);
-      }
+      const nextZoom = this.zoom > 1.01 ? 1 : 2;
+      this.setZoom(nextZoom, event ? { anchor: event } : {});
     },
 
     togglePanel(panelName) {
@@ -811,19 +1112,93 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       }
     },
 
+    onCanvasWheel(event) {
+      if (!this.isZoomableMedia()) return;
+      if (this.shouldIgnoreZoomInteraction(event.target)) return;
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+        const factor = Math.exp((-event.deltaY || 0) * 0.0015);
+        this.setZoom(this.zoom * factor, { anchor: event });
+        return;
+      }
+
+      const pane = this.getScrollPane();
+      if (!pane) return;
+
+      const viewportHeight = pane.clientHeight || window.innerHeight || 900;
+      const deltaMultiplier =
+        event.deltaMode === 1
+          ? 16
+          : event.deltaMode === 2
+            ? viewportHeight
+            : 1;
+      const rawDx = (event.deltaX || 0) * deltaMultiplier;
+      const rawDy = (event.deltaY || 0) * deltaMultiplier;
+      const dx = event.shiftKey && Math.abs(rawDx) < 0.001 ? rawDy : rawDx;
+      const dy = event.shiftKey && Math.abs(rawDx) < 0.001 ? 0 : rawDy;
+
+      if (Math.abs(dx) < 0.001 && Math.abs(dy) < 0.001) return;
+
+      const canScrollX = pane.scrollWidth > pane.clientWidth + 1;
+      const canScrollY = pane.scrollHeight > pane.clientHeight + 1;
+      if (!canScrollX && !canScrollY) return;
+
+      // Keep gestures inside the viewer so horizontal swipes do not trigger browser history navigation.
+      event.preventDefault();
+      if (canScrollX && Math.abs(dx) > 0.001) {
+        pane.scrollLeft += dx;
+      }
+      if (canScrollY && Math.abs(dy) > 0.001) {
+        pane.scrollTop += dy;
+      }
+    },
+
+    onCanvasClick(event) {
+      if (!this.isZoomableMedia()) return;
+      if (this.shouldIgnoreZoomInteraction(event.target)) return;
+      const clickStep = this.isImageMedia() ? this.imageClickZoomStep : this.zoomStep;
+      if (event.shiftKey || event.altKey) {
+        this.setZoom(this.zoom - clickStep, { anchor: event });
+        return;
+      }
+      if (!this.canZoomIn) {
+        this.resetZoomState();
+        return;
+      }
+      this.setZoom(this.zoom + clickStep, { anchor: event });
+    },
+
     onTouchStart(event) {
-      if (event.touches.length !== 2) return;
-      this.pinchStartDistance = this.touchDistance(event.touches[0], event.touches[1]);
-      this.pinchStartZoom = this.zoom;
+      if (!this.isZoomableMedia()) return;
+      if (this.shouldIgnoreZoomInteraction(event.target)) return;
+      if (event.touches.length === 2) {
+        this.pinchStartDistance = this.touchDistance(event.touches[0], event.touches[1]);
+        this.pinchStartZoom = this.zoom;
+      }
     },
 
     onTouchMove(event) {
-      if (event.touches.length !== 2 || !this.pinchStartDistance) return;
-      if (!this.isImageMedia() && !this.isDocxMedia()) return;
-      const currentDistance = this.touchDistance(event.touches[0], event.touches[1]);
-      const scale = currentDistance / this.pinchStartDistance;
-      const nextZoom = this.pinchStartZoom * scale;
-      this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, nextZoom));
+      if (!this.isZoomableMedia()) return;
+      if (event.touches.length === 2 && this.pinchStartDistance) {
+        event.preventDefault();
+        const currentDistance = this.touchDistance(event.touches[0], event.touches[1]);
+        const scale = currentDistance / this.pinchStartDistance;
+        const nextZoomRaw = this.pinchStartZoom * scale;
+        const nextZoom = this.snapZoomToStep(nextZoomRaw, this.pinchZoomStep);
+        const firstTouch = event.touches[0];
+        const secondTouch = event.touches[1];
+        const anchor = {
+          clientX: (firstTouch.clientX + secondTouch.clientX) / 2,
+          clientY: (firstTouch.clientY + secondTouch.clientY) / 2,
+        };
+        this.setZoom(nextZoom, { anchor });
+      }
+    },
+
+    onTouchEnd() {
+      this.pinchStartDistance = null;
+      this.pinchStartZoom = this.zoom;
+      this.pendingScrollRestore = null;
     },
 
     touchDistance(a, b) {
@@ -846,6 +1221,17 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       } else if (event.key === "ArrowRight") {
         event.preventDefault();
         this.nextPage();
+      } else if (event.key === "+" || event.key === "=") {
+        event.preventDefault();
+        this.zoomIn();
+      } else if (event.key === "-" || event.key === "_") {
+        event.preventDefault();
+        this.zoomOut();
+      } else if (event.key === "0") {
+        event.preventDefault();
+        if (this.isZoomableMedia()) {
+          this.resetZoomState();
+        }
       }
     },
   };

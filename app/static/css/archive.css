@@ -92,6 +92,7 @@
     --doc-related-toggle-height: 56px;
     --doc-mobile-actions-height: 64px;
     --doc-desktop-actions-width: 194px;
+    --doc-docx-page-max-width: 864px;
     --doc-stage-top: calc(var(--doc-header-height) + var(--doc-zoom-bar-height));
     --doc-stage-height: calc(100vh - var(--doc-stage-top));
     overscroll-behavior: none;
@@ -103,8 +104,6 @@
 }
 
 .doc-canvas {
-    transition: transform 0.16s ease;
-    transform-origin: top center;
     translate: 0 0;
     opacity: 1;
 }
@@ -139,6 +138,29 @@
     max-width: 100%;
     height: auto;
     box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+}
+
+.doc-pdf-scroll.is-zoomed .doc-pdf-canvas,
+.doc-pdf-scroll.is-zoomed .doc-mobile-pdf-canvas {
+    max-width: none !important;
+}
+
+.doc-pdf-scroll.is-zoomed .doc-mobile-pdf-canvas {
+    width: auto !important;
+}
+
+.doc-docx-scope .docx-preview,
+.doc-docx-scope .docx-wrapper {
+    max-width: min(var(--doc-docx-page-max-width), 100%);
+    margin-inline: auto;
+}
+
+.doc-docx-scope .docx {
+    max-width: 100% !important;
+}
+
+.doc-docx-scope .docx-wrapper.is-zoomed {
+    max-width: none !important;
 }
 
 @media (max-width: 900px) {
