@@ -403,7 +403,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     minZoom: 0.75,
     maxZoom: 5,
     zoomStep: 0.25,
-    imageClickZoomStep: 0.15,
     pinchZoomStep: 0.05,
     activePanel: null,
     showDocumentDetails: false,
@@ -825,9 +824,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
           this.isMediaLoading = false;
         }
         await this.$nextTick();
-        this.applyImageZoom();
-        this.applyPdfZoom();
-        this.applyDocxZoom();
+        this.applyAllZoom();
       }
     },
 
@@ -901,9 +898,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         window.cancelAnimationFrame(this.scrollRestoreRafId);
         this.scrollRestoreRafId = null;
       }
-      this.applyImageZoom();
-      this.applyPdfZoom();
-      this.applyDocxZoom();
+      this.applyAllZoom();
     },
 
     getImageContainer() {
@@ -1081,6 +1076,12 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       this.applyZoomToContainer(wrapper || preview || container, true);
     },
 
+    applyAllZoom() {
+      this.applyImageZoom();
+      this.applyPdfZoom();
+      this.applyDocxZoom();
+    },
+
     setZoom(nextZoom, options = {}) {
       if (!this.isZoomableMedia()) return;
       const current = this.zoom;
@@ -1196,11 +1197,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       if (canScrollY && Math.abs(dy) > 0.001) {
         pane.scrollTop += dy;
       }
-    },
-
-    onCanvasClick(event) {
-      // Disabled by UX request: zoom is controlled only via toolbar buttons (and keyboard shortcuts).
-      return;
     },
 
     onTouchStart(event) {
