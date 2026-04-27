@@ -401,7 +401,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     pageIndex: 0,
     zoom: 1,
     minZoom: 0.75,
-    maxZoom: 2,
+    maxZoom: 5,
     zoomStep: 0.25,
     imageClickZoomStep: 0.15,
     pinchZoomStep: 0.05,
@@ -560,10 +560,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     get canvasCursorClass() {
-      if (!this.currentMedia) return "cursor-default";
-      if (!this.isZoomableMedia()) return "cursor-default";
-      if (!this.canZoomIn && this.canZoomOut) return "cursor-zoom-out";
-      return this.canZoomIn ? "cursor-zoom-in" : "cursor-default";
+      return "cursor-default";
     },
 
     get canZoomIn() {
@@ -939,7 +936,57 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     applyImageZoom() {
       const container = this.getImageContainer();
-      this.applyZoomToContainer(container, this.isImageMedia());
+      if (!container) return;
+      const image = container.querySelector("img");
+
+      if (!this.isImageMedia() || !image) {
+        if (image) {
+          image.style.width = "";
+          image.style.maxWidth = "";
+          image.style.height = "";
+          image.style.maxHeight = "";
+          delete image.dataset.baseRenderWidth;
+        }
+        this.applyZoomToContainer(container, false);
+        return;
+      }
+
+      // Keep 100% as the baseline rendered size, then zoom from that baseline.
+      if (this.zoom <= 1.001) {
+        image.style.width = "";
+        image.style.maxWidth = "";
+        image.style.height = "";
+        image.style.maxHeight = "";
+        this.applyZoomToContainer(container, true);
+        const measuredWidth = image.getBoundingClientRect().width;
+        if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
+          image.dataset.baseRenderWidth = String(measuredWidth);
+        } else {
+          delete image.dataset.baseRenderWidth;
+        }
+        return;
+      }
+
+      let baseWidth = Number(image.dataset.baseRenderWidth || 0);
+      if (!Number.isFinite(baseWidth) || baseWidth <= 0) {
+        const measuredWidth = image.getBoundingClientRect().width;
+        if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
+          const divisor = Math.max(this.zoom, 1);
+          baseWidth = measuredWidth / divisor;
+          if (Number.isFinite(baseWidth) && baseWidth > 0) {
+            image.dataset.baseRenderWidth = String(baseWidth);
+          }
+        }
+      }
+
+      if (Number.isFinite(baseWidth) && baseWidth > 0) {
+        image.style.width = `${baseWidth}px`;
+        image.style.maxWidth = "none";
+        image.style.height = "auto";
+        image.style.maxHeight = "none";
+      }
+
+      this.applyZoomToContainer(container, true);
     },
 
     getPdfContainer() {
@@ -1116,9 +1163,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       if (!this.isZoomableMedia()) return;
       if (this.shouldIgnoreZoomInteraction(event.target)) return;
       if (event.ctrlKey || event.metaKey) {
-        event.preventDefault();
-        const factor = Math.exp((-event.deltaY || 0) * 0.0015);
-        this.setZoom(this.zoom * factor, { anchor: event });
+        // Disabled by UX request: cmd/ctrl + wheel should not zoom document content.
         return;
       }
 
@@ -1154,18 +1199,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     onCanvasClick(event) {
-      if (!this.isZoomableMedia()) return;
-      if (this.shouldIgnoreZoomInteraction(event.target)) return;
-      const clickStep = this.isImageMedia() ? this.imageClickZoomStep : this.zoomStep;
-      if (event.shiftKey || event.altKey) {
-        this.setZoom(this.zoom - clickStep, { anchor: event });
-        return;
-      }
-      if (!this.canZoomIn) {
-        this.resetZoomState();
-        return;
-      }
-      this.setZoom(this.zoom + clickStep, { anchor: event });
+      // Disabled by UX request: zoom is controlled only via toolbar buttons (and keyboard shortcuts).
+      return;
     },
 
     onTouchStart(event) {

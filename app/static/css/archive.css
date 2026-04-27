@@ -120,6 +120,24 @@
     animation: doc-carousel-in 180ms ease forwards;
 }
 
+.doc-image-scroll,
+.doc-pdf-scroll,
+.doc-docx-scope {
+    padding-bottom: calc(var(--doc-related-toggle-height) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 767px) {
+    .doc-image-scroll,
+    .doc-pdf-scroll,
+    .doc-docx-scope {
+        padding-bottom: calc(
+            var(--doc-related-toggle-height) +
+            var(--doc-mobile-actions-height) +
+            env(safe-area-inset-bottom, 0px)
+        );
+    }
+}
+
 @keyframes doc-carousel-in {
     from {
         translate: calc(var(--slide-direction, 1) * 2.2rem) 0;
@@ -147,6 +165,11 @@
 
 .doc-pdf-scroll.is-zoomed .doc-mobile-pdf-canvas {
     width: auto !important;
+}
+
+.doc-image-scroll.is-zoomed img {
+    max-width: none !important;
+    max-height: none !important;
 }
 
 .doc-docx-scope .docx-preview,
