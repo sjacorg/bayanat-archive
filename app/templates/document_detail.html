@@ -245,7 +245,7 @@
 
             <div class="mx-auto mt-3 max-w-5xl border-t border-slate-300 pt-3 text-base leading-6 text-slate-800 max-md:text-sm max-md:leading-5">
                 <p x-text="panelTitle" class="mb-3 inline-block bg-[#3D9B8F] px-4 py-2 text-xl font-semibold leading-none text-white max-md:text-base"></p>
-                <div x-show="activePanel === 'info'">
+                <div class="break-all" x-show="activePanel === 'info'">
                     <div role="tablist" aria-label="Detail scope" class="detail-scope-tabs tabs tabs-border tabs-xl">
                         <button
                             type="button"
@@ -255,7 +255,7 @@
                             :aria-selected="!showDocumentDetails"
                             @click="showDocumentDetails = false"
                         >
-                            <span class="px-4">Page details</span>
+                            <span class="md:px-4">Page details</span>
                         </button>
                         <button
                             type="button"
@@ -265,7 +265,7 @@
                             :aria-selected="showDocumentDetails"
                             @click="showDocumentDetails = true"
                         >
-                            <span class="px-4">Full document details</span>
+                            <span class="md:px-4">Full document details</span>
                         </button>
                     </div>
 
@@ -425,7 +425,7 @@
                     </table>
                 </div>
 
-                <div class="whitespace-pre-wrap text-right" x-show="activePanel === 'arabic'">
+                <div class="whitespace-pre-wrap break-all text-right" x-show="activePanel === 'arabic'">
                     <template x-if="currentArabicText">
                         <div :dir="arabicTextDir" x-text="currentArabicText"></div>
                     </template>
@@ -434,7 +434,7 @@
                     </template>
                 </div>
 
-                <div class="whitespace-pre-wrap" x-show="activePanel === 'translation'">
+                <div class="whitespace-pre-wrap break-all" x-show="activePanel === 'translation'">
                     <template x-if="currentTranslationText">
                         <div x-text="currentTranslationText"></div>
                     </template>

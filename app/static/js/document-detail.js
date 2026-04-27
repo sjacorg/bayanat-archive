@@ -403,7 +403,9 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     minZoom: 0.75,
     maxZoom: 5,
     zoomStep: 0.25,
-    pinchZoomStep: 0.05,
+    docxBaseScale: 0.5,
+    pinchZoomStep: 0.01,
+    pinchSensitivity: 0.35,
     activePanel: null,
     showDocumentDetails: false,
     relatedOpen: false,
@@ -1048,13 +1050,17 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
       const preview = container.querySelector(".docx-preview");
       const wrapper = container.querySelector(".docx-wrapper");
+      const zoomTarget = wrapper || preview || container;
       if (!this.isDocxMedia()) {
         this.applyZoomToContainer(container, false);
         if (preview && preview !== container) {
           this.applyZoomToContainer(preview, false);
         }
-        if (wrapper && wrapper !== preview && wrapper !== container) {
-          this.applyZoomToContainer(wrapper, false);
+        if (zoomTarget && zoomTarget !== preview && zoomTarget !== container) {
+          this.applyZoomToContainer(zoomTarget, false);
+          zoomTarget.style.width = "";
+          zoomTarget.style.maxWidth = "";
+          delete zoomTarget.dataset.baseRenderWidth;
         }
         return;
       }
@@ -1073,7 +1079,26 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         preview.style.width = "";
       }
 
-      this.applyZoomToContainer(wrapper || preview || container, true);
+      if (zoomTarget) {
+        let baseWidth = Number(zoomTarget.dataset.baseRenderWidth || 0);
+        if (!Number.isFinite(baseWidth) || baseWidth <= 0) {
+          const measuredWidth = zoomTarget.getBoundingClientRect().width;
+          if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
+            const divisor = Math.max(this.zoom, 1);
+            baseWidth = measuredWidth / divisor;
+            if (Number.isFinite(baseWidth) && baseWidth > 0) {
+              zoomTarget.dataset.baseRenderWidth = String(baseWidth);
+            }
+          }
+        }
+        if (Number.isFinite(baseWidth) && baseWidth > 0) {
+          const scaledBaseWidth = baseWidth * Math.max(0.1, this.docxBaseScale || 1);
+          zoomTarget.style.width = `${scaledBaseWidth}px`;
+          zoomTarget.style.maxWidth = "none";
+        }
+      }
+
+      this.applyZoomToContainer(zoomTarget, true);
     },
 
     applyAllZoom() {
@@ -1163,8 +1188,15 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     onCanvasWheel(event) {
       if (!this.isZoomableMedia()) return;
       if (this.shouldIgnoreZoomInteraction(event.target)) return;
-      if (event.ctrlKey || event.metaKey) {
-        // Disabled by UX request: cmd/ctrl + wheel should not zoom document content.
+      if (event.metaKey) {
+        // Keep cmd+wheel disabled.
+        return;
+      }
+      if (event.ctrlKey) {
+        // Trackpad pinch on desktop commonly emits ctrl+wheel.
+        event.preventDefault();
+        const factor = Math.exp((-event.deltaY || 0) * 0.0015);
+        this.setZoom(this.zoom * factor, { anchor: event });
         return;
       }
 
@@ -1214,7 +1246,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         event.preventDefault();
         const currentDistance = this.touchDistance(event.touches[0], event.touches[1]);
         const scale = currentDistance / this.pinchStartDistance;
-        const nextZoomRaw = this.pinchStartZoom * scale;
+        const smoothedScale = 1 + ((scale - 1) * this.pinchSensitivity);
+        const nextZoomRaw = this.pinchStartZoom * smoothedScale;
         const nextZoom = this.snapZoomToStep(nextZoomRaw, this.pinchZoomStep);
         const firstTouch = event.touches[0];
         const secondTouch = event.touches[1];
