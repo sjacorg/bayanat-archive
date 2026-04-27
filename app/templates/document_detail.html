@@ -247,29 +247,28 @@
             <div class="mx-auto mt-3 max-w-5xl border-t border-slate-300 pt-3 text-base leading-6 text-slate-800 max-md:text-sm max-md:leading-5">
                 <p x-text="panelTitle" class="mb-3 inline-block bg-[#3D9B8F] px-4 py-2 text-xl font-semibold leading-none text-white max-md:text-base"></p>
                 <div x-show="activePanel === 'info'">
-                    <div class="mb-2 inline-flex items-center gap-1 rounded-sm bg-slate-200 p-1">
+                    <div role="tablist" aria-label="Detail scope" class="detail-scope-tabs tabs tabs-border tabs-xl">
                         <button
                             type="button"
-                            class="rounded-sm px-3 py-1.5 text-sm font-semibold leading-none transition-colors"
-                            :class="!showDocumentDetails ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
+                            role="tab"
+                            class="tab text-sm font-semibold"
+                            :class="!showDocumentDetails ? 'tab-active text-primary [--tab-border-color:var(--color-primary)]' : 'text-slate-600'"
+                            :aria-selected="!showDocumentDetails"
                             @click="showDocumentDetails = false"
                         >
-                            Page details
+                            <span class="px-4">Page details</span>
                         </button>
                         <button
                             type="button"
-                            class="rounded-sm px-3 py-1.5 text-sm font-semibold leading-none transition-colors"
-                            :class="showDocumentDetails ? 'bg-primary text-white shadow-sm' : 'bg-transparent text-slate-700 hover:bg-slate-100'"
+                            role="tab"
+                            class="tab text-sm font-semibold"
+                            :class="showDocumentDetails ? 'tab-active text-primary [--tab-border-color:var(--color-primary)]' : 'text-slate-600'"
+                            :aria-selected="showDocumentDetails"
                             @click="showDocumentDetails = true"
                         >
-                            Full document details
+                            <span class="px-4">Full document details</span>
                         </button>
                     </div>
-
-                    <h1
-                        class="mb-2 mt-1 text-xl font-semibold leading-tight"
-                        x-text="showDocumentDetails ? 'Full document details' : 'Page details'"
-                    ></h1>
 
                     <table x-show="!showDocumentDetails" class="w-full border-collapse text-base max-md:text-sm">
                         <tbody>
@@ -316,9 +315,8 @@
                         </tbody>
                     </table>
 
-                    <div x-show="showDocumentDetails" class="mt-0.5">
-                        <h2 class="m-0 text-base font-semibold leading-tight">Document Details</h2>
-                        <table class="mt-1 w-full border-collapse text-sm">
+                    <div x-show="showDocumentDetails">
+                        <table class="w-full border-collapse text-sm">
                             <tbody>
                                 <tr>
                                     <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">ID</th>
