@@ -1,13 +1,18 @@
 window.documentDetailViewer = function documentDetailViewer(payload) {
   const LOG_PREFIX = "[document-detail]";
   let rawPdfDoc = null;
+  let rawPdfSrc = "";
   let rawPdfRenderToken = 0;
+  let rawPdfLoadPromise = null;
+  let rawPdfLoadSrc = "";
   let rawDocxBuffer = null;
   let rawDocxRenderToken = 0;
 
   const pdfModule = {
     reset(viewer) {
       rawPdfRenderToken += 1;
+      rawPdfLoadPromise = null;
+      rawPdfLoadSrc = "";
       if (rawPdfDoc && typeof rawPdfDoc.destroy === "function") {
         try {
           rawPdfDoc.destroy();
@@ -16,6 +21,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         }
       }
       rawPdfDoc = null;
+      rawPdfSrc = "";
       viewer.pdfReady = false;
       viewer.pdfTotalPages = 1;
       viewer.pdfStatusText = "";
@@ -101,8 +107,29 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
       viewer.pdfStatusText = "Loading PDF...";
-      rawPdfDoc = await this.loadWithAttempts(viewer, src);
+      if (rawPdfDoc && rawPdfSrc === src) {
+        viewer.pdfTotalPages = rawPdfDoc.numPages || 1;
+        viewer.pdfError = false;
+        viewer.pdfStatusText = `${viewer.pdfTotalPages} page PDF`;
+        return;
+      }
+
+      if (rawPdfLoadPromise && rawPdfLoadSrc === src) {
+        rawPdfDoc = await rawPdfLoadPromise;
+      } else {
+        rawPdfLoadSrc = src;
+        rawPdfLoadPromise = this.loadWithAttempts(viewer, src);
+        try {
+          rawPdfDoc = await rawPdfLoadPromise;
+        } finally {
+          if (rawPdfLoadPromise) {
+            rawPdfLoadPromise = null;
+            rawPdfLoadSrc = "";
+          }
+        }
+      }
       if (rawPdfDoc) {
+        rawPdfSrc = src;
         viewer.pdfTotalPages = rawPdfDoc.numPages || 1;
         viewer.pdfError = false;
         viewer.pdfStatusText = `${viewer.pdfTotalPages} page PDF`;
@@ -110,6 +137,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       }
 
       rawPdfDoc = null;
+      rawPdfSrc = "";
       viewer.pdfError = true;
       viewer.pdfReady = false;
       viewer.pdfStatusText = "Unable to render PDF.";
@@ -462,6 +490,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     pendingScrollRestore: null,
     scrollRestoreRafId: null,
     pdfZoomRafId: null,
+    initPromise: null,
+    hasInitialized: false,
     renderWidths: {
       pdf: { desktop: 0, mobile: 0 },
       docx: { desktop: 0, mobile: 0 },
@@ -473,6 +503,12 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     logPrefix: LOG_PREFIX,
 
     async init() {
+      if (this.hasInitialized) return;
+      if (this.initPromise) {
+        await this.initPromise;
+        return;
+      }
+      this.initPromise = (async () => {
       this.updateViewportMode();
       this.syncLayoutMetrics();
 
@@ -498,6 +534,13 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       });
 
       await this.loadCurrentMedia();
+      this.hasInitialized = true;
+      })();
+      try {
+        await this.initPromise;
+      } finally {
+        this.initPromise = null;
+      }
     },
 
     destroy() {
