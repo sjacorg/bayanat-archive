@@ -1,210 +1,444 @@
-{% macro build_url(override={}) %}
-{%- set params = {} -%}
-{%- if q %}{% set _ = params.update({'q': q}) %}{% endif -%}
-{%- if label %}{% set _ = params.update({'label': label}) %}{% endif -%}
-{%- if location %}{% set _ = params.update({'location': location}) %}{% endif -%}
-{%- if date_from %}{% set _ = params.update({'date_from': date_from}) %}{% endif -%}
-{%- if date_to %}{% set _ = params.update({'date_to': date_to}) %}{% endif -%}
-{%- if sort and sort != 'date_desc' %}{% set _ = params.update({'sort': sort}) %}{% endif -%}
-{%- set _ = params.update(override) -%}
-/search?{{ params | urlencode }}
-{%- endmacro %}
+{#
+  partials/search_results.html
+  OOB swap for #toolbar/#active-filters + main swap for #results cards/list + pagination.
+#}
 
-<div class="flex flex-col lg:flex-row gap-8">
+{% macro card_badge(doc_id) %}
+{% set media = thumbnails.get(doc_id) %}
+{% set labels = doc_labels.get(doc_id, []) %}
+{% set media_type = (media.media_type if media and media.media_type else "") | lower %}
+{% set label_value = (labels[0].title if labels else "document") | lower %}
+{% set filename = (media.filename if media and media.filename else "") | lower %}
+{% set badge_value = (media_type ~ " " ~ label_value ~ " " ~ filename) | lower %}
+{% set is_pdf = "application/pdf" in media_type or "pdf" in badge_value or ".pdf" in filename %}
+{% set is_docx = "application/vnd.openxmlformats-officedocument.wordprocessingml.document" in media_type or "application/msword" in media_type or "wordprocessingml" in media_type or ".docx" in filename or ".doc" in filename or "docx" in badge_value %}
+{% set is_image = "image/" in media_type or "image" in badge_value or "photo" in badge_value or "jpeg" in badge_value or "jpg" in badge_value or "png" in badge_value or "gif" in badge_value or "webp" in badge_value %}
+{% set is_video = "video/" in media_type or "video" in badge_value or "mp4" in badge_value or "mov" in badge_value or "avi" in badge_value or "webm" in badge_value %}
+{% set is_audio = "audio/" in media_type or "audio" in badge_value or "mp3" in badge_value or "wav" in badge_value or "ogg" in badge_value or "aac" in badge_value %}
+<span class="inline-flex items-center gap-2 bg-primary px-3 py-1 text-xs font-medium text-primary-content">
+    {% if is_pdf %}
+    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="white"/>
+    </svg>
+    PDF
+    {% elif is_image %}
+    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M16.625 15.0417V3.95833C16.625 3.0875 15.9125 2.375 15.0417 2.375H3.95833C3.0875 2.375 2.375 3.0875 2.375 3.95833V15.0417C2.375 15.9125 3.0875 16.625 3.95833 16.625H15.0417C15.9125 16.625 16.625 15.9125 16.625 15.0417ZM6.72917 10.6875L8.70833 13.0704L11.4792 9.5L15.0417 14.25H3.95833L6.72917 10.6875Z" fill="white"/>
+    </svg>
+    Image
+    {% elif is_video %}
+    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M9.49992 1.5835C5.12992 1.5835 1.58325 5.13016 1.58325 9.50016C1.58325 13.8702 5.12992 17.4168 9.49992 17.4168C13.8699 17.4168 17.4166 13.8702 17.4166 9.50016C17.4166 5.13016 13.8699 1.5835 9.49992 1.5835ZM7.91658 13.0627V5.93766L12.6666 9.50016L7.91658 13.0627Z" fill="white"/>
+    </svg>
+    Video
+    {% elif is_audio %}
+    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M9.5 0.791504C5.56542 0.791504 2.375 3.98192 2.375 7.9165V13.4582C2.375 14.7723 3.43583 15.8332 4.75 15.8332H7.125V9.49984H3.95833V7.9165C3.95833 4.85275 6.43625 2.37484 9.5 2.37484C12.5638 2.37484 15.0417 4.85275 15.0417 7.9165V9.49984H11.875V15.8332H14.25C15.5642 15.8332 16.625 14.7723 16.625 13.4582V7.9165C16.625 3.98192 13.4346 0.791504 9.5 0.791504Z" fill="white"/>
+    </svg>
+    Audio
+    {% elif is_docx %}
+    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <title>file-word-outline</title>
+        <path fill="currentColor" d="M14 2H6C4.89 2 4 2.9 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2M18 20H6V4H13V9H18V20M17.35 10L15.25 19H13.85L12.05 12.21L10.25 19H8.85L6.65 10H8.15L9.55 16.81L11.35 10H12.65L14.45 16.81L15.85 10H17.35Z"/>
+    </svg>
+    DOCX
+    {% else %}
+    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="white"/>
+    </svg>
+    Document
+    {% endif %}
+</span>
+{% endmacro %}
 
-    <!-- Facets sidebar -->
-    <aside class="lg:w-64 shrink-0 space-y-6">
+{% macro document_label_chips(doc_id) %}
+{% set labels = doc_labels.get(doc_id, []) %}
+{% if labels %}
+<div class="flex flex-wrap gap-1.5">
+    <span class="inline-flex h-5 items-center bg-base-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] leading-none text-base-content/70">
+        {{ labels[0].title }}
+    </span>
+    {% if labels|length > 1 %}
+    {% set overflow_titles = labels[1:] | map(attribute='title') | join(', ') %}
+    <div class="tooltip tooltip-top inline-flex" data-tip="{{ overflow_titles }}">
+        <span
+            class="inline-flex h-5 items-center bg-base-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] leading-none text-base-content/60"
+            tabindex="0"
+            aria-label="More labels: {{ overflow_titles }}"
+        >
+            +{{ labels|length - 1 }}
+        </span>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endmacro %}
 
-        {% if facets.labels %}
-        <div>
-            <h3 class="text-sm font-semibold text-base-content/70 mb-2">Labels</h3>
-            <ul class="space-y-1">
-                {% for f in facets.labels %}
-                <li>
-                    <a href="{{ build_url({'label': f.title, 'page': 1}) }}"
-                       hx-get="{{ build_url({'label': f.title, 'page': 1}) }}"
-                       hx-target="#results"
-                       hx-push-url="{{ build_url({'label': f.title, 'page': 1}) }}"
-                       class="flex justify-between text-sm hover:text-primary {{ 'font-bold text-primary' if label == f.title else '' }}">
-                        <span class="truncate">{{ f.title }}</span>
-                        <span class="text-base-content/40">{{ f.count }}</span>
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% if label %}
-            <a href="{{ build_url({'label': '', 'page': 1}) }}"
-               hx-get="{{ build_url({'label': '', 'page': 1}) }}"
-               hx-target="#results"
-               hx-push-url="{{ build_url({'label': '', 'page': 1}) }}"
-               class="text-xs text-primary mt-2 inline-block">Clear label filter</a>
-            {% endif %}
-        </div>
-        {% endif %}
+{% macro thumbnail_media(doc, img_class, fallback_icon_class) %}
+{% set media = thumbnails.get(doc.id) %}
+{% set labels = doc_labels.get(doc.id, []) %}
+{% set media_type = (media.media_type if media and media.media_type else "") | lower %}
+{% set label_value = (labels[0].title if labels else "document") | lower %}
+{% set filename = (media.filename if media and media.filename else "") | lower %}
+{% set badge_value = (media_type ~ " " ~ label_value ~ " " ~ filename) | lower %}
+{% set is_pdf = "application/pdf" in media_type or "pdf" in badge_value or ".pdf" in filename %}
+{% set is_docx = "application/vnd.openxmlformats-officedocument.wordprocessingml.document" in media_type or "application/msword" in media_type or "wordprocessingml" in media_type or ".docx" in filename or ".doc" in filename or "docx" in badge_value %}
+{% set is_image = "image/" in media_type or "image" in badge_value or "photo" in badge_value or "jpeg" in badge_value or "jpg" in badge_value or "png" in badge_value or "gif" in badge_value or "webp" in badge_value %}
+{% set is_video = "video/" in media_type or "video" in badge_value or "mp4" in badge_value or "mov" in badge_value or "avi" in badge_value or "webm" in badge_value %}
+{% set is_audio = "audio/" in media_type or "audio" in badge_value or "mp3" in badge_value or "wav" in badge_value or "ogg" in badge_value or "aac" in badge_value %}
+{% if media and media.filename and is_image %}
+<img
+    src="/static/media/{{ media.filename }}"
+    alt="{{ doc.title }}"
+    class="{{ img_class }}"
+    loading="lazy"
+>
+{% elif is_pdf %}
+<div class="flex h-full w-full items-center justify-center bg-red-50">
+    <svg class="{{ fallback_icon_class }} text-red-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+        <title>file-pdf-box</title>
+        <path fill="currentColor" d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3M9.5 11.5C9.5 12.3 8.8 13 8 13H7V15H5.5V9H8C8.8 9 9.5 9.7 9.5 10.5V11.5M14.5 13.5C14.5 14.3 13.8 15 13 15H10.5V9H13C13.8 9 14.5 9.7 14.5 10.5V13.5M18.5 10.5H17V11.5H18.5V13H17V15H15.5V9H18.5V10.5M12 10.5H13V13.5H12V10.5M7 10.5H8V11.5H7V10.5Z" />
+    </svg>
+</div>
+{% elif is_video %}
+<div class="flex h-full w-full items-center justify-center bg-blue-50">
+    <svg class="{{ fallback_icon_class }} text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+        <title>video</title>
+        <path fill="currentColor" d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z" />
+    </svg>
+</div>
+{% elif is_audio %}
+<div class="flex h-full w-full items-center justify-center bg-emerald-50">
+    <svg class="{{ fallback_icon_class }} text-emerald-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+        <title>music-box</title>
+        <path fill="currentColor" d="M16,9H13V14.5A2.5,2.5 0 0,1 10.5,17A2.5,2.5 0 0,1 8,14.5A2.5,2.5 0 0,1 10.5,12C11.07,12 11.58,12.19 12,12.5V7H16M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3Z" />
+    </svg>
+</div>
+{% elif is_docx %}
+<div class="flex h-full w-full items-center justify-center bg-sky-50">
+    <svg class="{{ fallback_icon_class }} text-sky-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+        <title>file-word-outline</title>
+        <path fill="currentColor" d="M14 2H6C4.89 2 4 2.9 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2M18 20H6V4H13V9H18V20M17.35 10L15.25 19H13.85L12.05 12.21L10.25 19H8.85L6.65 10H8.15L9.55 16.81L11.35 10H12.65L14.45 16.81L15.85 10H17.35Z" />
+    </svg>
+</div>
+{% else %}
+<div class="flex h-full w-full items-center justify-center bg-base-300/80">
+    <svg class="{{ fallback_icon_class }} text-base-content/50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+        <title>file-download</title>
+        <path fill="currentColor" d="M14,2H6C4.89,2 4,2.89 4,4V20C4,21.11 4.89,22 6,22H18C19.11,22 20,21.11 20,20V8L14,2M12,19L8,15H10.5V12H13.5V15H16L12,19M13,9V3.5L18.5,9H13Z" />
+    </svg>
+</div>
+{% endif %}
+{% endmacro %}
 
-        {% if facets.locations %}
-        <div>
-            <h3 class="text-sm font-semibold text-base-content/70 mb-2">Locations</h3>
-            <ul class="space-y-1">
-                {% for f in facets.locations %}
-                <li>
-                    <a href="{{ build_url({'location': f.full_location, 'page': 1}) }}"
-                       hx-get="{{ build_url({'location': f.full_location, 'page': 1}) }}"
-                       hx-target="#results"
-                       hx-push-url="{{ build_url({'location': f.full_location, 'page': 1}) }}"
-                       class="flex justify-between text-sm hover:text-primary {{ 'font-bold text-primary' if location == f.full_location else '' }}">
-                        <span class="truncate">{{ f.full_location }}</span>
-                        <span class="text-base-content/40">{{ f.count }}</span>
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
-            {% if location %}
-            <a href="{{ build_url({'location': '', 'page': 1}) }}"
-               hx-get="{{ build_url({'location': '', 'page': 1}) }}"
-               hx-target="#results"
-               hx-push-url="{{ build_url({'location': '', 'page': 1}) }}"
-               class="text-xs text-primary mt-2 inline-block">Clear location filter</a>
-            {% endif %}
-        </div>
-        {% endif %}
+<p id="result-count" hx-swap-oob="innerHTML" class="pt-2 text-4xl font-semibold text-base-content lg:pt-1">
+    {% if total == 0 %}0 results
+    {% elif total == 1 %}1 result
+    {% else %}{{ total }} results{% endif %}
+</p>
 
-    </aside>
-
-    <!-- Results -->
-    <div class="flex-1">
-
-        <!-- Header: count + sort -->
-        <div class="flex items-center justify-between mb-6">
-            <p class="text-sm text-base-content/60">
-                {% if total > 0 %}
-                    Showing {{ (page - 1) * per_page + 1 }}-{{ [page * per_page, total] | min }} of {{ total }} documents
-                {% else %}
-                    No documents found
-                {% endif %}
-            </p>
-            {% if total > 0 %}
-            <div class="flex gap-2 text-sm">
-                {% if q %}
-                <a href="{{ build_url({'sort': 'relevance', 'page': 1}) }}"
-                   hx-get="{{ build_url({'sort': 'relevance', 'page': 1}) }}"
-                   hx-target="#results"
-                   class="{{ 'font-bold text-primary' if sort == 'relevance' else 'text-base-content/50 hover:text-primary' }}">Relevance</a>
-                {% endif %}
-                <a href="{{ build_url({'sort': 'date_desc', 'page': 1}) }}"
-                   hx-get="{{ build_url({'sort': 'date_desc', 'page': 1}) }}"
-                   hx-target="#results"
-                   class="{{ 'font-bold text-primary' if sort == 'date_desc' else 'text-base-content/50 hover:text-primary' }}">Newest</a>
-                <a href="{{ build_url({'sort': 'date_asc', 'page': 1}) }}"
-                   hx-get="{{ build_url({'sort': 'date_asc', 'page': 1}) }}"
-                   hx-target="#results"
-                   class="{{ 'font-bold text-primary' if sort == 'date_asc' else 'text-base-content/50 hover:text-primary' }}">Oldest</a>
-            </div>
-            {% endif %}
-        </div>
-
-        {% if results %}
-        <!-- Result cards grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {% for doc in results %}
-            <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block" style="view-transition-name: doc-{{ doc.id }};">
-                <div class="bg-base-100 overflow-hidden hover:shadow-md transition-shadow">
-                    <!-- Thumbnail -->
-                    {% if thumbnails.get(doc.id) %}
-                    <div class="aspect-[4/3] bg-base-200 overflow-hidden">
-                        <img src="/static/media/{{ thumbnails[doc.id].filename }}"
-                             alt="{{ doc.title }}"
-                             class="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                             loading="lazy">
-                    </div>
-                    {% else %}
-                    <div class="aspect-[4/3] bg-base-200 flex items-center justify-center">
-                        <svg class="w-12 h-12 text-base-content/20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                  d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                        </svg>
-                    </div>
-                    {% endif %}
-
-                    <!-- Card body -->
-                    <div class="p-3 space-y-2">
-                        <h3 class="font-medium text-sm leading-snug line-clamp-2 group-hover:text-primary transition-colors">
-                            {% if doc.snippet_title %}
-                                {{ doc.snippet_title | safe }}
-                            {% else %}
-                                {{ doc.title }}
-                            {% endif %}
-                        </h3>
-
-                        {% if doc.snippet_desc %}
-                        <p class="text-xs text-base-content/50 line-clamp-2">{{ doc.snippet_desc | strip_html }}</p>
-                        {% elif doc.description %}
-                        <p class="text-xs text-base-content/50 line-clamp-2">{{ doc.description | strip_html | truncate(120) }}</p>
-                        {% endif %}
-
-                        <div class="flex items-center gap-2 flex-wrap">
-                            {% if doc.publish_date %}
-                            <span class="text-xs text-base-content/40">{{ doc.publish_date[:10] }}</span>
-                            {% endif %}
-                            {% for lbl in doc_labels.get(doc.id, [])[:2] %}
-                            <span class="badge badge-sm badge-ghost">{{ lbl.title }}</span>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-            </a>
+<div id="active-filters" hx-swap-oob="innerHTML">
+    {% if active_filters %}
+    <div class="flex justify-between gap-4 md:justify-start">
+        <div class="flex flex-wrap items-center gap-2">
+            {% for f in active_filters %}
+            <span class="badge h-fit gap-1 rounded-none bg-secondary py-1 pr-2 text-xs text-white">
+                {{ f.label }}
+                <button
+                    type="button"
+                    aria-label="Remove {{ f.label }} filter"
+                    class="ml-0.5 transition-colors hover:text-error"
+                    hx-get="{{ f.remove_url }}"
+                    hx-target="#results"
+                    hx-push-url="true"
+                    hx-indicator="#loading"
+                >
+                    <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </span>
             {% endfor %}
         </div>
+        <button
+            type="button"
+            class="flex items-center gap-1 text-xs text-base-content/35"
+            hx-get="{{ clear_url }}"
+            hx-target="#results"
+            hx-push-url="true"
+            hx-indicator="#loading"
+        >
+            <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
+            </svg>
+            Clear
+        </button>
+    </div>
+    {% endif %}
+</div>
 
-        <!-- Pagination -->
-        {% if total_pages > 1 %}
-        <div class="flex justify-center mt-8">
-            <div class="join">
-                {% if page > 1 %}
-                <a href="{{ build_url({'page': page - 1}) }}"
-                   hx-get="{{ build_url({'page': page - 1}) }}"
-                   hx-target="#results"
-                   hx-push-url="{{ build_url({'page': page - 1}) }}"
-                   class="join-item btn btn-sm">Previous</a>
-                {% endif %}
+<div id="toolbar" hx-swap-oob="innerHTML">
+    <input type="hidden" name="view" value="{{ view }}" class="search-param">
+    <input type="hidden" name="sort" value="{{ sort }}" class="search-param sort-hidden">
 
-                {% for p in range(1, total_pages + 1) %}
-                    {% if p == page %}
-                    <button class="join-item btn btn-sm btn-active">{{ p }}</button>
-                    {% elif p <= 3 or p > total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
-                    <a href="{{ build_url({'page': p}) }}"
-                       hx-get="{{ build_url({'page': p}) }}"
-                       hx-target="#results"
-                       hx-push-url="{{ build_url({'page': p}) }}"
-                       class="join-item btn btn-sm">{{ p }}</a>
-                    {% elif p == 4 or p == total_pages - 2 %}
-                    <button class="join-item btn btn-sm btn-disabled">...</button>
+    <div class="flex flex-col items-end justify-between gap-4 md:flex-row md:items-center">
+        <div class="flex w-full items-center gap-2.5 md:max-w-[285px]">
+            <div class="relative w-full" @click.outside="open = (open === 'sort') ? null : open">
+                <button
+                    type="button"
+                    @click.stop="open = (open === 'sort') ? null : 'sort'"
+                    class="flex h-[40px] md:h-[29px] w-full select-none items-center justify-between gap-2 bg-primary px-4 text-sm font-medium text-primary-content transition-colors hover:bg-primary/90"
+                    aria-haspopup="listbox"
+                    :aria-expanded="open === 'sort'"
+                >
+                    <span>
+                        {% if sort == "date_desc" %}Date (newest)
+                        {% elif sort == "date_asc" %}Date (oldest)
+                        {% else %}Relevance{% endif %}
+                    </span>
+                    <svg class="h-3 w-3 shrink-0 text-primary-content transition-transform duration-150" :class="{ 'rotate-180': open === 'sort' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M2 4l4 4 4-4"/>
+                    </svg>
+                </button>
+
+                <div
+                    x-show="open === 'sort'"
+                    x-cloak
+                    x-transition:enter="transition ease-out duration-100"
+                    x-transition:enter-start="opacity-0 -translate-y-0.5"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="absolute right-0 top-[120%] z-30 min-w-40 border border-gray-200 bg-base-100 py-1 shadow-ambient w-full"
+                    role="listbox"
+                >
+                    {% for value, label in [("date_desc", "Date (newest)"), ("date_asc", "Date (oldest)"), ("relevance", "Relevance")] %}
+                    {% if value != "relevance" or q %}
+                    <button
+                        type="button"
+                        class="flex w-full items-center gap-3 px-4 py-2 text-sm transition-colors hover:bg-gray-200/50 {% if sort == value %}font-medium text-secondary{% else %}text-base-content/80{% endif %}"
+                        @click="
+                            open = null;
+                            document.querySelector('.sort-hidden').value = '{{ value }}';
+                        "
+                        hx-get="/search"
+                        hx-include=".search-param"
+                        hx-vals='{"sort": "{{ value }}", "page": "1"}'
+                        hx-target="#results"
+                        hx-push-url="true"
+                        hx-indicator="#loading"
+                    >
+                        <svg
+                            class="size-4 shrink-0 text-secondary transition-opacity duration-100 {% if sort == value %}opacity-100{% else %}opacity-0{% endif %}"
+                            viewBox="0 0 17 17"
+                            fill="currentColor"
+                            aria-hidden="true"
+                        >
+                            <path d="M6.37462 11.4541L3.42087 8.50038L2.41504 9.49913L6.37462 13.4587L14.8746 4.95871L13.8759 3.95996L6.37462 11.4541Z"/>
+                        </svg>
+                        <span>{{ label }}</span>
+                    </button>
                     {% endif %}
-                {% endfor %}
-
-                {% if page < total_pages %}
-                <a href="{{ build_url({'page': page + 1}) }}"
-                   hx-get="{{ build_url({'page': page + 1}) }}"
-                   hx-target="#results"
-                   hx-push-url="{{ build_url({'page': page + 1}) }}"
-                   class="join-item btn btn-sm">Next</a>
-                {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
-        {% endif %}
 
-        {% else %}
-        <div class="text-center py-20">
-            <p class="text-base-content/50">No documents match your search.</p>
-            {% if q or label or location %}
-            <a href="/"
-               hx-get="/search"
-               hx-target="#results"
-               hx-push-url="/"
-               class="text-primary text-sm mt-2 inline-block">Clear all filters</a>
-            {% endif %}
+        <div class="flex items-center gap-3">
+            <span class="text-xs font-semibold uppercase tracking-[0.1em] text-base-content/70">Display in</span>
+            <div class="flex border border-base-300" role="group" aria-label="View as">
+                <button
+                    type="button"
+                    aria-label="Grid view"
+                    :aria-pressed="view === 'grid' ? 'true' : 'false'"
+                    :class="view === 'grid' ? 'bg-primary text-primary-content' : 'text-base-content/40 hover:bg-base-200 hover:text-base-content'"
+                    class="p-2 transition-colors"
+                    @click="view = 'grid'"
+                    hx-get="/search"
+                    hx-include=".search-param"
+                    hx-vals='{"view": "grid", "page": "1"}'
+                    hx-target="#results"
+                    hx-push-url="true"
+                    hx-indicator="#loading"
+                >
+                    <svg class="h-4 w-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <rect x="1" y="1" width="6" height="6"/>
+                        <rect x="9" y="1" width="6" height="6"/>
+                        <rect x="1" y="9" width="6" height="6"/>
+                        <rect x="9" y="9" width="6" height="6"/>
+                    </svg>
+                </button>
+                <button
+                    type="button"
+                    aria-label="List view"
+                    :aria-pressed="view === 'list' ? 'true' : 'false'"
+                    :class="view === 'list' ? 'bg-primary text-primary-content' : 'text-base-content/40 hover:bg-base-200 hover:text-base-content'"
+                    class="border-l border-base-content/15 p-2 transition-colors"
+                    @click="view = 'list'"
+                    hx-get="/search"
+                    hx-include=".search-param"
+                    hx-vals='{"view": "list", "page": "1"}'
+                    hx-target="#results"
+                    hx-push-url="true"
+                    hx-indicator="#loading"
+                >
+                    <svg class="h-4 w-4" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                        <rect x="1" y="2" width="14" height="2"/>
+                        <rect x="1" y="7" width="14" height="2"/>
+                        <rect x="1" y="12" width="14" height="2"/>
+                    </svg>
+                </button>
+            </div>
         </div>
-        {% endif %}
-
     </div>
 </div>
+
+{% if not results %}
+<div class="py-24 text-center">
+    <svg class="mx-auto mb-4 h-10 w-10 text-base-content/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+        <rect x="9" y="3" width="6" height="4" rx="1"/>
+    </svg>
+    <p class="text-sm text-base-content/45">No documents found{% if q %} for "{{ q }}"{% endif %}.</p>
+    {% if active_filters %}
+    <p class="mt-1 text-xs text-base-content/30">Try removing some filters.</p>
+    {% endif %}
+</div>
+{% elif view != "list" %}
+<div class="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-4">
+    {% for doc in results %}
+    <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block border border-gray-300">
+        <article>
+            <div class="relative h-[224px] w-full overflow-hidden bg-base-200/70">
+                {{ thumbnail_media(doc, "h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]", "h-12 w-12") }}
+                <div class="absolute bottom-3 left-3">
+                    {{ card_badge(doc.id) }}
+                </div>
+            </div>
+            <div class="space-y-3 px-[30px] py-[20px]">
+                <h2
+                    dir="auto"
+                    class="line-clamp-3 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary"
+                >
+                    {% if doc.snippet_title %}
+                        {{ doc.snippet_title | safe }}
+                    {% else %}
+                        {{ doc.title }}
+                    {% endif %}
+                </h2>
+                <p
+                    dir="auto"
+                    class="line-clamp-6 text-xs leading-relaxed text-base-content/55"
+                >
+                    {% if doc.snippet_desc %}
+                        {{ doc.snippet_desc | strip_html }}
+                    {% elif doc.description %}
+                        {{ doc.description | strip_html | truncate(220) }}
+                    {% else %}
+                        No description available.
+                    {% endif %}
+                </p>
+                <p class="mt-5 line-clamp-1 text-xs text-base-content/45">
+                    {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
+                </p>
+                <div class="mt-1">
+                {{ document_label_chips(doc.id) }}
+                </div>
+            </div>
+        </article>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col gap-4">
+    {% for doc in results %}
+    <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block border border-gray-300">
+        <article class="flex cursor-pointer gap-4">
+            <div class="relative h-[110px] w-[138px] shrink-0 overflow-hidden bg-base-200/70 md:h-[225px] md:w-[378px]">
+                {{ thumbnail_media(doc, "h-full w-full object-cover", "h-10 w-10") }}
+                <div class="absolute bottom-2 left-2">
+                    {{ card_badge(doc.id) }}
+                </div>
+            </div>
+            <div class="flex w-full flex-row justify-between p-2 md:px-[30px] md:py-[50px]">
+                <div class="min-w-0 flex-1">
+                    <h2
+                        dir="auto"
+                        class="line-clamp-1 text-sm font-semibold leading-snug text-base-content transition-colors group-hover:text-primary md:line-clamp-2"
+                    >
+                        {% if doc.snippet_title %}
+                            {{ doc.snippet_title | safe }}
+                        {% else %}
+                            {{ doc.title }}
+                        {% endif %}
+                    </h2>
+                    <p
+                        dir="auto"
+                        class="mt-1.5 line-clamp-2 text-sm leading-relaxed text-base-content/60 md:line-clamp-3"
+                    >
+                        {% if doc.snippet_desc %}
+                            {{ doc.snippet_desc | strip_html }}
+                        {% elif doc.description %}
+                            {{ doc.description | strip_html | truncate(300) }}
+                        {% else %}
+                            No description available.
+                        {% endif %}
+                    </p>
+                    <p class="mt-2 line-clamp-1 text-xs text-base-content/45">
+                        {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
+                    </p>
+                    <div class="mt-2">
+                        {{ document_label_chips(doc.id) }}
+                    </div>
+                </div>
+            </div>
+        </article>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+<nav class="mb-[40px] mt-[80px] flex justify-center" aria-label="Pagination">
+    <div class="join border border-gray-200">
+        <button
+            class="join-item btn btn-sm btn-ghost {% if page <= 1 %}btn-disabled{% endif %}"
+            {% if page > 1 %}
+            hx-get="/search"
+            hx-include=".search-param"
+            hx-vals='{"page": "{{ page - 1 }}"}'
+            hx-target="#results"
+            hx-push-url="true"
+            hx-indicator="#loading"
+            {% endif %}
+            aria-label="Previous page"
+        >‹</button>
+
+        {% for p in range(1, total_pages + 1) %}
+        <button
+            class="join-item btn btn-sm {% if p == page %}btn-primary{% else %}btn-ghost{% endif %}"
+            {% if total_pages > 1 and p != page %}
+            hx-get="/search"
+            hx-include=".search-param"
+            hx-vals='{"page": "{{ p }}"}'
+            hx-target="#results"
+            hx-push-url="true"
+            hx-indicator="#loading"
+            {% endif %}
+            aria-label="Page {{ p }}"
+            aria-disabled="{{ 'true' if p == page else 'false' }}"
+            aria-current="{{ 'page' if p == page else 'false' }}"
+        >{{ p }}</button>
+        {% endfor %}
+
+        <button
+            class="join-item btn btn-sm btn-ghost {% if page >= total_pages %}btn-disabled{% endif %}"
+            {% if page < total_pages %}
+            hx-get="/search"
+            hx-include=".search-param"
+            hx-vals='{"page": "{{ page + 1 }}"}'
+            hx-target="#results"
+            hx-push-url="true"
+            hx-indicator="#loading"
+            {% endif %}
+            aria-label="Next page"
+        >›</button>
+    </div>
+</nav>

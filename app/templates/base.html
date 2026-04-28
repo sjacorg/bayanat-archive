@@ -18,6 +18,9 @@
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2"></script>
 
+    <!-- Search page Alpine state factory (safe to load globally). -->
+    <script defer src="{{ url_for('static', filename='js/search-page.js') }}"></script>
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3/dist/cdn.min.js"></script>
 
@@ -51,15 +54,14 @@
 
     {% block head %}{% endblock %}
 </head>
-<body class="bg-base-200 text-base-content [font-family:'Inter',sans-serif]">
+<body class="text-base-content overflow-x-hidden [font-family:'Inter',sans-serif]">
     <div class="drawer min-h-screen">
         <input id="main-nav-drawer" type="checkbox" class="drawer-toggle">
 
         <div class="drawer-content flex min-h-screen flex-col">
             {% set nav_links = [
-                {"href": url_for("search.index"), "label": "Search", "active_paths": ["/"]},
-                {"href": url_for("pages.about"), "label": "About", "active_paths": ["/about"]},
-                {"href": url_for("pages.feedback"), "label": "Feedback", "active_paths": ["/feedback"]}
+                {"href": url_for("search.index"), "label": "Search", "active_paths": ["/", "/search"]},
+                {"href": url_for("pages.about"), "label": "About Us", "active_paths": ["/about"]}
             ] %}
 
             {% block page_header %}
@@ -90,17 +92,6 @@
                             </a>
                             {% endfor %}
                         </nav>
-
-                        {% if request.path != '/' %}
-                        <a href="{{ url_for('search.index') }}" class="btn btn-ghost btn-square" aria-label="Go to search">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
-                                <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path>
-                            </svg>
-                        </a>
-                        {% else %}
-                        <span class="h-10 w-10" aria-hidden="true"></span>
-                        {% endif %}
                     </div>
                 </div>
             </header>
@@ -109,73 +100,14 @@
             {% block banners %}{% endblock %}
 
             <main id="page-main" class="flex-1 {% block main_class %}{% endblock %}">
-                <div class="{% block main_container_class %}mx-auto w-full max-w-[1200px] px-4 py-8 sm:px-6 sm:py-10 lg:px-10 lg:py-14{% endblock %}">
+                <div class="{% block main_container_class %}mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10{% endblock %}">
                     {% block content %}{% endblock %}
                 </div>
             </main>
 
-            {% block page_footer %}
-            <footer
-                class="mt-auto border-t border-base-300/70 bg-base-300/40 text-base-content"
-                hx-boost="true"
-                hx-target=".drawer"
-                hx-select=".drawer"
-                hx-swap="outerHTML transition:true"
-            >
-                <div class="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 lg:px-10">
-                    <div class="grid gap-8 md:grid-cols-3">
-                        <section class="space-y-3">
-                            <p class="text-xs font-medium uppercase tracking-[0.12em] text-base-content/50">Project</p>
-                            <a href="{{ url_for('search.index') }}" class="inline-block text-lg font-light tracking-tight text-primary">
-                                Bayanat <span class="font-semibold">Document Archive</span>
-                            </a>
-                        </section>
+            {% include "partials/feedback_widget.html" %}
 
-                        <nav aria-label="Footer links" class="space-y-3">
-                            <p class="text-xs font-medium uppercase tracking-[0.12em] text-base-content/50">Navigate</p>
-                            <ul class="space-y-2 text-sm">
-                                {% for link in nav_links %}
-                                <li>
-                                    <a href="{{ link.href }}" class="text-base-content/70 transition-colors hover:text-primary">{{ link.label }}</a>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </nav>
-
-                        <section class="space-y-3">
-                            <p class="text-xs font-medium uppercase tracking-[0.12em] text-base-content/50">Attribution</p>
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm font-medium text-base-content/70">A project by</span>
-                                <a href="https://syriaaccountability.org/" target="_blank" rel="noopener noreferrer" hx-boost="false">
-                                    <img src="{{ url_for('static', filename='assets/sjac-logo-dt.svg') }}" alt="SJAC logo" class="h-10 w-auto">
-                                </a>
-                            </div>
-                            <div class="flex items-center gap-3 border-t border-base-300/70 pt-3">
-                                <span class="text-sm text-base-content/55">Powered by</span>
-                                <a href="https://bayanat.org/" target="_blank" rel="noopener noreferrer" hx-boost="false">
-                                    <img src="{{ url_for('static', filename='assets/bayanat-logo.svg') }}" alt="Bayanat logo" class="h-6 w-auto opacity-85 transition-opacity hover:opacity-100">
-                                </a>
-                            </div>
-                            <a
-                                href="https://syriaaccountability.org/tos/#privacy"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                hx-boost="false"
-                                class="inline-block text-sm text-base-content/70 transition-colors hover:text-primary"
-                            >
-                                Privacy Policy
-                            </a>
-                        </section>
-                    </div>
-
-                    <div class="mt-8 border-t border-base-300/70 pt-4">
-                        <p class="text-sm text-base-content/60">
-                            Copyright &copy; {{ current_year }} Syria Justice &amp; Accountability Centre. All rights reserved.
-                        </p>
-                    </div>
-                </div>
-            </footer>
-            {% endblock %}
+            {% include "partials/footer.html" %}
         </div>
 
         <div

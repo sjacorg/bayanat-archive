@@ -1,67 +1,352 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="py-4 lg:py-8">
+{% block title %}Search — Bayanat Document Archive{% endblock %}
 
-    <!-- Search -->
-    <div
-        class="flex items-center gap-6 mb-10"
-        x-data
-        x-init="
-            const params = new URLSearchParams(window.location.search);
-            const q = params.get('q');
-            if (q) {
-                $refs.q.value = q;
-            }
-            $nextTick(() => htmx.ajax('GET', '/search' + window.location.search, { target: '#results' }));
-        "
-    >
-        <h1 class="hidden text-xl font-medium tracking-tight text-primary shrink-0 md:text-4xl md:font-light md:block">Search</h1>
-        <label class="input w-full">
-            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <g
-                stroke-linejoin="round"
-                stroke-linecap="round"
-                stroke-width="2.5"
-                fill="none"
-                stroke="currentColor"
+{% block content %}
+<div
+    x-data='searchPageState({
+        minYear: {{ timeline_min_year }},
+        maxYear: {{ timeline_max_year }},
+        timelineYears: {{ timeline_bins | map(attribute="year") | list | tojson }}
+    })'
+    {# Bootstrap first results from URL params so direct links render immediately. #}
+    x-init="
+        const p = new URLSearchParams(window.location.search);
+        hydrateYearRangeFromUrl(p);
+        if (p.get('q')) $refs.searchInput.value = p.get('q');
+    "
+    @keydown.escape.window="open = null; closeMobileFilters(); timePanelOpen = false"
+    {# Shared sync event: partial responses emit current facet/view state. #}
+    @facets-sync.document="syncMobileFromDetail($event.detail)"
+>
+
+    <!-- Search row -->
+    <div :class="timePanelOpen ? '' : 'mb-8'" class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60">
+        <div class="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-4 py-6 sm:gap-8 sm:px-6 lg:px-10">
+            <h1 class="hidden text-2xl font-semibold tracking-tight text-primary shrink-0 sm:block">Search</h1>
+            <label class="input w-full border-base-300 bg-base-100 h-[40px] md:h-[54px]">
+                <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.3-4.3"></path>
+                    </g>
+                </svg>
+                <input
+                    x-ref="searchInput"
+                    type="search"
+                    name="q"
+                    id="q-input"
+                    placeholder="Search for a document"
+                    autocomplete="off"
+                    class="search-param text-base"
+                    hx-get="/search"
+                    hx-trigger="input changed delay:500ms, search"
+                    hx-target="#results"
+                    hx-push-url="true"
+                    hx-include=".search-param"
+                    hx-vals='{"page": "1"}'
+                    hx-indicator="#loading"
                 >
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.3-4.3"></path>
-                </g>
-            </svg>
-            <input
-                x-ref="q"
-                type="search"
-                name="q"
-                placeholder="Search {{ total }} documents..."
-                class="text-base"
-                hx-get="/search"
-                hx-trigger="keyup[key=='Enter'], input[this.value=='']"
-                hx-target="#results"
-                hx-indicator="#loading"
-                hx-disabled-elt="this"
-                hx-push-url="true"
-                hx-on:htmx:before-request="
-                    const u = new URL(window.location);
-                    this.value ? u.searchParams.set('q', this.value) : u.searchParams.delete('q');
-                    history.replaceState({}, '', u);
-                "
+            </label>
+            <button
+                type="button"
+                class="inline-flex h-10 w-10 items-center justify-center text-5xl leading-none text-primary/80"
+                :aria-expanded="timePanelOpen ? 'true' : 'false'"
+                @click="toggleTimePanel()"
             >
-        </label>
+                <svg
+                    aria-hidden="true"
+                    class="size-9 origin-center transform-gpu"
+                    :class="timePanelOpen ? 'rotate-45' : 'rotate-0'"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M12 5v14"></path>
+                    <path d="M5 12h14"></path>
+                </svg>
+                <span class="sr-only">Toggle time range</span>
+            </button>
+        </div>
     </div>
+
+    <!-- Global query params that must persist across every HTMX request. -->
+    <input type="hidden" name="date_from" class="search-param" :value="yearStart > minYear ? `${yearStart}-01-01` : ''">
+    <input type="hidden" name="date_to" class="search-param" :value="yearEnd < maxYear ? `${yearEnd}-12-31` : ''">
+
+    {% include "partials/search_timeline_panel.html" %}
+
+    <!-- Facets: live outside #results so they never re-render or flash -->
+    {% macro facet(key, label, items, counts) %}
+    <div
+        {% if key == "label" %}
+        x-data="{ sel: window.readLabelParams(new URLSearchParams(window.location.search)) }"
+        {% else %}
+        x-data="{ sel: new URLSearchParams(window.location.search).getAll('{{ key }}') }"
+        {% endif %}
+        @facets-sync.document="sel = $event.detail['{{ key }}']"
+    >
+        <button
+            type="button"
+            @click.stop="open = (open === 'facet:{{ key }}') ? null : 'facet:{{ key }}'"
+            :class="open === 'facet:{{ key }}' ? 'bg-white' : 'hover:bg-gray-500/12'"
+            class="flex w-full items-center justify-between gap-3 px-3 h-[33px] select-none bg-gray-500/8 border border-gray-400"
+            aria-haspopup="listbox"
+            :aria-expanded="open === 'facet:{{ key }}'"
+        >
+            <span class="flex min-w-0 items-baseline gap-2 truncate">
+                <span class="truncate text-xs uppercase text-base-content/70">{{ label }}</span>
+                <span x-show="sel.length > 0" x-cloak x-text="sel.length" class="shrink-0 flex h-3.5 w-3.5 items-center justify-center bg-primary text-[10px] font-semibold text-white"></span>
+            </span>
+            <svg class="h-3 w-3 shrink-0 text-base-content/30" :class="{ 'rotate-180': open === 'facet:{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 4l4 4 4-4"/>
+            </svg>
+        </button>
+
+        <div
+            x-cloak
+            :class="open === 'facet:{{ key }}' ? '' : 'hidden'"
+            x-transition:enter="transition ease-out duration-100"
+            x-transition:enter-start="opacity-0 -translate-y-0.5"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            @click.outside="open = null"
+            class="absolute top-[120%] left-0 z-30 w-full bg-base-100 border border-gray-200 shadow-ambient p-6 h-[274px] overflow-y-auto"
+            role="listbox"
+            aria-multiselectable="true"
+        >
+            <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
+                {% if items %}
+                    {% for item in items %}
+                    <label
+                        class="flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors hover:bg-gray-200/50"
+                    >
+                        <input
+                            type="checkbox"
+                            name="{{ key }}"
+                            value="{{ item }}"
+                            x-model="sel"
+                            class="search-param checkbox checkbox-sm checkbox-primary hidden"
+                            hx-get="/search"
+                            hx-trigger="change"
+                            hx-target="#results"
+                            hx-push-url="true"
+                            hx-include=".search-param"
+                            hx-vals='{"page": "1"}'
+                            hx-indicator="#loading"
+                            @change="open = null"
+                        >
+                        <span
+                            :class='sel.includes({{ item | tojson }}) ? "text-secondary" : "text-base-content/80"'
+                            class="text-sm"
+                        >{{ item }} ({{ counts[item] }})</span>
+                        <svg
+                            :class='sel.includes({{ item | tojson }}) ? "opacity-100" : "opacity-0"'
+                            class="size-4 shrink-0 text-secondary transition-opacity duration-100"
+                            viewBox="0 0 17 17"
+                            fill="currentColor"
+                            aria-hidden="true"
+                        >
+                            <path d="M6.37462 11.4541L3.42087 8.50038L2.41504 9.49913L6.37462 13.4587L14.8746 4.95871L13.8759 3.95996L6.37462 11.4541Z"/>
+                        </svg>
+                    </label>
+                    {% endfor %}
+                {% else %}
+                    <p class="px-4 py-3 text-xs text-base-content/40">No options available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endmacro %}
+
+    {% macro mobile_facet(key, label, items, counts) %}
+    <div class="border-b border-base-content/10">
+        <button
+            type="button"
+            class="flex w-full items-center justify-between py-3 text-left"
+            @click="mobileFacetOpen = mobileFacetOpen === '{{ key }}' ? null : '{{ key }}'"
+        >
+            <div class="flex items-center gap-2">
+                <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-base-content/70">{{ label }}</span>
+                <span
+                    :class="mobileSelected['{{ key }}'].length ? 'inline' : 'hidden'"
+                    class="text-[11px] text-secondary"
+                    x-text="`(${mobileSelected['{{ key }}'].length} Selected)`"
+                ></span>
+            </div>
+            <svg class="h-3 w-3 text-base-content/35 transition-transform duration-150" :class="{ 'rotate-180': mobileFacetOpen === '{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M2 4l4 4 4-4"/>
+            </svg>
+        </button>
+
+        <div
+            x-show="mobileFacetOpen === '{{ key }}'"
+            x-cloak
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 -translate-y-1"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-120"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-1"
+            class="pb-3"
+        >
+            <label class="input input-sm mb-3 w-full border-base-300 bg-base-100">
+                <svg class="h-3.5 w-3.5 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8" stroke-width="2"></circle>
+                    <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path>
+                </svg>
+                <input
+                    type="search"
+                    :placeholder="'Search ' + '{{ label | lower }}'"
+                    x-model="mobileSearch['{{ key }}']"
+                >
+            </label>
+
+            <div class="max-h-56 overflow-y-auto">
+                {% for item in items %}
+                <label
+                    :class='mobileMatches("{{ key }}", {{ item | tojson }}) ? "flex" : "hidden"'
+                    class="w-full cursor-pointer items-center justify-between py-2 text-left text-sm text-base-content/85"
+                >
+                    <input
+                        type="checkbox"
+                        class="sr-only"
+                        value="{{ item }}"
+                        x-model="mobileSelected['{{ key }}']"
+                    >
+                    <span
+                        :class='isMobileSelected("{{ key }}", {{ item | tojson }}) ? "text-secondary" : ""'
+                    >{{ item }} ({{ counts[item] }})</span>
+                    <svg
+                        :class='isMobileSelected("{{ key }}", {{ item | tojson }}) ? "opacity-100" : "opacity-0"'
+                        class="size-4 text-secondary transition-opacity duration-100"
+                        viewBox="0 0 17 17"
+                        fill="currentColor"
+                        aria-hidden="true"
+                    >
+                        <path d="M6.37462 11.4541L3.42087 8.50038L2.41504 9.49913L6.37462 13.4587L14.8746 4.95871L13.8759 3.95996L6.37462 11.4541Z"/>
+                    </svg>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endmacro %}
+
+    <div class="relative mb-8 flex items-center gap-6 lg:gap-8">
+        <p id="result-count" class="text-base font-semibold text-base-content">0 results</p>
+
+        <button
+            type="button"
+            class="ml-auto inline-flex items-center gap-2 border border-primary bg-base-100 px-3 py-1.5 text-sm font-medium text-primary lg:hidden"
+            @click="openMobileFilters()"
+        >
+            <svg class="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                <path d="M2 3h12v2H2V3zm2 4h8v2H4V7zm2 4h4v2H6v-2z"/>
+            </svg>
+            Filter
+        </button>
+
+        <div class="hidden flex-1 grid-cols-2 gap-5 lg:grid lg:grid-cols-4">
+            {{ facet("label",    "Labels",    all_labels,    label_counts) }}
+            {{ facet("location", "Locations", all_locations, location_counts) }}
+        </div>
+    </div>
+
+    <!-- Mobile filter drawer -->
+    <div
+        x-show="mobileDrawerOpen"
+        x-cloak
+        class="fixed inset-0 z-[70] lg:hidden"
+        aria-modal="true"
+        role="dialog"
+    >
+        <button
+            type="button"
+            class="absolute inset-0 z-0 bg-black/35"
+            x-transition.opacity.duration.150ms
+            @click="closeMobileFilters()"
+            aria-label="Close filters"
+        ></button>
+
+        <aside
+            class="absolute inset-y-0 right-0 z-10 w-full bg-base-100"
+            x-transition:enter="transition ease-out duration-180"
+            x-transition:enter-start="translate-x-full"
+            x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="translate-x-0"
+            x-transition:leave-end="translate-x-full"
+        >
+            <div class="flex h-full flex-col">
+                <div class="flex items-center px-5 pt-[38px]">
+                    <button type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-base-content py-3.5" @click="closeMobileFilters()">
+                        <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
+                        </svg>
+                        Close Filter
+                    </button>
+                </div>
+
+                <div class="min-h-0 flex-1 overflow-y-auto px-5 py-2">
+                    {{ mobile_facet("label",    "Labels",    all_labels,    label_counts) }}
+                    {{ mobile_facet("location", "Locations", all_locations, location_counts) }}
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 bg-base-100 px-5 py-5">
+                    <button type="button" class="btn btn-ghost border border-primary py-6" @click="clearMobileFilters()">Clear Filter</button>
+                    <button type="button" class="btn btn-primary py-6" @click="applyMobileFilters()">Apply Filter</button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <div id="active-filters" class="mb-6"></div>
+
+    <div class="mb-7 border-b border-gray-200"></div>
+
+    <!-- Toolbar: count + active filters + sort + view (updated via OOB) -->
+    <div id="toolbar" class="mb-5 flex flex-col gap-3"></div>
 
     <!-- Loading skeleton -->
     <div id="loading" class="htmx-indicator">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="mb-5 skeleton h-6 w-32 opacity-40"></div>
+        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {% for _ in range(4) %}
-            <div class="skeleton h-64 w-full"></div>
+            <div>
+                <div class="skeleton h-52 w-full"></div>
+                <div class="mt-3 space-y-2">
+                    <div class="skeleton h-4 w-3/4"></div>
+                    <div class="skeleton h-3 w-full"></div>
+                    <div class="skeleton h-3 w-2/3"></div>
+                </div>
+            </div>
             {% endfor %}
         </div>
     </div>
 
-    <!-- Results (HTMX target) -->
-    <div id="results"></div>
-
+    <!-- Hidden HTMX trigger used by mobile facets + timeline apply actions. -->
+    <button
+        type="button"
+        x-ref="mobileApplyTrigger"
+        class="hidden"
+        hx-get="/search"
+        hx-include=".search-param"
+        hx-vals='{"page": "1"}'
+        hx-target="#results"
+        hx-push-url="true"
+        hx-indicator="#loading"
+    ></button>
+    <div
+        id="results"
+        hx-get="{{ url_for('search.search') }}{% if request.query_string %}?{{ request.query_string.decode('utf-8') }}{% endif %}"
+        hx-trigger="load"
+        hx-target="this"
+        hx-swap="innerHTML"
+        hx-include=".search-param"
+        hx-indicator="#loading"
+    ></div>
 </div>
 {% endblock %}
