@@ -113,66 +113,7 @@
 
             {% include "partials/feedback_widget.html" %}
 
-            <footer
-                class="mt-auto border-t border-base-300/70 bg-base-300/40 text-base-content"
-                hx-boost="true"
-                hx-target=".drawer"
-                hx-select=".drawer"
-                hx-swap="outerHTML transition:true"
-            >
-                <div class="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 lg:px-10">
-                    <div class="grid gap-8 md:grid-cols-3">
-                        <section class="space-y-3">
-                            <p class="text-xs font-medium uppercase tracking-[0.12em] text-base-content/50">Project</p>
-                            <a href="{{ url_for('search.index') }}" class="inline-block text-lg font-light tracking-tight text-primary">
-                                Bayanat <span class="font-semibold">Document Archive</span>
-                            </a>
-                        </section>
-
-                        <nav aria-label="Footer links" class="space-y-3">
-                            <p class="text-xs font-medium uppercase tracking-[0.12em] text-base-content/50">Navigate</p>
-                            <ul class="space-y-2 text-sm">
-                                {% for link in nav_links %}
-                                <li>
-                                    <a href="{{ link.href }}" class="text-base-content/70 transition-colors hover:text-primary">{{ link.label }}</a>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </nav>
-
-                        <section class="space-y-3">
-                            <p class="text-xs font-medium uppercase tracking-[0.12em] text-base-content/50">Attribution</p>
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm font-medium text-base-content/70">A project by</span>
-                                <a href="https://syriaaccountability.org/" target="_blank" rel="noopener noreferrer" hx-boost="false">
-                                    <img src="{{ url_for('static', filename='assets/sjac-logo-dt.svg') }}" alt="SJAC logo" class="h-10 w-auto">
-                                </a>
-                            </div>
-                            <div class="flex items-center gap-3 border-t border-base-300/70 pt-3">
-                                <span class="text-sm text-base-content/55">Powered by</span>
-                                <a href="https://bayanat.org/" target="_blank" rel="noopener noreferrer" hx-boost="false">
-                                    <img src="{{ url_for('static', filename='assets/bayanat-logo.svg') }}" alt="Bayanat logo" class="h-6 w-auto opacity-85 transition-opacity hover:opacity-100">
-                                </a>
-                            </div>
-                            <a
-                                href="https://syriaaccountability.org/tos/#privacy"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                hx-boost="false"
-                                class="inline-block text-sm text-base-content/70 transition-colors hover:text-primary"
-                            >
-                                Privacy Policy
-                            </a>
-                        </section>
-                    </div>
-
-                    <div class="mt-8 border-t border-base-300/70 pt-4">
-                        <p class="text-sm text-base-content/60">
-                            Copyright &copy; {{ current_year }} Syria Justice &amp; Accountability Centre. All rights reserved.
-                        </p>
-                    </div>
-                </div>
-            </footer>
+            {% include "partials/footer.html" %}
         </div>
 
         <div
