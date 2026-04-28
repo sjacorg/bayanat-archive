@@ -190,6 +190,19 @@
     max-width: none !important;
 }
 
+@media (max-width: 767px) {
+    .doc-docx-scope .docx-preview[style] {
+        padding: 16px !important;
+        box-sizing: border-box;
+    }
+}
+
+/* Normalize DOCX preview heading/list paragraph offsets from Word styles. */
+.doc-docx-scope .docx-preview p[class*="docx-preview_heading"][class*="docx-preview-num-"] {
+    text-indent: 0 !important;
+    margin-inline-start: 0 !important;
+}
+
 @media (max-width: 900px) {
     .doc-mobile-pdf-canvas {
         max-width: 100%;

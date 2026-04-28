@@ -461,6 +461,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     resizeDebounceTimer: null,
     pendingScrollRestore: null,
     scrollRestoreRafId: null,
+    pdfZoomRafId: null,
     renderWidths: {
       pdf: { desktop: 0, mobile: 0 },
       docx: { desktop: 0, mobile: 0 },
@@ -519,6 +520,10 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       if (this.scrollRestoreRafId !== null) {
         window.cancelAnimationFrame(this.scrollRestoreRafId);
         this.scrollRestoreRafId = null;
+      }
+      if (this.pdfZoomRafId !== null) {
+        window.cancelAnimationFrame(this.pdfZoomRafId);
+        this.pdfZoomRafId = null;
       }
     },
 
@@ -1020,6 +1025,16 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     applyPdfZoom() {
+      if (this.pdfZoomRafId !== null) {
+        window.cancelAnimationFrame(this.pdfZoomRafId);
+      }
+      this.pdfZoomRafId = window.requestAnimationFrame(() => {
+        this.pdfZoomRafId = null;
+        this.applyPdfZoomNow();
+      });
+    },
+
+    applyPdfZoomNow() {
       const container = this.getPdfContainer();
       if (!container) return;
 
