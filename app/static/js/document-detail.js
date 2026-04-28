@@ -457,6 +457,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     documentTranslation: payload.documentTranslation || "",
     pageIndex: 0,
     zoom: 1,
+    tapZoomLevel: 1.5,
     minZoom: 0.75,
     maxZoom: 5,
     zoomStep: 0.25,
@@ -637,7 +638,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     get canvasCursorClass() {
-      return "cursor-default";
+      if (!this.isZoomableMedia()) return "cursor-default";
+      return this.zoom >= (this.tapZoomLevel - 0.01) ? "cursor-zoom-out" : "cursor-zoom-in";
     },
 
     get canZoomIn() {
@@ -1281,6 +1283,13 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       this.setZoom(nextZoom, event ? { anchor: event } : {});
     },
 
+    onCanvasClick(event) {
+      if (!this.isZoomableMedia()) return;
+      if (this.shouldIgnoreZoomInteraction(event.target)) return;
+      const targetZoom = this.zoom >= (this.tapZoomLevel - 0.01) ? 1 : this.tapZoomLevel;
+      this.setZoom(targetZoom, { anchor: event });
+    },
+
     togglePanel(panelName) {
       if (this.activePanel === panelName) {
         this.activePanel = null;
@@ -1397,28 +1406,20 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     onKeydown(event) {
       const tagName = event.target?.tagName;
       const isTypingTarget =
-        tagName === "INPUT" ||
+        (tagName === "INPUT" && event.target?.type !== "button" && event.target?.type !== "range") ||
         tagName === "TEXTAREA" ||
         event.target?.isContentEditable;
-      if (isTypingTarget || this.isAnimating) return;
+      if (isTypingTarget || this.isAnimating || event.metaKey || event.ctrlKey || event.altKey) return;
 
-      if (event.key === "ArrowLeft") {
+      const key = event.key;
+      const code = event.code;
+
+      if (key === "ArrowLeft" || code === "ArrowLeft") {
         event.preventDefault();
         this.prevPage();
-      } else if (event.key === "ArrowRight") {
+      } else if (key === "ArrowRight" || code === "ArrowRight") {
         event.preventDefault();
         this.nextPage();
-      } else if (event.key === "+" || event.key === "=") {
-        event.preventDefault();
-        this.zoomIn();
-      } else if (event.key === "-" || event.key === "_") {
-        event.preventDefault();
-        this.zoomOut();
-      } else if (event.key === "0") {
-        event.preventDefault();
-        if (this.isZoomableMedia()) {
-          this.resetZoomState();
-        }
       }
     },
   };

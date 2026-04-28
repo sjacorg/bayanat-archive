@@ -105,9 +105,13 @@
                 </div>
             </main>
 
+            {% block page_feedback %}
             {% include "partials/feedback_widget.html" %}
+            {% endblock %}
 
+            {% block page_footer %}
             {% include "partials/footer.html" %}
+            {% endblock %}
         </div>
 
         <div

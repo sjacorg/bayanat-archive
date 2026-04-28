@@ -107,6 +107,45 @@ def _related_count(db, document_id):
     return row["count"] if row else 0
 
 
+def _get_related_documents(db, document_id, limit=4):
+    rows = db.execute(
+        """
+        SELECT
+          d.id AS related_document_id,
+          d.slug,
+          d.title AS display_title,
+          d.description,
+          d.publish_date,
+          m.filename AS related_filename,
+          m.media_type AS related_media_type
+        FROM documents d
+        LEFT JOIN media m
+          ON m.id = (
+            SELECT m2.id
+            FROM media m2
+            WHERE m2.document_id = d.id
+            ORDER BY
+              CASE WHEN lower(coalesce(m2.media_type, '')) LIKE 'image/%' THEN 0 ELSE 1 END,
+              m2.id
+            LIMIT 1
+          )
+        WHERE d.id != ?
+        ORDER BY
+          CASE
+            WHEN coalesce(d.documentation_date, d.publish_date) IS NULL
+              OR trim(coalesce(d.documentation_date, d.publish_date)) = '' THEN 1
+            ELSE 0
+          END,
+          coalesce(d.documentation_date, d.publish_date) DESC,
+          d.id DESC
+        LIMIT ?
+        """,
+        [document_id, limit],
+    ).fetchall()
+
+    return rows
+
+
 @bp.route("/documents/<int:document_id>/<slug>")
 def detail(document_id, slug):
     db = get_db()
@@ -144,6 +183,7 @@ def detail(document_id, slug):
     document_events = _get_document_events(db, document_id)
     media_summary = _media_summary(media_rows)
     related_count = _related_count(db, document_id)
+    relations = _get_related_documents(db, document_id)
 
     metadata = {
         "date": document["documentation_date"] or document["publish_date"],
@@ -163,7 +203,7 @@ def detail(document_id, slug):
         media_summary=media_summary,
         related_count=related_count,
         metadata=metadata,
-        relations=[],
+        relations=relations,
         canonical_url=request.url_root.rstrip("/")
         + f"/documents/{document['id']}/{document['slug']}",
     )
