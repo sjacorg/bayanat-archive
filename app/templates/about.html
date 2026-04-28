@@ -1,93 +1,203 @@
 {% extends "base.html" %}
 
-{% block title %}About - Bayanat Document Archive{% endblock %}
-{% block description %}About the Bayanat Document Archive, its methodology, SJAC context, and how to use it.{% endblock %}
+{% block title %}About Us - Bayanat Document Archive{% endblock %}
+{% block description %}About the Bayanat Document Archive, SJAC programs, methodology, and how to navigate the archive.{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl py-4 lg:py-8">
-    <div class="mb-10">
-        <p class="text-xs font-medium uppercase tracking-[0.12em] text-base-content/50">About</p>
-        <h1 class="mt-3 text-4xl font-light tracking-tight text-primary">
-            About the Bayanat Document Archive
-        </h1>
-        <p class="mt-2 text-sm text-base-content/60">
-            Built by SJAC using the Bayanat documentation platform.
-        </p>
-        <p class="mt-4 max-w-3xl text-base text-base-content/75">
-            The Bayanat Document Archive is a public interface for accessing selected Syrian government documents relevant to accountability, legal analysis, and historical research. 
-            It provides structured, searchable access to materials preserved through over a decade of human rights documentation work.
-        </p>
-    </div>
+<div class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 -mt-8 sm:-mt-10 lg:-mt-14">
+    <section class="bg-[#EFF0F2]">
+        <div class="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-14 lg:px-10 lg:py-20">
+            <div class="max-w-[600px]">
+                <div class="mb-7 flex flex-wrap items-center gap-3 sm:mb-9 sm:gap-4">
+                    <span class="inline-flex items-center bg-[#E9F3EF] px-3 py-2 text-[11px] font-medium tracking-wide">
+                        A project by
+                    </span>
+                    <a href="https://syriaaccountability.org/" target="_blank" rel="noopener noreferrer" hx-boost="false">
+                        <img src="{{ url_for('static', filename='assets/sjac-logo-dt.svg') }}" alt="Syria Justice and Accountability Centre logo" class="h-7 w-auto sm:h-10">
+                    </a>
+                </div>
 
-    <div class="space-y-6">
-        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
-            <h2 class="text-lg font-semibold text-base-content">What This Archive Is</h2>
-            <p class="mt-3 text-sm leading-relaxed text-base-content/75">
-                This archive publishes curated document records to make key materials accessible to researchers, legal practitioners, journalists, and the public. 
-                It is designed to support evidence-led investigation, enable discovery across large document sets, and contribute to long-term preservation of historically significant records.
-            </p>
-        </section>
+                <h1 class="text-[40px] font-light leading-[1.02] tracking-tight text-primary">
+                    An Archive Beyond Commercial Solutions
+                </h1>
 
-        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
-            <h2 class="text-lg font-semibold text-base-content">Who Built This Archive</h2>
-            <p class="mt-3 text-sm leading-relaxed text-base-content/75">
-                The archive is maintained by the 
-                <a class="text-primary hover:text-secondary transition-colors" href="https://syriaaccountability.org" target="_blank" rel="noopener noreferrer">
-                    Syria Justice and Accountability Centre (SJAC)
-                </a>, 
-                a Syrian-led human rights organization working to advance justice and accountability. 
-                Over more than a decade, SJAC has collected, verified, and analyzed large volumes of documentation related to human rights violations, supporting legal processes, policy work, and historical record-building.
-            </p>
-            <p class="mt-3 text-sm leading-relaxed text-base-content/75">
-                This archive reflects a subset of that work, making selected materials publicly accessible while adhering to responsible documentation practices.
-            </p>
-        </section>
+                <p class="mt-7 max-w-[700px] text-base font-light leading-[1.72] sm:mt-8">
+                    Bayanat Document Archive is designed as an open platform to support accountability by preserving and organizing records. It addresses the lack of purpose-built tools for human rights documentation, offering secure workflows and relationship modeling that general databases and costly commercial systems fail to provide.
+                </p>
+            </div>
+        </div>
+    </section>
 
-        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
-            <h2 class="text-lg font-semibold text-base-content">How Documents Are Prepared</h2>
-            <ol class="mt-3 list-decimal space-y-2 pl-5 text-sm leading-relaxed text-base-content/75">
-                <li>Documents are collected from verified sources, including institutional repositories and established archival processes.</li>
-                <li>Each record is reviewed by SJAC staff to ensure relevance, accuracy of metadata, and suitability for publication.</li>
-                <li>Sensitive personal information is redacted where necessary to reduce harm and protect individuals.</li>
-                <li>Documents are structured with consistent metadata to support search, filtering, and analysis.</li>
-                <li>Where available, original Arabic content is preserved alongside contextual or translated information.</li>
-            </ol>
-        </section>
+    <section class="bg-base-100">
+        <div class="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-14">
+            <div class="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)] lg:items-start">
+                <div class="max-w-[600px]">
+                    <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">Syria Justice &amp; Accountability Centre</h2>
 
-        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
-            <h2 class="text-lg font-semibold text-base-content">How to Use the Archive</h2>
-            <ul class="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed text-base-content/75">
-                <li>Use the search bar to find documents by names, institutions, locations, or keywords across the archive.</li>
-                <li>Browse individual records to view document details, metadata, and available formats.</li>
-                <li>Apply filters to narrow results by time period, entity, or classification.</li>
-                <li>Use document identifiers and source references when citing materials.</li>
-                <li>Explore connections across records to support research, investigation, or reporting.</li>
-            </ul>
-        </section>
+                    <p class="mt-6 text-base font-light leading-[1.62]">
+                        SJAC is a Syrian-led human rights organization working for meaningful justice and accountability that holds perpetrators accountable and addresses grievances, leading to lasting peace.
+                    </p>
+                    <p class="mt-4 text-base font-light leading-[1.62]">
+                        The organization collects documentation from multiple sources, secures them in a database, catalogs according to human rights standards, and analyzes using legal expertise combined with big data methodologies.
+                    </p>
+                    <p class="mt-4 text-base font-light leading-[1.62]">
+                        Since 2012, SJAC has collected and preserved millions of documents, testimonies, and pieces of evidence, supporting investigations, case building, missing persons tracking, and trial monitoring.
+                    </p>
 
-        <section class="rounded-box border border-base-300/70 bg-base-100 p-6">
-            <h2 class="text-lg font-semibold text-base-content">About the Bayanat Platform</h2>
-            <p class="mt-3 text-sm leading-relaxed text-base-content/75">
-                This archive is powered by 
-                <a class="text-primary hover:text-secondary transition-colors" href="https://bayanat.org" target="_blank" rel="noopener noreferrer">
-                    Bayanat
-                </a>, 
-                SJAC's open-source platform for human rights documentation. 
-                Bayanat enables organizations to securely collect, organize, verify, and analyze large volumes of evidence while maintaining auditability and data integrity.
-            </p>
-            <a
-                href="https://bayanat.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn btn-outline btn-primary mt-4"
-            >
-                Learn more about Bayanat
-            </a>
-        </section>
-    </div>
+                    <a
+                        href="https://syriaaccountability.org/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        hx-boost="false"
+                        class="btn mt-7 border-none bg-primary px-6 py-3 text-sm font-medium text-primary-content shadow-[0_4px_8px_rgba(0,0,0,0.16)] transition hover:bg-primary/95"
+                    >
+                        Learn More About SJAC
+                    </a>
+                </div>
 
-    <p class="mt-8 text-sm text-base-content/60">
-        This archive is intended to support research, accountability efforts, and the preservation of historical record.
-    </p>
+                <aside class="border border-gray-300/85 bg-base-100 px-7 py-7">
+                    <h3 class="text-base font-medium">SJAC Programs</h3>
+                    <ul class="mt-5 space-y-4 text-base font-light leading-snug">
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Documentation</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Investigations &amp; Case Building</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Missing Persons</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Trial Monitoring</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Tech &amp; Human Rights</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Capacity Building</span></li>
+                    </ul>
+                </aside>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-[#EFF0F2]">
+        <div class="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-14">
+            <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">Our Approach to Documentation</h2>
+
+            <div class="mt-7 grid gap-4 md:grid-cols-2 lg:mt-8 lg:grid-cols-3 lg:gap-4">
+                <article class="order-1 border border-gray-300/85 bg-base-100 p-5 lg:order-4">
+                    <h3 class="text-base font-medium">Security</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">Sensitive information is safeguarded through strict protocols.</p>
+                </article>
+
+                <article class="order-2 border border-gray-300/85 bg-base-100 p-5 lg:order-5">
+                    <h3 class="text-base font-medium">Structure</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">The archive is designed to balance openness with protection, supporting both accountability and research.</p>
+                </article>
+
+                <article class="order-3 border border-gray-300/85 bg-base-100 p-5 lg:order-1">
+                    <h3 class="text-base font-medium">Collection</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">Records are gathered from diverse sources, ensuring breadth and reliability.</p>
+                </article>
+
+                <article class="order-4 border border-gray-300/85 bg-base-100 p-5 lg:order-2">
+                    <h3 class="text-base font-medium">Processing</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">Standardized workflows preserve context and maintain accuracy.</p>
+                </article>
+
+                <article class="order-5 border border-gray-300/85 bg-base-100 p-5 lg:order-3">
+                    <h3 class="text-base font-medium">Cataloguing</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">Each item is enriched with metadata to highlight relationships between events, actors, and evidence.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-base-100">
+        <div class="mx-auto w-full max-w-[1200px] px-4 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-14">
+            <div class="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-center lg:gap-9">
+                <div>
+                    <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">Navigating the Document Archive</h2>
+
+                    <ol class="mt-7 space-y-4 text-base leading-[1.58]">
+                        <li class="flex gap-4">
+                            <span class="font-medium">1.</span>
+                            <div class="font-light"><span class="font-medium">Search Records</span><br>Enter keywords or apply filters to quickly locate relevant documents.</div>
+                        </li>
+                        <li class="flex gap-4">
+                            <span class="font-medium">2.</span>
+                            <div class="font-light"><span class="font-medium">Browse Collections</span><br>Navigate through curated categories to explore broader sets of materials.</div>
+                        </li>
+                        <li class="flex gap-4">
+                            <span class="font-medium">3.</span>
+                            <div class="font-light"><span class="font-medium">View Details</span><br>Open individual records to see metadata, context, and linked documents.</div>
+                        </li>
+                        <li class="flex gap-4">
+                            <span class="font-medium">4.</span>
+                            <div class="font-light"><span class="font-medium">Trace Connections</span><br>Follow relationships between events, actors, and evidence across the archive.</div>
+                        </li>
+                        <li class="flex gap-4">
+                            <span class="font-medium">5.</span>
+                            <div class="font-light"><span class="font-medium">Leverage Bayanat</span><br>Behind the archive is Bayanat, the open-source platform purpose-built for documentation and accountability.</div>
+                        </li>
+                    </ol>
+
+                    <p class="mt-7 text-base leading-[1.42] text-primary font-light">
+                        Explore more or start building your own archive with Bayanat
+                    </p>
+
+                    <a
+                        href="https://bayanat.org/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        hx-boost="false"
+                        class="btn mt-6 border-none bg-primary px-6 py-3 text-sm font-medium text-primary-content shadow-[0_4px_8px_rgba(0,0,0,0.16)] transition hover:bg-primary/95"
+                    >
+                        Explore with Bayanat
+                    </a>
+                </div>
+
+                <figure class="border border-gray-300/85 bg-base-100 p-3 sm:p-4 lg:mt-[3.6rem]">
+                    <figcaption class="sr-only">Search interface preview placeholder</figcaption>
+
+                    <div class="overflow-hidden border border-gray-300/80 bg-base-100">
+                        <div class="flex items-center justify-between border-b border-gray-300/80 bg-base-100 px-3 py-2 text-[9px] text-primary sm:text-[11px] font-light tracking-tight">
+                            <span>Bayanat <strong class="font-semibold">Document Archive</strong></span>
+                            <span class="flex gap-3"><span>Search</span><span>About Us</span></span>
+                        </div>
+
+                        <div class="border-b border-gray-300/70 bg-[#ECEDEF] px-3 py-2 sm:py-3">
+                            <div class="flex items-center gap-2 text-[10px] sm:gap-3 sm:text-xs">
+                                <span class="font-medium text-primary">Search</span>
+                                <div class="h-6 flex-1 border border-gray-300/85 bg-base-100 sm:h-7"></div>
+                                <span class="text-xl leading-none text-primary/85">+</span>
+                            </div>
+                        </div>
+
+                        <div class="border-b border-gray-300/70 px-3 py-2">
+                            <div class="flex flex-wrap gap-2">
+                                <span class="h-5 w-20 border border-gray-300/85 bg-[#ECEDEF] sm:w-24"></span>
+                                <span class="h-5 w-20 border border-gray-300/85 bg-[#ECEDEF] sm:w-24"></span>
+                                <span class="h-5 w-20 border border-gray-300/85 bg-[#ECEDEF] sm:w-24"></span>
+                                <span class="h-5 w-20 border border-gray-300/85 bg-[#ECEDEF] sm:w-24"></span>
+                            </div>
+                        </div>
+
+                        <div class="px-3 pb-3 pt-2 sm:pb-4 sm:pt-3">
+                            <div class="mb-2 flex items-center justify-between text-[9px] sm:text-[10px]">
+                                <span class="h-4 w-20 bg-primary/90"></span>
+                                <span class="h-3 w-14 bg-base-content/20"></span>
+                            </div>
+
+                            <div class="grid grid-cols-4 gap-1.5 sm:gap-2">
+                                {% for _ in range(4) %}
+                                <article class="border border-gray-300/70 bg-base-100">
+                                    <div class="h-10 bg-[linear-gradient(160deg,#b8bec9_0%,#8f98a6_60%,#657287_100%)] sm:h-14"></div>
+                                    <div class="space-y-1 p-1.5 sm:space-y-1.5 sm:p-2">
+                                        <div class="h-1.5 w-4/5 bg-base-content/35"></div>
+                                        <div class="h-1 w-full bg-base-content/20"></div>
+                                        <div class="h-1 w-5/6 bg-base-content/20"></div>
+                                        <div class="h-1 w-2/3 bg-base-content/20"></div>
+                                    </div>
+                                </article>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </figure>
+            </div>
+        </div>
+    </section>
+
 </div>
 {% endblock %}

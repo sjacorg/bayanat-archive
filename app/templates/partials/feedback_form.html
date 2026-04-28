@@ -1,0 +1,153 @@
+<form
+    x-ref="feedbackForm"
+    x-data="{
+        rating: 0,
+        comment: '',
+        email: '',
+        emailError: '',
+        submitting: false,
+        isEmailFormatValid(value) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+        },
+        get emailIsValid() {
+            return this.email.trim() === '' || this.isEmailFormatValid(this.email);
+        },
+        get canSubmit() {
+            return this.rating > 0 && this.comment.trim().length > 0;
+        },
+        clearEmailError() {
+            this.emailError = '';
+        },
+        validateEmail() {
+            if (this.email.trim() !== '' && !this.emailIsValid) {
+                this.emailError = 'Please enter a valid email address';
+                return false;
+            }
+            this.emailError = '';
+            return true;
+        },
+        async submitForm() {
+            if (!this.validateEmail() || !this.canSubmit) return;
+            this.submitting = true;
+            try {
+                await htmx.ajax('POST', '{{ url_for('pages.feedback') }}', {
+                    source: this.$refs.feedbackForm,
+                    target: '#feedback-panel-content',
+                    swap: 'innerHTML'
+                });
+            } finally {
+                this.submitting = false;
+            }
+        }
+    }"
+    @submit.prevent="submitForm()"
+    novalidate
+    class="space-y-5 text-base-content"
+>
+    <p class="text-[0.95rem] font-semibold leading-snug">
+        Help us improve the Bayanat Document Archive by sharing your feedback.
+    </p>
+
+    <section class="space-y-2">
+        <h3 class="text-[1.15rem] font-semibold">Rating</h3>
+        <p class="text-[0.95rem] leading-relaxed text-base-content/85">
+            Select a score that reflects your overall experience with the archive.
+        </p>
+
+        <input type="hidden" name="rating" x-effect="$el.value = rating">
+
+        <div class="mt-3 flex items-center gap-2.5">
+            <button type="button" @click="rating = 1" :class="rating === 1 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Very dissatisfied">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <circle cx="20" cy="20" r="15"></circle>
+                    <circle cx="14.5" cy="16" r="1.2"></circle>
+                    <circle cx="25.5" cy="16" r="1.2"></circle>
+                    <path d="M12 27Q20 20 28 27"></path>
+                </svg>
+            </button>
+            <button type="button" @click="rating = 2" :class="rating === 2 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Dissatisfied">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <circle cx="20" cy="20" r="15"></circle>
+                    <circle cx="14.5" cy="16" r="1.2"></circle>
+                    <circle cx="25.5" cy="16" r="1.2"></circle>
+                    <path d="M12.5 26Q20 22.5 27.5 26"></path>
+                </svg>
+            </button>
+            <button type="button" @click="rating = 3" :class="rating === 3 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Neutral">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <circle cx="20" cy="20" r="15"></circle>
+                    <circle cx="14.5" cy="16" r="1.2"></circle>
+                    <circle cx="25.5" cy="16" r="1.2"></circle>
+                    <path d="M13 24.8H27"></path>
+                </svg>
+            </button>
+            <button type="button" @click="rating = 4" :class="rating === 4 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Satisfied">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <circle cx="20" cy="20" r="15"></circle>
+                    <circle cx="14.5" cy="16" r="1.2"></circle>
+                    <circle cx="25.5" cy="16" r="1.2"></circle>
+                    <path d="M12.5 23.8Q20 29 27.5 23.8"></path>
+                </svg>
+            </button>
+            <button type="button" @click="rating = 5" :class="rating === 5 ? 'text-[#F3A11A]' : 'text-base-content/70 hover:text-primary'" class="transition-colors" aria-label="Very satisfied">
+                <svg viewBox="0 0 40 40" class="size-10" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <circle cx="20" cy="20" r="15"></circle>
+                    <circle cx="14.5" cy="16" r="1.2"></circle>
+                    <circle cx="25.5" cy="16" r="1.2"></circle>
+                    <path d="M12 22Q20 30.5 28 22"></path>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <section class="space-y-2">
+        <h3 class="text-[1.15rem] font-semibold">Comments</h3>
+        <p class="text-[0.95rem] leading-relaxed text-base-content/85">
+            Share your thoughts, suggestions, or concerns. Your insights help us refine the platform and better serve documentation needs.
+        </p>
+        <textarea
+            name="comment"
+            x-model="comment"
+            rows="4"
+            placeholder="Enter your comments"
+            class="textarea textarea-bordered w-full resize-none rounded-none bg-base-100 text-[0.95rem] placeholder:text-base-content/45 focus:border-primary focus:outline-none"
+        ></textarea>
+    </section>
+
+    <section class="space-y-2">
+        <h3 class="text-[1.15rem] font-semibold">
+            Email <span class="italic font-normal text-base-content/80">(Optional)</span>
+            <span x-show="emailError" x-text="emailError" class="ml-2 font-normal italic text-error"></span>
+        </h3>
+        <p class="text-[0.95rem] leading-relaxed text-base-content/85">
+            Provide your email if you'd like us to follow up on your feedback.
+        </p>
+        <input
+            type="email"
+            name="email"
+            x-model="email"
+            @input="clearEmailError()"
+            @blur="validateEmail()"
+            :aria-invalid="emailError ? 'true' : 'false'"
+            :aria-describedby="emailError ? 'feedback-email-error' : undefined"
+            placeholder="Enter your email address"
+            :class="emailError ? 'border-error focus:border-error' : 'focus:border-primary'"
+            class="input input-bordered h-10 min-h-10 w-full rounded-none bg-base-100 text-[0.95rem] placeholder:text-base-content/45 focus:outline-none"
+        >
+        <p id="feedback-email-error" x-show="emailError" x-text="emailError" aria-live="polite" class="sr-only"></p>
+    </section>
+
+    <div class="pt-1">
+        <button
+            type="submit"
+            :disabled="!canSubmit || submitting"
+            :class="canSubmit && !submitting
+                ? 'bg-primary text-primary-content shadow-[0_3px_8px_rgba(0,0,0,0.16)]'
+                : 'cursor-not-allowed bg-gray-300 text-base-content/35'"
+            class="inline-flex items-center gap-2 px-5 py-2.5 text-base font-semibold transition-colors"
+        >
+            <span x-show="submitting" class="loading loading-spinner loading-sm"></span>
+            <span x-text="submitting ? 'Submitting...' : 'Submit Form'"></span>
+        </button>
+    </div>
+</form>
