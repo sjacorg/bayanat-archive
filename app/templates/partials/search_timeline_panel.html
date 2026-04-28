@@ -1,0 +1,96 @@
+<!-- Mobile-only timeline range panel (Stasi-style: bars + two edge handles). -->
+{% set timeline_years = timeline_bins | map(attribute='year') | list %}
+{% set timeline_max_count = (timeline_bins | map(attribute='count') | max) if timeline_bins else 1 %}
+{% set tick_step = ((timeline_bins | length) // 6) + 1 if (timeline_bins | length) > 7 else 1 %}
+{% set timeline_count = timeline_bins | length %}
+<div
+    x-show="timePanelOpen"
+    x-cloak
+    class="relative left-1/2 right-1/2 mb-6 w-screen -translate-x-1/2 bg-gray-200/60"
+>
+    <div class="mx-auto w-full max-w-[1200px] px-4 pb-5 pt-4 sm:px-6">
+        <div class="pt-4">
+            <div class="mb-2 flex items-center gap-3">
+                <p class="text-sm font-semibold text-primary">Select Time Period:</p>
+                <div class="flex items-center gap-2 text-primary">
+                    <input
+                        type="number"
+                        inputmode="numeric"
+                        class="h-8 w-20 border-x-0 border-t-0 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
+                        :value="yearStart"
+                        @change="commitYearStartFromEvent($event)"
+                        @blur="commitYearStartFromEvent($event)"
+                        @keydown.enter.prevent="commitYearStartFromEvent($event); $event.target.blur()"
+                    >
+                    <span class="text-xl">-</span>
+                    <input
+                        type="number"
+                        inputmode="numeric"
+                        class="h-8 w-20 border-x-0 border-t-0 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
+                        :value="yearEnd"
+                        @change="commitYearEndFromEvent($event)"
+                        @blur="commitYearEndFromEvent($event)"
+                        @keydown.enter.prevent="commitYearEndFromEvent($event); $event.target.blur()"
+                    >
+                </div>
+            </div>
+
+            <div class="relative mt-4 h-28">
+                <div
+                    class="absolute inset-x-0 bottom-8 grid h-16 items-end"
+                    style="grid-template-columns: repeat({{ timeline_count }}, minmax(0, 1fr));"
+                >
+                    {% for bin in timeline_bins %}
+                    {% set bar_height = 8 + ((bin.count * 44) // (timeline_max_count if timeline_max_count else 1)) %}
+                    <div
+                        :class="{{ bin.year }} >= yearStart && {{ bin.year }} <= yearEnd ? 'bg-secondary' : 'bg-base-content/20'"
+                        role="button"
+                        tabindex="0"
+                        @click="selectSingleYearIndex({{ loop.index0 }})"
+                        @keydown.enter.prevent="selectSingleYearIndex({{ loop.index0 }})"
+                        @keydown.space.prevent="selectSingleYearIndex({{ loop.index0 }})"
+                        title="{{ bin.year }}: {{ bin.count }} documents"
+                        style="height: {{ bar_height }}px;"
+                        class="w-full cursor-pointer border border-gray-200"
+                    ></div>
+                    {% endfor %}
+                </div>
+
+                <div class="absolute inset-x-0 bottom-8 h-[2px] bg-primary/30"></div>
+                <div class="absolute bottom-8 h-[2px] bg-primary" :style="selectedRangeStyle()"></div>
+
+                <input
+                    type="range"
+                    class="timeline-range absolute bottom-[20px] border-0"
+                    :style="leftSliderStyle()"
+                    min="0"
+                    :max="timelineCount - 1"
+                    step="1"
+                    :value="startIndex"
+                    @input="setStartIndex($event.target.value, $event.target)"
+                >
+                <input
+                    type="range"
+                    class="timeline-range absolute bottom-[20px] border-0"
+                    :style="rightSliderStyle()"
+                    min="0"
+                    :max="timelineCount - 1"
+                    step="1"
+                    :value="endIndex"
+                    @input="setEndIndex($event.target.value, $event.target)"
+                >
+
+                <div
+                    class="absolute inset-x-0 bottom-0 grid gap-1 text-center text-[11px] font-semibold text-primary/80"
+                    style="grid-template-columns: repeat({{ timeline_bins | length }}, minmax(0, 1fr));"
+                >
+                    {% for year in timeline_years %}
+                    <span class="{% if loop.index0 % tick_step == 0 or loop.last %}opacity-100{% else %}opacity-0{% endif %}">
+                        {{ year }}
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
