@@ -158,18 +158,13 @@
     box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
 }
 
-.doc-pdf-scroll.is-zoomed .doc-pdf-canvas,
-.doc-pdf-scroll.is-zoomed .doc-mobile-pdf-canvas {
-    max-width: none !important;
-}
-
-.doc-pdf-scroll.is-zoomed .doc-mobile-pdf-canvas {
-    width: auto !important;
-}
-
 .doc-image-scroll.is-zoomed img {
     max-width: none !important;
     max-height: none !important;
+}
+
+.doc-pdf-scroll.is-zoomed {
+    align-items: flex-start;
 }
 
 .doc-docx-scope .docx-preview,
@@ -179,7 +174,16 @@
 }
 
 .doc-docx-scope .docx {
+    max-width: none !important;
+    width: auto !important;
+}
+
+.doc-docx-scope div[style*="display: inline-block"][style*="width"][style*="pt"] {
     max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    left: auto !important;
+    right: auto !important;
 }
 
 .doc-docx-scope .docx-wrapper.is-zoomed {
@@ -189,7 +193,7 @@
 @media (max-width: 900px) {
     .doc-mobile-pdf-canvas {
         max-width: 100%;
-        width: 100% !important;
+        width: auto;
     }
 }
 

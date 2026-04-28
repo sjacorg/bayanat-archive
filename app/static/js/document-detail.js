@@ -247,6 +247,33 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
   };
 
   const docxModule = {
+    normalizeInlineMedia(container) {
+      if (!container) return;
+      const fixedInlineBlocks = container.querySelectorAll(
+        "div[style*='display: inline-block'][style*='width'][style*='pt']",
+      );
+      fixedInlineBlocks.forEach((node) => {
+        // DOCX often injects fixed pt wrappers around images that overflow on mobile.
+        node.style.maxWidth = "100%";
+        node.style.width = "100%";
+        node.style.height = "auto";
+        node.style.left = "auto";
+        node.style.right = "auto";
+      });
+
+      const media = container.querySelectorAll("img[style], svg[style], canvas[style], video[style]");
+      media.forEach((node) => {
+        node.style.maxWidth = "100%";
+        node.style.height = "auto";
+        node.style.left = "auto";
+        node.style.right = "auto";
+        // Neutralize fixed DOCX pt widths that overflow on responsive layouts.
+        if (node.tagName === "IMG" || node.tagName === "VIDEO") {
+          node.style.width = "auto";
+        }
+      });
+    },
+
     reset(viewer) {
       rawDocxRenderToken += 1;
       rawDocxBuffer = null;
@@ -356,6 +383,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         if (token !== rawDocxRenderToken) return;
         viewer.docxReady = true;
         await viewer.$nextTick();
+        this.normalizeInlineMedia(container);
         viewer.syncDocxBaseWidth(container);
         viewer.rememberRenderedWidth("docx", container);
       } catch (error) {
@@ -380,6 +408,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
           if (token !== rawDocxRenderToken) return;
           viewer.docxReady = true;
           await viewer.$nextTick();
+          this.normalizeInlineMedia(container);
           viewer.syncDocxBaseWidth(container);
           viewer.rememberRenderedWidth("docx", container);
         } catch (fallbackError) {
@@ -403,7 +432,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     minZoom: 0.75,
     maxZoom: 5,
     zoomStep: 0.25,
-    docxBaseScale: 0.5,
     pinchZoomStep: 0.01,
     pinchSensitivity: 0.35,
     activePanel: null,
@@ -575,7 +603,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     get currentMinZoom() {
-      if (this.isImageMedia()) return this.minZoom;
+      if (this.isImageMedia()) return 1;
       if (this.isPdfMedia() || this.isDocxMedia()) return 1;
       return 1;
     },
@@ -907,7 +935,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       return this.isMobile ? this.$refs.imageMobileList : this.$refs.imageDesktopList;
     },
 
-    applyZoomToContainer(container, isActive) {
+    applyZoomToContainer(container, isActive, options = {}) {
+      const transformOrigin = options.transformOrigin || "top left";
       if (!container) return;
       if (!isActive) {
         container.classList.remove("is-zoomed");
@@ -921,12 +950,12 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       if (this.nativeCssZoomSupported) {
         container.style.zoom = String(this.zoom);
         container.style.transform = "";
-        container.style.transformOrigin = "";
+        container.style.transformOrigin = transformOrigin;
         container.style.width = "";
       } else {
         container.style.zoom = "";
         container.style.transform = `scale(${this.zoom})`;
-        container.style.transformOrigin = "top center";
+        container.style.transformOrigin = transformOrigin;
         container.style.width = `${(100 / this.zoom).toFixed(4)}%`;
       }
     },
@@ -992,7 +1021,40 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     applyPdfZoom() {
       const container = this.getPdfContainer();
-      this.applyZoomToContainer(container, this.isPdfMedia());
+      if (!container) return;
+
+      if (!this.isPdfMedia()) {
+        container.style.width = "";
+        container.style.maxWidth = "";
+        container.querySelectorAll("canvas").forEach((canvas) => {
+          canvas.style.width = "";
+          delete canvas.dataset.baseRenderWidth;
+        });
+        this.applyZoomToContainer(container, false);
+        return;
+      }
+
+      // For PDF use layout-based canvas sizing instead of transform-based scaling.
+      // This preserves real scroll bounds on Firefox and avoids left-edge clipping at high zoom.
+      this.applyZoomToContainer(container, false);
+      container.classList.toggle("is-zoomed", this.zoom > 1.001);
+
+      const canvases = container.querySelectorAll("canvas");
+      canvases.forEach((canvas) => {
+        let baseWidth = Number(canvas.dataset.baseRenderWidth || 0);
+        if (!Number.isFinite(baseWidth) || baseWidth <= 0) {
+          const styleWidth = Number.parseFloat(canvas.style.width || "");
+          const measuredWidth = styleWidth || canvas.getBoundingClientRect().width || 0;
+          if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
+            baseWidth = measuredWidth;
+            canvas.dataset.baseRenderWidth = String(baseWidth);
+          }
+        }
+        if (!Number.isFinite(baseWidth) || baseWidth <= 0) return;
+        canvas.style.width = `${baseWidth * this.zoom}px`;
+        canvas.style.height = "auto";
+        canvas.style.maxWidth = "none";
+      });
     },
 
     getScrollPane() {
@@ -1060,7 +1122,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
           this.applyZoomToContainer(zoomTarget, false);
           zoomTarget.style.width = "";
           zoomTarget.style.maxWidth = "";
-          delete zoomTarget.dataset.baseRenderWidth;
         }
         return;
       }
@@ -1082,20 +1143,24 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       if (zoomTarget) {
         let baseWidth = Number(zoomTarget.dataset.baseRenderWidth || 0);
         if (!Number.isFinite(baseWidth) || baseWidth <= 0) {
+          // Freeze DOCX at its initially rendered size, then zoom from that baseline.
           const measuredWidth = zoomTarget.getBoundingClientRect().width;
           if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
-            const divisor = Math.max(this.zoom, 1);
-            baseWidth = measuredWidth / divisor;
-            if (Number.isFinite(baseWidth) && baseWidth > 0) {
-              zoomTarget.dataset.baseRenderWidth = String(baseWidth);
-            }
+            baseWidth = measuredWidth / Math.max(this.zoom, 1);
+            zoomTarget.dataset.baseRenderWidth = String(baseWidth);
           }
         }
+
+        this.applyZoomToContainer(zoomTarget, true);
+
         if (Number.isFinite(baseWidth) && baseWidth > 0) {
-          const scaledBaseWidth = baseWidth * Math.max(0.1, this.docxBaseScale || 1);
-          zoomTarget.style.width = `${scaledBaseWidth}px`;
+          zoomTarget.style.width = `${baseWidth}px`;
           zoomTarget.style.maxWidth = "none";
+        } else {
+          zoomTarget.style.width = "";
+          zoomTarget.style.maxWidth = "";
         }
+        return;
       }
 
       this.applyZoomToContainer(zoomTarget, true);
