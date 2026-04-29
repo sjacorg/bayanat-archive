@@ -1,0 +1,560 @@
+{% extends "base.html" %}
+
+{% block title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
+{% block description %}{{ document.description | strip_html | truncate(180) if document.description else (document.translation | truncate(180) if document.translation else 'Document detail in the Bayanat Document Archive') }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
+{% block og_description %}{{ self.description() }}{% endblock %}
+
+{% block head %}
+<link rel="canonical" href="{{ canonical_url }}">
+{% endblock %}
+
+{% block main_container_class %}h-full min-h-0 w-full overflow-hidden p-0{% endblock %}
+{% block main_class %}h-dvh max-h-dvh min-h-0 overflow-hidden bg-[#dfe3e4]{% endblock %}
+{% block page_header %}{% endblock %}
+{% block page_footer %}{% endblock %}
+{% block page_feedback %}{% endblock %}
+
+{% block content %}
+{% set media_payload = [] %}
+{% for item in media_rows %}
+    {% set media_type = (item.media_type or '') | lower %}
+    {% set media_kind = 'other' %}
+    {% if media_type.startswith('image/') %}
+        {% set media_kind = 'image' %}
+    {% elif media_type == 'application/pdf' %}
+        {% set media_kind = 'pdf' %}
+    {% elif media_type.startswith('video/') %}
+        {% set media_kind = 'video' %}
+    {% elif media_type.startswith('audio/') %}
+        {% set media_kind = 'audio' %}
+    {% elif media_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'] %}
+        {% set media_kind = 'docx' %}
+    {% endif %}
+    {% set _ = media_payload.append({
+        "id": item.id,
+        "media_id": item.media_id,
+        "filename": item.filename,
+        "src": url_for('static', filename='media/' ~ item.filename),
+        "title": item.title or item.title_ar or ('Page ' ~ loop.index),
+        "title_ar": item.title_ar or '',
+        "media_type": item.media_type or '',
+        "language": item.language or '',
+        "ocr_text": item.ocr_text or '',
+        "original_text": item.original_text or '',
+        "confidence": item.confidence,
+        "media_kind": media_kind
+    }) %}
+{% endfor %}
+
+{% macro action_icon(kind, classes) -%}
+    {% if kind == 'info' %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
+        <path d="M7.79163 12.042H9.20829V7.79199H7.79163V12.042ZM8.49996 1.41699C4.58996 1.41699 1.41663 4.59033 1.41663 8.50033C1.41663 12.4103 4.58996 15.5837 8.49996 15.5837C12.41 15.5837 15.5833 12.4103 15.5833 8.50033C15.5833 4.59033 12.41 1.41699 8.49996 1.41699ZM8.49996 14.167C5.37621 14.167 2.83329 11.6241 2.83329 8.50033C2.83329 5.37658 5.37621 2.83366 8.49996 2.83366C11.6237 2.83366 14.1666 5.37658 14.1666 8.50033C14.1666 11.6241 11.6237 14.167 8.49996 14.167ZM7.79163 6.37533H9.20829V4.95866H7.79163V6.37533Z" fill="white"/>
+    </svg>
+    {% elif kind == 'arabic' %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
+        <path d="M12.0416 15.5837V14.167H14.1666V12.042H15.5833V14.5212C15.5833 14.7974 15.47 15.0453 15.2575 15.2578C15.045 15.4703 14.797 15.5837 14.5208 15.5837H12.0416ZM4.95829 15.5837H2.47913C2.20288 15.5837 1.95496 15.4703 1.74246 15.2578C1.52996 15.0453 1.41663 14.7974 1.41663 14.5212V12.042H2.83329V14.167H4.95829V15.5837ZM12.0416 1.41699H14.5208C14.797 1.41699 15.045 1.53033 15.2575 1.74283C15.47 1.95533 15.5833 2.20324 15.5833 2.47949V4.95866H14.1666V2.83366H12.0416V1.41699ZM4.95829 1.41699V2.83366H2.83329V4.95866H1.41663V2.47949C1.41663 2.20324 1.52996 1.95533 1.74246 1.74283C1.95496 1.53033 2.20288 1.41699 2.47913 1.41699H4.95829Z" fill="white"/>
+        <path d="M8.14587 7.4375H7.08337V6.375H10.2709V7.4375H9.20837V10.625H8.14587V7.4375Z" fill="white"/>
+    </svg>
+    {% elif kind == 'translation' %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
+        <path d="M9.11629 10.6749L7.31712 8.89699L7.33837 8.87574C8.57087 7.50158 9.44921 5.92199 9.96629 4.25033H12.0417V2.83366H7.08337V1.41699H5.66671V2.83366H0.708374V4.24324H8.62046C8.14587 5.61033 7.39504 6.90658 6.37504 8.03991C5.71629 7.31033 5.17087 6.50991 4.73879 5.66699H3.32212C3.83921 6.82158 4.54754 7.91241 5.43296 8.89699L1.82754 12.4528L2.83337 13.4587L6.37504 9.91699L8.57796 12.1199L9.11629 10.6749ZM13.1042 7.08366H11.6875L8.50004 15.5837H9.91671L10.71 13.4587H14.0746L14.875 15.5837H16.2917L13.1042 7.08366ZM11.2484 12.042L12.3959 8.97491L13.5434 12.042H11.2484V12.042Z" fill="white"/>
+    </svg>
+    {% elif kind == 'download' %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
+        <path d="M11.3334 9.20833H9.20837V2.125H7.79171V9.20833H5.66671L8.50004 12.0417L11.3334 9.20833ZM2.83337 13.4583V14.875H14.1667V13.4583H2.83337Z" fill="white"/>
+    </svg>
+    {% endif %}
+{%- endmacro %}
+
+{% macro action_button(kind, label, panel=None, layout='desktop', has_divider=false, is_last=false) -%}
+    <button
+        type="button"
+        title="{{ label }}"
+        class="{% if layout == 'desktop' %}flex w-full items-center gap-3 px-4 py-3 text-left text-sm{% else %}text-xs inline-flex flex-col items-center justify-center gap-2{% endif %} border-0 {% if layout == 'desktop' and not is_last %}border-b border-[#5AB5A9]{% endif %}{% if layout == 'mobile' and has_divider %}border-r border-r-[rgba(26,69,64,0.25)]{% endif %} rounded-none bg-secondary text-base font-semibold leading-none text-white transition-colors hover:bg-primary"
+        {% if panel %}
+        :class="{ 'bg-primary': activePanel === '{{ panel }}' }"
+        @click="togglePanel('{{ panel }}')"
+        {% else %}
+        @click="handleDownload"
+        {% endif %}
+    >
+        {{ action_icon(kind, "h-4 w-4 shrink-0" if layout == 'desktop' else "h-6 w-6 shrink-0") }}
+        <span>{{ label }}</span>
+    </button>
+{%- endmacro %}
+
+{% macro empty_media_card(wrapper_classes='w-full') -%}
+    <div class="flex min-h-[42vh] w-full items-center justify-center">
+        <div class="{{ wrapper_classes }} mx-auto w-full max-w-2xl border border-slate-300 border-l-4 border-l-primary bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+            <h2 class="m-0 text-lg font-semibold text-slate-900">No media available</h2>
+            <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
+            <a href="{{ url_for('search.index') }}" class="inline-block border border-primary bg-primary px-3 py-1.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-white hover:text-primary">Back to Search</a>
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro preview_unavailable_card(title, message, cta_label='Download file', wrapper_classes='w-full') -%}
+    <div class="flex min-h-[42vh] w-full items-center justify-center">
+        <div class="{{ wrapper_classes }} mx-auto w-full max-w-2xl border border-slate-300 border-l-4 border-l-primary bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+            <h2 class="m-0 text-lg font-semibold text-slate-900">{{ title }}</h2>
+            <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">{{ message }}</p>
+            <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-primary bg-primary px-3 py-1.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-white hover:text-primary">{{ cta_label }}</a>
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro pdf_error_card(wrapper_classes='w-full') -%}
+    {{ preview_unavailable_card('PDF preview unavailable', 'We could not load this PDF in the viewer. You can still download the file directly.', 'Download PDF', wrapper_classes) }}
+{%- endmacro %}
+
+{% macro docx_error_card(wrapper_classes='w-full') -%}
+    {{ preview_unavailable_card('DOCX preview unavailable', 'We could not load this DOCX in the viewer. You can still download the file directly.', 'Download DOCX', wrapper_classes) }}
+{%- endmacro %}
+
+{% macro media_nav_arrow(direction, classes) -%}
+    <button
+        type="button"
+        class="{{ classes }}"
+        @touchstart.stop
+        @click.stop.prevent="{{ 'prevMedia()' if direction == 'prev' else 'nextMedia()' }}"
+        :disabled="{{ '!hasPrevMedia || isAnimating' if direction == 'prev' else '!hasNextMedia || isAnimating' }}"
+        aria-label="{{ 'Previous media' if direction == 'prev' else 'Next media' }}"
+    >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="mx-auto h-6 w-6">
+            {% if direction == 'prev' %}
+            <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            {% else %}
+            <path d="M9 18l6-6-6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            {% endif %}
+        </svg>
+    </button>
+{%- endmacro %}
+
+<div
+    class="doc-detail flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[#d9ddde] text-slate-800"
+    x-data='documentDetailViewer({
+        media: {{ media_payload | tojson }},
+        title: {{ document.title | tojson }},
+        id: {{ document.id | tojson }},
+        documentOcrText: {{ (document.ocr_text or '') | tojson }},
+        documentTranslation: {{ (document.translation or '') | tojson }}
+    })'
+    @keydown.window="onKeydown($event)"
+    x-init="init(); return () => destroy()"
+>
+    <header x-ref="topHeader" class="flex min-h-16 items-center justify-between gap-4 bg-slate-50 px-8 py-3 max-md:flex-col max-md:items-start max-md:px-3 max-md:py-2">
+        <a href="{{ url_for('search.index') }}" class="inline-flex items-center gap-2 font-semibold no-underline" data-print-no-href>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-5 w-5">
+                <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span>Back to Search</span>
+        </a>
+
+        <p class="m-0 max-w-prose overflow-hidden text-ellipsis whitespace-nowrap text-sm text-primary max-md:max-w-full max-md:text-xs" title="{{ document.title }}">
+            <span>Search Document Library</span>
+            <span>/</span>
+            <span class="font-semibold">{{ document.title }}</span>
+        </p>
+    </header>
+
+    <section class="h-[var(--doc-zoom-bar-height)] bg-primary px-4 text-slate-100 max-md:px-2" aria-label="Document controls">
+        <div class="flex h-full items-center justify-center gap-3">
+            <p x-text="`${displayPage} of ${displayTotal}`" aria-live="polite" class="m-0"></p>
+            <span class="inline-block h-4 w-px bg-white/50"></span>
+            <button type="button" @click="zoomOut()" :disabled="!canZoomOut" aria-label="Zoom out" class="inline-flex min-w-5 items-center justify-center bg-transparent p-0 leading-none text-inherit disabled:cursor-default disabled:opacity-35">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M15.8334 10.8337H4.16669V9.16699H15.8334V10.8337Z" fill="white"/>
+                </svg>
+            </button>
+            <p class="m-0 min-w-16 bg-slate-100 px-2 py-0.5 text-center text-base font-semibold text-slate-600 max-md:text-sm" x-text="`${Math.round(zoom * 100)}%`"></p>
+            <button type="button" @click="zoomIn()" :disabled="!canZoomIn" aria-label="Zoom in" class="inline-flex min-w-5 items-center justify-center bg-transparent p-0 leading-none text-inherit disabled:cursor-default disabled:opacity-35">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M15.8334 10.8337H10.8334V15.8337H9.16669V10.8337H4.16669V9.16699H9.16669V4.16699H10.8334V9.16699H15.8334V10.8337Z" fill="white"/>
+                </svg>
+            </button>
+        </div>
+    </section>
+
+    <section
+        x-ref="desktopScrollPane"
+        class="relative flex flex-none items-stretch overflow-auto max-md:hidden h-[var(--doc-stage-height)] min-h-[var(--doc-stage-height)] max-h-[var(--doc-stage-height)] [scrollbar-gutter:stable]"
+        :class="activePanel ? 'is-panel-open' : ''"
+        style="padding-bottom: var(--doc-related-toggle-height); overscroll-behavior-x: contain;"
+    >
+        <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+var(--doc-mobile-actions-height))] z-[70] hidden w-[var(--doc-desktop-actions-width)] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
+            {{ action_button('info', 'Info', 'info', 'desktop') }}
+            {{ action_button('arabic', 'Extract Text', 'arabic', 'desktop') }}
+            {{ action_button('translation', 'Translate', 'translation', 'desktop') }}
+            {{ action_button('download', 'Download', none, 'desktop', false, true) }}
+        </aside>
+
+        <div
+            x-ref="canvasViewport"
+            class="relative box-border grid min-h-full w-full place-items-center overflow-visible p-3"
+            :class="{ 'place-items-start': isKindReady('pdf') || isKindReady('docx') }"
+            style="touch-action: manipulation;"
+            @click="onCanvasClick($event)"
+            @wheel="onCanvasWheel($event)"
+            @touchstart="onTouchStart($event)"
+            @touchmove="onTouchMove($event)"
+            @touchend="onTouchEnd()"
+            @touchcancel="onTouchEnd()"
+        >
+            <template x-if="!pageCount">
+                {{ empty_media_card() }}
+            </template>
+
+            <div
+                x-ref="canvasStage"
+                class="doc-canvas flex w-full items-start justify-center"
+                :class="[carouselClass, canvasCursorClass]"
+                :style="`view-transition-name: doc-${docId}; --slide-direction: ${carouselDirection};`"
+            >
+                {% set mode = 'desktop' %}
+                {% include 'partials/media/renderers/image.html' %}
+                {% include 'partials/media/renderers/pdf.html' %}
+                {% include 'partials/media/renderers/video.html' %}
+                {% include 'partials/media/renderers/audio.html' %}
+                {% include 'partials/media/renderers/docx.html' %}
+                {% include 'partials/media/renderers/other.html' %}
+            </div>
+
+        </div>
+
+        {{ media_nav_arrow('prev', 'doc-nav-arrow fixed left-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-primary bg-white/80 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400') }}
+        {{ media_nav_arrow('next', 'doc-nav-arrow fixed right-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-primary bg-white/80 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400') }}
+
+    </section>
+
+    <aside
+        class="fixed bottom-[var(--doc-related-toggle-height)] left-0 right-0 z-[58] bg-slate-100/90 max-md:bottom-[calc(var(--doc-related-toggle-height)+var(--doc-mobile-actions-height))]"
+        x-cloak
+        x-show="activePanel"
+        x-transition.opacity
+        @keydown.escape.window="closePanel"
+        @click="closePanel"
+        :style="`top: var(--doc-header-height);`"
+    >
+        <div class="h-full overflow-auto px-4 py-5 md:pl-[calc(var(--doc-desktop-actions-width)+2rem)] md:pr-6 md:pt-6" @click.stop>
+            <div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
+                <p class="mb-1 max-w-5xl text-xs font-semibold uppercase tracking-wider text-slate-700">
+                    Reference Number: {{ document.id }}
+                </p>
+                <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex items-center gap-2 border-0 bg-transparent p-0 text-xl font-semibold leading-none text-slate-900">
+                    <span aria-hidden="true">
+                        <svg class="size-5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
+                        </svg>
+                    </span>
+                    <span class="text-base">Close View</span>
+                </button>
+            </div>
+
+            <div class="mx-auto mt-3 max-w-5xl border-t border-slate-300 pt-3 text-base leading-6 text-slate-800 max-md:text-sm max-md:leading-5">
+                <p x-text="panelTitle" class="mb-3 inline-block bg-[#3D9B8F] px-4 py-2 text-xl font-semibold leading-none text-white max-md:text-base"></p>
+                <div class="break-all" x-show="activePanel === 'info'">
+                    <div role="tablist" aria-label="Detail scope" class="detail-scope-tabs tabs tabs-border tabs-xl">
+                        <button
+                            type="button"
+                            role="tab"
+                            class="tab text-sm font-semibold"
+                            :class="!showDocumentDetails ? 'tab-active text-primary [--tab-border-color:var(--color-primary)]' : 'text-slate-600'"
+                            :aria-selected="!showDocumentDetails"
+                            @click="showDocumentDetails = false"
+                        >
+                            <span class="md:px-4">Page details</span>
+                        </button>
+                        <button
+                            type="button"
+                            role="tab"
+                            class="tab text-sm font-semibold"
+                            :class="showDocumentDetails ? 'tab-active text-primary [--tab-border-color:var(--color-primary)]' : 'text-slate-600'"
+                            :aria-selected="showDocumentDetails"
+                            @click="showDocumentDetails = true"
+                        >
+                            <span class="md:px-4">Full document details</span>
+                        </button>
+                    </div>
+
+                    <table x-show="!showDocumentDetails" class="w-full border-collapse text-base max-md:text-sm">
+                        <tbody>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Page</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="`${displayPage} / ${displayTotal}`"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Filename</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top break-all" x-text="currentMedia?.filename || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Media ID</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.media_id || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Type</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.media_type || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Title</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.title || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Arabic Title</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.title_ar || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Language</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.language || 'N/A'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Has OCR Text</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.ocr_text ? 'Yes' : 'No'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Has Original Text</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.original_text ? 'Yes' : 'No'"></td>
+                            </tr>
+                            <tr>
+                                <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">OCR Confidence</th>
+                                <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.confidence !== null && currentMedia?.confidence !== undefined ? `${Number(currentMedia.confidence).toFixed(1)}%` : 'N/A'"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div x-show="showDocumentDetails">
+                        <table class="w-full border-collapse text-sm">
+                            <tbody>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">ID</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.id }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Title</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.title }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Arabic Title</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.title_ar if document.title_ar else 'N/A' }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Slug</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top break-all">{{ document.slug }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Description</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.description | strip_html if document.description else 'N/A' }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">OCR Text</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.ocr_text if document.ocr_text else 'N/A' }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Translation</th>
+                                    <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.translation if document.translation else 'N/A' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <table x-show="showDocumentDetails" class="mt-2 w-full border-collapse text-sm">
+                        <tbody>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Published Date</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.publish_date if document.publish_date else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Documentation Date</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.documentation_date if document.documentation_date else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Labels</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {% if document_labels %}
+                                        {{ document_labels | join(', ') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Locations</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {% if document_locations %}
+                                        {{ document_locations | join(', ') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Sources</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {% if document_sources %}
+                                        {{ document_sources | join(', ') }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Events</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {% if document_events %}
+                                        <ul class="m-0 list-disc pl-4">
+                                            {% for event in document_events %}
+                                                <li>
+                                                    {{ event.title or 'Untitled event' }}
+                                                    {% if event.event_type %} ({{ event.event_type }}){% endif %}
+                                                    {% if event.from_date or event.to_date %}
+                                                        — {{ event.from_date or '?' }} to {{ event.to_date or '?' }}
+                                                    {% endif %}
+                                                    {% if event.location %} — {{ event.location }}{% endif %}
+                                                </li>
+                                            {% endfor %}
+                                        </ul>
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Media Summary</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                    {{ media_summary.total }} total
+                                    ({{ media_summary.images }} images, {{ media_summary.pdfs }} PDFs{% if media_summary.videos %}, {{ media_summary.videos }} videos{% endif %}{% if media_summary.audios %}, {{ media_summary.audios }} audio{% if media_summary.audios != 1 %}s{% endif %}{% endif %}{% if media_summary.docx %}, {{ media_summary.docx }} DOCX{% endif %}{% if media_summary.other %}, {{ media_summary.other }} other{% endif %})
+                                </td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Related Items</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ related_count }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="whitespace-pre-wrap break-all text-right" x-show="activePanel === 'arabic'">
+                    <template x-if="currentArabicText">
+                        <div :dir="arabicTextDir" x-text="currentArabicText"></div>
+                    </template>
+                    <template x-if="!currentArabicText">
+                        <p>No Arabic/OCR text is available for this page.</p>
+                    </template>
+                </div>
+
+                <div class="whitespace-pre-wrap break-all" x-show="activePanel === 'translation'">
+                    <template x-if="currentTranslationText">
+                        <div x-text="currentTranslationText"></div>
+                    </template>
+                    <template x-if="!currentTranslationText">
+                        <p>No English translation is available for this page.</p>
+                    </template>
+                </div>
+
+            </div>
+        </div>
+    </aside>
+
+    <section
+        x-ref="mobileScrollPane"
+        class="doc-mobile-scroll hidden min-h-0 flex-1 overflow-auto max-md:block"
+        style="padding-bottom: calc(var(--doc-related-toggle-height) + var(--doc-mobile-actions-height)); overscroll-behavior-x: contain; touch-action: manipulation;"
+        @click="onCanvasClick($event)"
+        @wheel="onCanvasWheel($event)"
+        @touchstart="onTouchStart($event)"
+        @touchmove="onTouchMove($event)"
+        @touchend="onTouchEnd()"
+        @touchcancel="onTouchEnd()"
+    >
+        <template x-if="!pageCount">
+            {{ empty_media_card('mx-3 my-3 w-auto') }}
+        </template>
+
+        {% set mode = 'mobile' %}
+        {% include 'partials/media/renderers/image.html' %}
+        {% include 'partials/media/renderers/pdf.html' %}
+        {% include 'partials/media/renderers/video.html' %}
+        {% include 'partials/media/renderers/audio.html' %}
+        {% include 'partials/media/renderers/docx.html' %}
+        {% include 'partials/media/renderers/other.html' %}
+
+    </section>
+
+    {{ media_nav_arrow('prev', 'fixed left-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400 max-md:block') }}
+    {{ media_nav_arrow('next', 'fixed right-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400 max-md:block') }}
+
+    <nav class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-cols-4 max-md:grid" aria-label="Document actions">
+        {{ action_button('info', 'Info', 'info', 'mobile', true) }}
+        {{ action_button('arabic', 'Extract Text', 'arabic', 'mobile', true) }}
+        {{ action_button('translation', 'Translate', 'translation', 'mobile', true) }}
+        {{ action_button('download', 'Download', none, 'mobile') }}
+    </nav>
+
+    <section class="doc-related fixed -bottom-px left-0 right-0 z-[75] flex flex-col overflow-hidden bg-transparent" :class="{ 'is-open': relatedOpen }">
+        <header class="bg-primary hover:bg-secondary p-0 text-slate-50">
+            <button type="button" @click="relatedOpen = !relatedOpen" class="flex min-h-[var(--doc-related-toggle-height)] w-full items-center gap-2 border-0 bg-transparent px-4 py-2 text-base font-semibold text-slate-50">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="size-4" :class="relatedOpen ? '-rotate-90' : 'rotate-90'">
+                    <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                <span>Related Content</span>
+            </button>
+        </header>
+
+        <div
+            class="overflow-auto border-b border-white/10 bg-[#54585f] transition-all duration-200 ease-out max-h-0 opacity-0"
+            :class="relatedOpen ? 'max-h-[min(42vh,24rem)] opacity-100 max-md:max-h-[min(72vh,40rem)]' : 'max-h-0 opacity-0'"
+        >
+            {% if relations %}
+            <div class="grid grid-cols-4 gap-3 p-3 max-md:grid-cols-1 max-md:gap-3 max-md:pb-4">
+                {% for related in relations %}
+                <a href="/documents/{{ related.related_document_id }}/{{ related.slug }}" class="group block border border-white/20 bg-[#5c6269] text-white">
+                    <article>
+                        <div class="relative h-[170px] w-full overflow-hidden bg-slate-400">
+                            {% if related.related_filename %}
+                            <img src="{{ url_for('static', filename='media/' ~ related.related_filename) }}" alt="{{ related.display_title }}" loading="lazy" class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]">
+                            {% else %}
+                            <div class="grid h-full w-full place-items-center bg-slate-500 text-sm">No preview</div>
+                            {% endif %}
+                            <div class="absolute bottom-3 left-3 inline-flex items-center gap-2 bg-primary px-3 py-1 text-xs font-medium text-primary-content">
+                                <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                                    <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="white"/>
+                                </svg>
+                                Document
+                            </div>
+                        </div>
+                        <div class="space-y-2 px-4 py-3">
+                            <h3 class="m-0 line-clamp-3 text-base font-semibold leading-snug text-white/95 group-hover:text-white">{{ related.display_title or 'Related record' }}</h3>
+                            <p class="line-clamp-3 text-xs leading-relaxed text-slate-200">
+                                {% if related.description %}
+                                    {{ related.description | strip_html | truncate(140) }}
+                                {% else %}
+                                    No description available.
+                                {% endif %}
+                            </p>
+                            <p class="text-[11px] text-slate-300">
+                                {% if related.publish_date %}{{ related.publish_date[:10] }}{% else %}Date unavailable{% endif %}
+                            </p>
+                        </div>
+                    </article>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="m-3 border border-white/15 bg-slate-900/25 p-4 text-white">
+                <h3 class="m-0 text-base font-semibold">No related content yet</h3>
+                <p class="mt-2 text-sm text-slate-200">This drawer is ready. Related documents will appear here once linked.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://unpkg.com/docx-preview@0.3.6/dist/docx-preview.js"></script>
+<script src="{{ url_for('static', filename='js/document-detail.js') }}"></script>
+{% endblock %}

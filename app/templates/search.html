@@ -348,20 +348,5 @@
         hx-include=".search-param"
         hx-indicator="#loading"
     ></div>
-
-    <!-- CSS-only sticky CTA anchored to this content container (not viewport-fixed). -->
-    <div class="sticky z-50 pointer-events-none" style="bottom: 0;">
-        <div class="flex justify-end">
-            <a
-                href="{{ url_for('pages.feedback') }}"
-                class="pointer-events-auto inline-flex items-center gap-3 border border-primary px-4 py-3 text-xl font-semibold text-primary bg-base-200"
-            >
-                <svg class="size-4.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M9.5 6.33325L4.75 11.0833L5.86625 12.1995L9.5 8.57367L13.1338 12.1995L14.25 11.0833L9.5 6.33325Z" fill="#1A4540"/>
-                </svg>
-                <span class="text-sm font-semibold">Feedback Form</span>
-            </a>
-        </div>
-    </div>
 </div>
 {% endblock %}

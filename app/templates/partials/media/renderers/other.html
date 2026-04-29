@@ -1,0 +1,15 @@
+<template x-if="currentMedia && currentMedia.media_kind === 'other' && isKindLoading('other')">
+    {% set loading_text = 'Loading file preview...' %}
+    {% set loading_max_class = 'max-w-2xl' %}
+    {% set loading_stage_class = 'min-h-[42vh]' %}
+    {% set loading_frame_class = 'h-40' %}
+    {% include 'partials/media/loading.html' %}
+</template>
+
+<template x-if="currentMedia && currentMedia.media_kind === 'other' && !isKindLoading('other')">
+    {% if mode == 'desktop' %}
+    {{ preview_unavailable_card('Preview unavailable', 'This file type cannot be previewed inline yet, but you can still download it.', 'Download file') }}
+    {% else %}
+    {{ preview_unavailable_card('Preview unavailable', 'This file type cannot be previewed inline yet, but you can still download it.', 'Download file', 'mx-3 my-3 w-auto') }}
+    {% endif %}
+</template>

@@ -1,0 +1,19 @@
+<template x-if="currentMedia && currentMedia.media_kind === 'pdf' && isKindLoading('pdf')">
+    {% set loading_text = 'Loading PDF preview...' %}
+    {% set loading_max_class = 'max-w-[56rem]' %}
+    {% set loading_stage_class = 'min-h-[54vh]' %}
+    {% set loading_frame_class = 'mx-auto aspect-[1/1.414] max-w-[40rem]' %}
+    {% include 'partials/media/loading.html' %}
+</template>
+
+<template x-if="currentMedia && currentMedia.media_kind === 'pdf' && hasKindError('pdf')">
+    {% if mode == 'desktop' %}
+    {{ pdf_error_card() }}
+    {% else %}
+    {{ pdf_error_card('mx-3 my-3 w-auto') }}
+    {% endif %}
+</template>
+
+<div x-show="currentMedia && currentMedia.media_kind === 'pdf' && !hasKindError('pdf')" class="doc-pdf-fallback flex min-h-64 w-full flex-col items-center bg-transparent px-2 py-3 text-left {% if mode == 'desktop' %}min-h-96 px-0 py-3{% endif %}" :class="isKindLoading('pdf') ? 'invisible pointer-events-none absolute inset-0' : ''">
+    <div class="doc-pdf-scroll flex w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="{{ 'pdfDesktopList' if mode == 'desktop' else 'pdfMobileList' }}"></div>
+</div>

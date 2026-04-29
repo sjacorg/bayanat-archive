@@ -1,0 +1,25 @@
+<template x-if="currentMedia && currentMedia.media_kind === 'video' && isKindLoading('video')">
+    {% set loading_text = 'Loading video preview...' %}
+    {% set loading_max_class = 'max-w-[56rem]' %}
+    {% set loading_stage_class = 'min-h-[50vh]' %}
+    {% set loading_frame_class = 'mx-auto aspect-video max-w-[52rem]' %}
+    {% include 'partials/media/loading.html' %}
+</template>
+
+<template x-if="currentMedia && currentMedia.media_kind === 'video' && hasKindError('video')">
+    {% if mode == 'desktop' %}
+    {{ preview_unavailable_card('Video preview unavailable', 'We could not load this video in the viewer.', 'Download video') }}
+    {% else %}
+    {{ preview_unavailable_card('Video preview unavailable', 'We could not load this video in the viewer.', 'Download video', 'mx-3 my-3 w-auto') }}
+    {% endif %}
+</template>
+
+<template x-if="currentMedia && currentMedia.media_kind === 'video' && isKindReady('video')">
+    {% if mode == 'desktop' %}
+    <video :src="currentMedia.src" controls preload="metadata" @loadeddata="setMediaReady('video')" @canplay="setMediaReady('video')" @error="setMediaError('video')" class="block h-auto w-auto max-h-[72vh] max-w-[min(100%,60rem)] border border-slate-700/30 bg-black shadow-[0_6px_18px_rgba(15,23,42,0.12)]"></video>
+    {% else %}
+    <div class="grid gap-3 p-3">
+        <video :src="currentMedia.src" controls preload="metadata" @loadeddata="setMediaReady('video')" @canplay="setMediaReady('video')" @error="setMediaError('video')" class="h-auto w-full border border-slate-700/30 bg-black shadow-[0_6px_18px_rgba(15,23,42,0.12)]"></video>
+    </div>
+    {% endif %}
+</template>

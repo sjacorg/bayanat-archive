@@ -61,9 +61,10 @@
         <div class="drawer-content flex min-h-screen flex-col">
             {% set nav_links = [
                 {"href": url_for("search.index"), "label": "Search", "active_paths": ["/", "/search"]},
-                {"href": url_for("pages.about"), "label": "About", "active_paths": ["/about"]}
+                {"href": url_for("pages.about"), "label": "About Us", "active_paths": ["/about"]}
             ] %}
 
+            {% block page_header %}
             <header
                 class="sticky top-0 z-50 border-b border-base-300/70 bg-base-200/85 backdrop-blur-md"
                 hx-boost="true"
@@ -91,32 +92,26 @@
                             </a>
                             {% endfor %}
                         </nav>
-
-                        {% if request.path != '/' %}
-                        <a href="{{ url_for('search.index') }}" class="btn btn-ghost btn-square" aria-label="Go to search">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <circle cx="11" cy="11" r="7" stroke-width="2"></circle>
-                                <path d="m20 20-3.5-3.5" stroke-width="2" stroke-linecap="round"></path>
-                            </svg>
-                        </a>
-                        {% else %}
-                        <span class="h-10 w-10" aria-hidden="true"></span>
-                        {% endif %}
                     </div>
                 </div>
             </header>
+            {% endblock %}
 
             {% block banners %}{% endblock %}
 
-            <main id="page-main" class="flex-1">
-                <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
+            <main id="page-main" class="flex-1 {% block main_class %}{% endblock %}">
+                <div class="{% block main_container_class %}mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10{% endblock %}">
                     {% block content %}{% endblock %}
                 </div>
             </main>
 
+            {% block page_feedback %}
             {% include "partials/feedback_widget.html" %}
+            {% endblock %}
 
+            {% block page_footer %}
             {% include "partials/footer.html" %}
+            {% endblock %}
         </div>
 
         <div

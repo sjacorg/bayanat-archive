@@ -100,7 +100,7 @@
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 1rem;
+    height: 1.75rem;
     transform: translate(-10px);
     background: transparent;
     pointer-events: none;
@@ -116,10 +116,10 @@
     appearance: none;
     width: 0;
     height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 14px solid #1a4540;
-    margin-top: -10px;
+    border-left: 13px solid transparent;
+    border-right: 13px solid transparent;
+    border-bottom: 30px solid #1a4540;
+    margin-top: -13px;
     pointer-events: auto;
     cursor: ew-resize;
 }
@@ -133,12 +133,149 @@
 .timeline-range::-moz-range-thumb {
     width: 0;
     height: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 14px solid #1a4540;
+    border-left: 13px solid transparent;
+    border-right: 13px solid transparent;
+    border-bottom: 30px solid #1a4540;
     border-top: 0;
     border-radius: 0;
     background: transparent;
     pointer-events: auto;
     cursor: ew-resize;
+}
+
+/* Document detail: minimal custom CSS for behaviors not practical in utility classes */
+.doc-detail {
+    --doc-header-height: 64px;
+    --doc-zoom-bar-height: 56px;
+    --doc-related-toggle-height: 56px;
+    --doc-mobile-actions-height: 64px;
+    --doc-desktop-actions-width: 194px;
+    --doc-docx-page-max-width: 864px;
+    --doc-stage-top: calc(var(--doc-header-height) + var(--doc-zoom-bar-height));
+    --doc-stage-height: calc(100vh - var(--doc-stage-top));
+    overscroll-behavior: none;
+}
+
+.doc-mobile-scroll {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+.doc-canvas {
+    translate: 0 0;
+    opacity: 1;
+}
+
+.doc-canvas.is-sliding-out {
+    translate: calc(var(--slide-direction, 1) * -2.2rem) 0;
+    opacity: 0.06;
+    transition: translate 120ms ease, opacity 120ms ease;
+}
+
+.doc-canvas.is-sliding-in {
+    translate: calc(var(--slide-direction, 1) * 2.2rem) 0;
+    opacity: 0.06;
+    animation: doc-carousel-in 180ms ease forwards;
+}
+
+.doc-image-scroll,
+.doc-pdf-scroll,
+.doc-docx-scope {
+    padding-bottom: calc(var(--doc-related-toggle-height) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 767px) {
+    .doc-image-scroll,
+    .doc-pdf-scroll,
+    .doc-docx-scope {
+        padding-bottom: calc(
+            var(--doc-related-toggle-height) +
+            var(--doc-mobile-actions-height) +
+            env(safe-area-inset-bottom, 0px)
+        );
+    }
+}
+
+@keyframes doc-carousel-in {
+    from {
+        translate: calc(var(--slide-direction, 1) * 2.2rem) 0;
+        opacity: 0.06;
+    }
+    to {
+        translate: 0 0;
+        opacity: 1;
+    }
+}
+
+.doc-pdf-canvas,
+.doc-mobile-pdf-canvas {
+    display: block;
+    margin-inline: auto;
+    max-width: 100%;
+    height: auto;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.08);
+}
+
+.doc-image-scroll.is-zoomed img {
+    max-width: none !important;
+    max-height: none !important;
+}
+
+.doc-pdf-scroll.is-zoomed {
+    align-items: flex-start;
+}
+
+.doc-docx-scope .docx-preview,
+.doc-docx-scope .docx-wrapper {
+    max-width: min(var(--doc-docx-page-max-width), 100%);
+    margin-inline: auto;
+}
+
+.doc-docx-scope .docx {
+    max-width: none !important;
+    width: auto !important;
+}
+
+.doc-docx-scope div[style*="display: inline-block"][style*="width"][style*="pt"] {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+    left: auto !important;
+    right: auto !important;
+}
+
+.doc-docx-scope .docx-wrapper.is-zoomed {
+    max-width: none !important;
+}
+
+@media (max-width: 767px) {
+    .doc-docx-scope .docx-preview[style] {
+        padding: 16px !important;
+        box-sizing: border-box;
+    }
+}
+
+/* Normalize DOCX preview heading/list paragraph offsets from Word styles. */
+.doc-docx-scope .docx-preview p[class*="docx-preview_heading"][class*="docx-preview-num-"] {
+    text-indent: 0 !important;
+    margin-inline-start: 0 !important;
+}
+
+@media (max-width: 900px) {
+    .doc-mobile-pdf-canvas {
+        max-width: 100%;
+        width: auto;
+    }
+}
+
+.doc-audio-wave-bg {
+    background:
+        repeating-linear-gradient(
+            90deg,
+            rgba(61, 155, 143, 0.18) 0,
+            rgba(61, 155, 143, 0.18) 6px,
+            rgba(15, 23, 42, 0.06) 6px,
+            rgba(15, 23, 42, 0.06) 10px
+        ),
+        linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
 }

@@ -1,0 +1,27 @@
+<template x-if="currentMedia && currentMedia.media_kind === 'image' && isKindLoading('image')">
+    {% set loading_text = 'Loading image preview...' %}
+    {% set loading_max_class = 'max-w-[56rem]' %}
+    {% set loading_stage_class = 'min-h-[50vh]' %}
+    {% set loading_frame_class = 'mx-auto aspect-[4/3] max-w-[48rem]' %}
+    {% include 'partials/media/loading.html' %}
+</template>
+
+<template x-if="currentMedia && currentMedia.media_kind === 'image' && hasKindError('image')">
+    {% if mode == 'desktop' %}
+    {{ preview_unavailable_card('Image preview unavailable', 'We could not load this image in the viewer.', 'Download image') }}
+    {% else %}
+    {{ preview_unavailable_card('Image preview unavailable', 'We could not load this image in the viewer.', 'Download image', 'mx-3 my-3 w-auto') }}
+    {% endif %}
+</template>
+
+<template x-if="currentMedia && currentMedia.media_kind === 'image' && isKindReady('image')">
+    {% if mode == 'desktop' %}
+    <div class="doc-image-scroll flex w-full justify-center py-2" x-ref="imageDesktopList">
+        <img :src="currentMedia.src" :alt="`${title} page ${pageIndex + 1}`" loading="eager" draggable="false" @dragstart.prevent @load="setMediaReady('image')" @error="setMediaError('image')" class="block h-auto w-auto max-h-[70vh] max-w-[min(100%,56rem)] select-none bg-slate-50">
+    </div>
+    {% else %}
+    <div class="doc-image-scroll grid gap-3 p-3" x-ref="imageMobileList">
+        <img :src="currentMedia.src" :alt="`${title} page ${displayPage}`" loading="lazy" draggable="false" @dragstart.prevent @load="setMediaReady('image')" @error="setMediaError('image')" class="h-auto w-full select-none bg-white">
+    </div>
+    {% endif %}
+</template>
