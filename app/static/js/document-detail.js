@@ -84,7 +84,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     async resolveContainer(viewer) {
       for (let attempt = 0; attempt < 8; attempt += 1) {
         await viewer.$nextTick();
-        const container = viewer.isMobile ? viewer.$refs.pdfMobileList : viewer.$refs.pdfDesktopList;
+        const container = viewer.$refs.pdfList;
         if (!container) {
           await new Promise((resolve) => window.setTimeout(resolve, 16));
           continue;
@@ -93,7 +93,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         if (width > 40) return container;
         await new Promise((resolve) => window.setTimeout(resolve, 16));
       }
-      return viewer.isMobile ? viewer.$refs.pdfMobileList : viewer.$refs.pdfDesktopList;
+      return viewer.$refs.pdfList;
     },
 
     async load(viewer, src) {
@@ -325,14 +325,14 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     async resolveContainer(viewer) {
       for (let attempt = 0; attempt < 8; attempt += 1) {
         await viewer.$nextTick();
-        const container = viewer.isMobile ? viewer.$refs.docxMobileList : viewer.$refs.docxDesktopList;
+        const container = viewer.$refs.docxList;
         if (!container) {
           await new Promise((resolve) => window.setTimeout(resolve, 16));
           continue;
         }
         return container;
       }
-      return viewer.isMobile ? viewer.$refs.docxMobileList : viewer.$refs.docxDesktopList;
+      return viewer.$refs.docxList;
     },
 
     async load(viewer, src) {
@@ -535,6 +535,53 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       });
 
       await this.loadCurrentMedia();
+
+      if (window.ResizeObserver && this.$refs.pdfScrollPane) {
+        let pdfRenderedWidth = 0;
+        let pdfResizeTimer = null;
+        const pdfRO = new ResizeObserver((entries) => {
+          const width = Math.round(entries[0].contentRect.width);
+          if (width <= 0 || !this.isPdfMedia() || this.pdfError) return;
+          if (Math.abs(width - pdfRenderedWidth) < 24) return;
+          window.clearTimeout(pdfResizeTimer);
+          pdfResizeTimer = window.setTimeout(() => {
+            if (!this.isPdfMedia() || this.pdfError) return;
+            pdfModule.render(this).then(() => {
+              pdfRenderedWidth = this.$refs.pdfList?.clientWidth || width;
+              this.applyPdfZoom();
+            });
+          }, 100);
+        });
+        pdfRO.observe(this.$refs.pdfScrollPane);
+        this.$watch("pdfReady", (ready) => {
+          if (ready) pdfRenderedWidth = this.$refs.pdfList?.clientWidth || 0;
+        });
+        window.addEventListener("pagehide", () => pdfRO.disconnect(), { once: true });
+      }
+
+      if (window.ResizeObserver && this.$refs.docxScrollPane) {
+        let docxRenderedWidth = 0;
+        let docxResizeTimer = null;
+        const docxRO = new ResizeObserver((entries) => {
+          const width = Math.round(entries[0].contentRect.width);
+          if (width <= 0 || !this.isDocxMedia() || this.docxError) return;
+          if (Math.abs(width - docxRenderedWidth) < 24) return;
+          window.clearTimeout(docxResizeTimer);
+          docxResizeTimer = window.setTimeout(() => {
+            if (!this.isDocxMedia() || this.docxError) return;
+            docxModule.render(this).then(() => {
+              docxRenderedWidth = this.$refs.docxList?.clientWidth || width;
+              this.applyDocxZoom();
+            });
+          }, 100);
+        });
+        docxRO.observe(this.$refs.docxScrollPane);
+        this.$watch("docxReady", (ready) => {
+          if (ready) docxRenderedWidth = this.$refs.docxList?.clientWidth || 0;
+        });
+        window.addEventListener("pagehide", () => docxRO.disconnect(), { once: true });
+      }
+
       this.hasInitialized = true;
       })();
       try {
@@ -762,27 +809,10 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         window.clearTimeout(this.resizeDebounceTimer);
       }
       this.resizeDebounceTimer = window.setTimeout(() => {
-        const wasMobile = this.isMobile;
         this.updateViewportMode();
         this.syncLayoutMetrics();
         if (this.isImageMedia() && !this.hasKindError("image")) {
           this.applyImageZoom();
-        } else if (this.isPdfMedia() && !this.pdfError) {
-          if (this.shouldRerenderOnResize("pdf", wasMobile)) {
-            pdfModule.render(this).then(() => {
-              this.applyPdfZoom();
-            });
-          } else {
-            this.applyPdfZoom();
-          }
-        } else if (this.isDocxMedia() && !this.docxError) {
-          if (this.shouldRerenderOnResize("docx", wasMobile)) {
-            docxModule.render(this).then(() => {
-              this.applyDocxZoom();
-            });
-          } else {
-            this.applyDocxZoom();
-          }
         }
       }, 120);
     },
@@ -805,12 +835,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     getMediaContainer(kind, isMobile = this.isMobile) {
-      if (kind === "pdf") {
-        return isMobile ? this.$refs.pdfMobileList : this.$refs.pdfDesktopList;
-      }
-      if (kind === "docx") {
-        return isMobile ? this.$refs.docxMobileList : this.$refs.docxDesktopList;
-      }
+      if (kind === "pdf") return this.$refs.pdfList;
+      if (kind === "docx") return this.$refs.docxList;
       if (kind === "image") {
         return isMobile ? this.$refs.imageMobileList : this.$refs.imageDesktopList;
       }
@@ -1066,7 +1092,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     getPdfContainer() {
-      return this.isMobile ? this.$refs.pdfMobileList : this.$refs.pdfDesktopList;
+      return this.$refs.pdfList;
     },
 
     applyPdfZoom() {
@@ -1118,6 +1144,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     getScrollPane() {
+      if (this.isPdfMedia() && this.$refs.pdfScrollPane) return this.$refs.pdfScrollPane;
+      if (this.isDocxMedia() && this.$refs.docxScrollPane) return this.$refs.docxScrollPane;
       return this.isMobile ? this.$refs.mobileScrollPane : this.$refs.desktopScrollPane;
     },
 
@@ -1163,7 +1191,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     getDocxContainer() {
-      return this.isMobile ? this.$refs.docxMobileList : this.$refs.docxDesktopList;
+      return this.$refs.docxList;
     },
 
     applyDocxZoom() {

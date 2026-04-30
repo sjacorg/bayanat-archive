@@ -1,19 +1,37 @@
-<template x-if="currentMedia && currentMedia.media_kind === 'pdf' && isKindLoading('pdf')">
-    {% set loading_text = 'Loading PDF preview...' %}
-    {% set loading_max_class = 'max-w-[56rem]' %}
-    {% set loading_stage_class = 'min-h-[54vh]' %}
-    {% set loading_frame_class = 'mx-auto aspect-[1/1.414] max-w-[40rem]' %}
-    {% include 'partials/media/loading.html' %}
-</template>
-
-<template x-if="currentMedia && currentMedia.media_kind === 'pdf' && hasKindError('pdf')">
-    {% if mode == 'desktop' %}
-    {{ pdf_error_card() }}
-    {% else %}
-    {{ pdf_error_card('mx-3 my-3 w-auto') }}
-    {% endif %}
-</template>
-
-<div x-show="currentMedia && currentMedia.media_kind === 'pdf' && !hasKindError('pdf')" class="doc-pdf-fallback flex min-h-64 w-full flex-col items-center bg-transparent px-2 py-3 text-left {% if mode == 'desktop' %}min-h-96 px-0 py-3{% endif %}" :class="isKindLoading('pdf') ? 'invisible pointer-events-none absolute inset-0' : ''">
-    <div class="doc-pdf-scroll flex w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="{{ 'pdfDesktopList' if mode == 'desktop' else 'pdfMobileList' }}"></div>
+<div
+    x-show="currentMedia && currentMedia.media_kind === 'pdf'"
+    class="doc-pdf-universal fixed left-0 right-0 z-[15] overflow-auto [scrollbar-gutter:stable]"
+    style="top: var(--doc-stage-top); touch-action: manipulation; overscroll-behavior: contain;"
+    :class="canvasCursorClass"
+    x-ref="pdfScrollPane"
+    @click="onCanvasClick($event)"
+    @wheel="onCanvasWheel($event)"
+    @touchstart="onTouchStart($event)"
+    @touchmove="onTouchMove($event)"
+    @touchend="onTouchEnd()"
+    @touchcancel="onTouchEnd()"
+>
+    <template x-if="currentMedia && currentMedia.media_kind === 'pdf' && isKindLoading('pdf')">
+        <div class="grid w-full place-items-center px-3 min-h-[54vh]">
+            <div class="mx-auto w-full max-w-[56rem] border border-slate-300 bg-slate-50 p-4">
+                <div class="animate-pulse space-y-3">
+                    <div class="h-4 w-2/5 bg-slate-300/80"></div>
+                    <div class="h-3 w-full bg-slate-200"></div>
+                    <div class="h-3 w-4/5 bg-slate-200"></div>
+                    <div class="mx-auto aspect-[1/1.414] w-full max-w-[40rem] border border-slate-300 bg-white"></div>
+                </div>
+                <p class="mt-3 text-xs text-slate-600">Loading PDF preview...</p>
+            </div>
+        </div>
+    </template>
+    <template x-if="currentMedia && currentMedia.media_kind === 'pdf' && hasKindError('pdf')">
+        {{ pdf_error_card() }}
+    </template>
+    <div
+        x-show="currentMedia && currentMedia.media_kind === 'pdf' && !hasKindError('pdf')"
+        class="flex w-full flex-col items-center min-h-96 px-0 py-3"
+        :class="isKindLoading('pdf') ? 'invisible pointer-events-none absolute inset-0' : ''"
+    >
+        <div class="doc-pdf-scroll flex w-full flex-col items-center gap-3 bg-transparent py-2" x-ref="pdfList"></div>
+    </div>
 </div>

@@ -194,14 +194,7 @@
         <div
             x-ref="canvasViewport"
             class="relative box-border grid min-h-full w-full place-items-center overflow-visible p-3"
-            :class="{ 'place-items-start': isKindReady('pdf') || isKindReady('docx') }"
             style="touch-action: manipulation;"
-            @click="onCanvasClick($event)"
-            @wheel="onCanvasWheel($event)"
-            @touchstart="onTouchStart($event)"
-            @touchmove="onTouchMove($event)"
-            @touchend="onTouchEnd()"
-            @touchcancel="onTouchEnd()"
         >
             <template x-if="!pageCount">
                 {{ empty_media_card() }}
@@ -215,10 +208,8 @@
             >
                 {% set mode = 'desktop' %}
                 {% include 'partials/media/renderers/image.html' %}
-                {% include 'partials/media/renderers/pdf.html' %}
                 {% include 'partials/media/renderers/video.html' %}
                 {% include 'partials/media/renderers/audio.html' %}
-                {% include 'partials/media/renderers/docx.html' %}
                 {% include 'partials/media/renderers/other.html' %}
             </div>
 
@@ -228,6 +219,9 @@
         {{ media_nav_arrow('next', 'doc-nav-arrow fixed right-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-primary bg-white/80 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400') }}
 
     </section>
+
+    {% include 'partials/media/renderers/pdf.html' %}
+    {% include 'partials/media/renderers/docx.html' %}
 
     {% include 'partials/document_detail/details_panel.html' %}
 
@@ -248,10 +242,8 @@
 
         {% set mode = 'mobile' %}
         {% include 'partials/media/renderers/image.html' %}
-        {% include 'partials/media/renderers/pdf.html' %}
         {% include 'partials/media/renderers/video.html' %}
         {% include 'partials/media/renderers/audio.html' %}
-        {% include 'partials/media/renderers/docx.html' %}
         {% include 'partials/media/renderers/other.html' %}
 
     </section>
