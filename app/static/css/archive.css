@@ -52,8 +52,11 @@
     transition: background-color 0.15s;
 }
 
-.sidebar-btn:hover {
+.sidebar-btn:hover,
+.sidebar-btn:focus-visible {
     background: #1A4540;
+    outline: 2px solid #fff;
+    outline-offset: -3px;
 }
 
 /* Document chip (mimics physical tab folder) */
@@ -80,6 +83,12 @@
 
 #results > *:not(#toolbar) {
     animation: fade-in 1000ms ease both;
+}
+
+/* Global focus-visible ring — applies to all interactive elements */
+:focus-visible {
+    outline: 2px solid oklch(0.61 0.085 180);
+    outline-offset: 2px;
 }
 
 /* Alpine.js: hide x-cloak elements before hydration */

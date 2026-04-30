@@ -6,6 +6,7 @@
     @keydown.escape.window="closePanel"
     @click="closePanel"
     :style="`top: var(--doc-header-height);`"
+    :aria-label="panelTitle + ' panel'"
 >
     <div class="h-full overflow-auto px-4 py-5 md:pl-[calc(var(--doc-desktop-actions-width)+2rem)] md:pr-6 md:pt-6" @click.stop>
         <div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
