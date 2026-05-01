@@ -16,6 +16,6 @@
 
 <template x-if="currentMedia && currentMedia.media_kind === 'image' && isKindReady('image')">
     <div class="doc-image-scroll flex w-full justify-center p-3 md:py-2" x-ref="imageList">
-        <img :src="currentMedia.src" :alt="`${title} page ${displayPage}`" loading="eager" draggable="false" @dragstart.prevent @load="setMediaReady('image')" @error="setMediaError('image')" class="block h-auto w-full select-none bg-white md:w-auto md:max-h-[70vh] md:max-w-[min(100%,56rem)] md:bg-slate-50">
+        <img :src="currentMedia.src" :alt="`${title} page ${displayMediaNumber}`" loading="eager" draggable="false" @dragstart.prevent @load="setMediaReady('image')" @error="setMediaError('image')" class="block h-auto w-full select-none bg-white md:w-auto md:max-h-[70vh] md:max-w-[min(100%,56rem)] md:bg-slate-50">
     </div>
 </template>

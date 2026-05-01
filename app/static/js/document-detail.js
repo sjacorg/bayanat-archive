@@ -491,7 +491,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     docId: payload.id,
     documentOcrText: payload.documentOcrText || "",
     documentTranslation: payload.documentTranslation || "",
-    pageIndex: 0,
+    mediaIndex: 0,
     zoom: 1,
     tapZoomLevel: 1.5,
     minZoom: 0.75,
@@ -559,11 +559,11 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
       const url = new URL(window.location.href);
       const requestedPage = Number(url.searchParams.get("page") || 1);
-      if (Number.isFinite(requestedPage) && requestedPage > 0 && requestedPage <= this.pageCount) {
-        this.pageIndex = requestedPage - 1;
+      if (Number.isFinite(requestedPage) && requestedPage > 0 && requestedPage <= this.mediaCount) {
+        this.mediaIndex = requestedPage - 1;
       }
 
-      this.$watch("pageIndex", () => {
+      this.$watch("mediaIndex", () => {
         this.persistPageInUrl();
       });
 
@@ -666,37 +666,29 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       rawDocxSrc = "";
     },
 
-    get pageCount() {
+    get mediaCount() {
       return this.media.length;
     },
 
     get currentMedia() {
-      return this.media[this.pageIndex] || null;
+      return this.media[this.mediaIndex] || null;
     },
 
-    get displayPage() {
+    get displayMediaNumber() {
       if (!this.currentMedia) return 0;
-      return this.pageIndex + 1;
+      return this.mediaIndex + 1;
     },
 
-    get displayTotal() {
-      return this.pageCount;
-    },
-
-    get hasPrev() {
-      return this.pageIndex > 0;
-    },
-
-    get hasNext() {
-      return this.pageIndex < this.pageCount - 1;
+    get displayMediaTotal() {
+      return this.mediaCount;
     },
 
     get hasPrevMedia() {
-      return this.hasPrev;
+      return this.mediaIndex > 0;
     },
 
     get hasNextMedia() {
-      return this.hasNext;
+      return this.mediaIndex < this.mediaCount - 1;
     },
 
     get panelTitle() {
@@ -993,32 +985,24 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       }
     },
 
-    async prevPage() {
-      await this.prevMedia();
-    },
-
-    async nextPage() {
-      await this.nextMedia();
-    },
-
     async prevMedia() {
-      if (!this.pageCount) return;
+      if (!this.mediaCount) return;
       if (!this.hasPrevMedia || this.isAnimating) return;
-      await this.goToMediaIndex(this.pageIndex - 1);
+      await this.goToMediaIndex(this.mediaIndex - 1);
     },
 
     async nextMedia() {
-      if (!this.pageCount) return;
+      if (!this.mediaCount) return;
       if (!this.hasNextMedia || this.isAnimating) return;
-      await this.goToMediaIndex(this.pageIndex + 1);
+      await this.goToMediaIndex(this.mediaIndex + 1);
     },
 
     async goToMediaIndex(nextIndex) {
-      if (!Number.isInteger(nextIndex) || nextIndex < 0 || nextIndex >= this.pageCount) return;
-      if (nextIndex === this.pageIndex || this.isAnimating) return;
+      if (!Number.isInteger(nextIndex) || nextIndex < 0 || nextIndex >= this.mediaCount) return;
+      if (nextIndex === this.mediaIndex || this.isAnimating) return;
       this.isAnimating = true;
       try {
-        this.pageIndex = nextIndex;
+        this.mediaIndex = nextIndex;
         this.resetZoomState();
         this.persistPageInUrl();
         await this.$nextTick();
@@ -1038,7 +1022,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     persistPageInUrl() {
       const url = new URL(window.location.href);
-      const nextPage = this.pageIndex + 1;
+      const nextPage = this.mediaIndex + 1;
       url.searchParams.set("page", String(nextPage > 0 ? nextPage : 1));
       window.history.replaceState({}, "", url);
     },
@@ -1489,7 +1473,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         const dx = endX - this.swipeStartX;
         const canGo = dx < 0 ? this.hasNextMedia : this.hasPrevMedia;
         if (Math.abs(dx) > 60 && canGo) {
-          this.goToMediaIndex(this.pageIndex + (dx < 0 ? 1 : -1));
+          this.goToMediaIndex(this.mediaIndex + (dx < 0 ? 1 : -1));
         }
       }
       this.pinchStartDistance = null;
@@ -1519,10 +1503,10 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
       if (key === "ArrowLeft" || code === "ArrowLeft") {
         event.preventDefault();
-        this.prevPage();
+        this.prevMedia();
       } else if (key === "ArrowRight" || code === "ArrowRight") {
         event.preventDefault();
-        this.nextPage();
+        this.nextMedia();
       }
     },
   };
