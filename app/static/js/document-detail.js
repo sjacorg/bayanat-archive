@@ -8,19 +8,14 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
   let rawDocxBuffer = null;
   let rawDocxSrc = "";
   let rawDocxRenderToken = 0;
+  const pdfDocCache = new Map();
+  const docxBufferCache = new Map();
 
   const pdfModule = {
     reset(viewer) {
       rawPdfRenderToken += 1;
       rawPdfLoadPromise = null;
       rawPdfLoadSrc = "";
-      if (rawPdfDoc && typeof rawPdfDoc.destroy === "function") {
-        try {
-          rawPdfDoc.destroy();
-        } catch (error) {
-          // Best-effort cleanup only.
-        }
-      }
       rawPdfDoc = null;
       rawPdfSrc = "";
       viewer.pdfReady = false;
@@ -115,7 +110,9 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         return;
       }
 
-      if (rawPdfLoadPromise && rawPdfLoadSrc === src) {
+      if (pdfDocCache.has(src)) {
+        rawPdfDoc = pdfDocCache.get(src);
+      } else if (rawPdfLoadPromise && rawPdfLoadSrc === src) {
         rawPdfDoc = await rawPdfLoadPromise;
       } else {
         rawPdfLoadSrc = src;
@@ -130,6 +127,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         }
       }
       if (rawPdfDoc) {
+        pdfDocCache.set(src, rawPdfDoc);
         rawPdfSrc = src;
         viewer.pdfTotalPages = rawPdfDoc.numPages || 1;
         viewer.pdfError = false;
@@ -170,6 +168,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
             minWidth: 220,
             preferredScale: 1.1,
             minScale: 0.35,
+            initialPages: 1,
           });
         } else {
           renderedPages = await this.renderPages(viewer, pdfDoc, token, container, {
@@ -178,6 +177,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
             minWidth: 280,
             preferredScale: 1.35,
             minScale: 0,
+            initialPages: 1,
           });
         }
 
@@ -201,6 +201,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
                 minWidth: 220,
                 preferredScale: 1.1,
                 minScale: 0.35,
+                initialPages: 1,
               }
               : {
                 className: "doc-pdf-canvas",
@@ -208,6 +209,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
                 minWidth: 280,
                 preferredScale: 1.35,
                 minScale: 0,
+                initialPages: 1,
               });
             if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
             if (retryRenderedPages > 0) {
@@ -234,42 +236,68 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       }
     },
 
+    async renderPage(viewer, pdfDoc, token, container, opts, pageNumber) {
+      if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return false;
+
+      const page = await pdfDoc.getPage(pageNumber);
+      if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return false;
+
+      const baseViewport = page.getViewport({ scale: 1 });
+      const availableWidth = Math.max((container.clientWidth || 0) - opts.gutter, opts.minWidth);
+      const fitScale = availableWidth / Math.max(baseViewport.width, 1);
+      const scaled = Math.min(opts.preferredScale, fitScale);
+      const cssScale = Math.max(opts.minScale || 0, scaled);
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const viewport = page.getViewport({ scale: cssScale });
+      const renderViewport = page.getViewport({ scale: cssScale * dpr });
+      const canvas = document.createElement("canvas");
+      canvas.className = opts.className;
+      canvas.width = Math.floor(renderViewport.width);
+      canvas.height = Math.floor(renderViewport.height);
+      canvas.style.width = `${Math.floor(viewport.width)}px`;
+      canvas.style.height = "auto";
+
+      const context = canvas.getContext("2d", { alpha: false });
+      if (!context) {
+        throw new Error("Unable to initialize PDF canvas context.");
+      }
+      await page.render({ canvasContext: context, viewport: renderViewport }).promise;
+
+      if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return false;
+      container.appendChild(canvas);
+      return true;
+    },
+
+    scheduleRemainingPages(viewer, pdfDoc, token, container, opts, startPage) {
+      const run = async () => {
+        for (let pageNumber = startPage; pageNumber <= viewer.pdfTotalPages; pageNumber += 1) {
+          if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
+          await this.renderPage(viewer, pdfDoc, token, container, opts, pageNumber);
+          viewer.applyPdfZoom();
+          await this.sleep(0);
+        }
+      };
+      if (window.requestIdleCallback) {
+        window.requestIdleCallback(() => { run(); }, { timeout: 500 });
+      } else {
+        window.setTimeout(run, 0);
+      }
+    },
+
     async renderPages(viewer, pdfDoc, token, container, opts) {
       if (!container || !pdfDoc) return 0;
 
       container.innerHTML = "";
       let renderedPages = 0;
-      for (let pageNumber = 1; pageNumber <= viewer.pdfTotalPages; pageNumber += 1) {
-        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return renderedPages;
-
-        const page = await pdfDoc.getPage(pageNumber);
-        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return renderedPages;
-
-        const baseViewport = page.getViewport({ scale: 1 });
-        const availableWidth = Math.max((container.clientWidth || 0) - opts.gutter, opts.minWidth);
-        const fitScale = availableWidth / Math.max(baseViewport.width, 1);
-        const scaled = Math.min(opts.preferredScale, fitScale);
-        const cssScale = Math.max(opts.minScale || 0, scaled);
-
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const viewport = page.getViewport({ scale: cssScale });
-        const renderViewport = page.getViewport({ scale: cssScale * dpr });
-        const canvas = document.createElement("canvas");
-        canvas.className = opts.className;
-        canvas.width = Math.floor(renderViewport.width);
-        canvas.height = Math.floor(renderViewport.height);
-        canvas.style.width = `${Math.floor(viewport.width)}px`;
-        canvas.style.height = "auto";
-
-        const context = canvas.getContext("2d", { alpha: false });
-        if (!context) {
-          throw new Error("Unable to initialize PDF canvas context.");
-        }
-        await page.render({ canvasContext: context, viewport: renderViewport }).promise;
-
-        if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return renderedPages;
-        container.appendChild(canvas);
+      const initialPages = Math.min(opts.initialPages || 1, viewer.pdfTotalPages);
+      for (let pageNumber = 1; pageNumber <= initialPages; pageNumber += 1) {
+        const rendered = await this.renderPage(viewer, pdfDoc, token, container, opts, pageNumber);
+        if (!rendered) return renderedPages;
         renderedPages += 1;
+      }
+      if (initialPages < viewer.pdfTotalPages) {
+        this.scheduleRemainingPages(viewer, pdfDoc, token, container, opts, initialPages + 1);
       }
       return renderedPages;
     },
@@ -345,12 +373,16 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       }
 
       try {
-        const response = await fetch(src, { credentials: "same-origin" });
-        if (!response.ok) {
-          throw new Error(`Failed to load DOCX (${response.status})`);
+        if (docxBufferCache.has(src)) {
+          rawDocxBuffer = docxBufferCache.get(src);
+        } else {
+          const response = await fetch(src, { credentials: "same-origin" });
+          if (!response.ok) {
+            throw new Error(`Failed to load DOCX (${response.status})`);
+          }
+          rawDocxBuffer = await response.arrayBuffer();
+          docxBufferCache.set(src, rawDocxBuffer);
         }
-
-        rawDocxBuffer = await response.arrayBuffer();
         const header = new Uint8Array(rawDocxBuffer.slice(0, 4));
         const isZip =
           header.length === 4 &&
@@ -482,12 +514,11 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     pdfReady: false,
     docxError: false,
     docxReady: false,
-    mediaErrors: {},
-    mediaReady: {},
-    isMediaLoading: false,
-    mediaLoadingKind: "",
-    mediaLoadToken: 0,
-    requestedDisplayPage: null,
+    mediaState: {
+      status: "idle",
+      kind: "",
+      token: 0,
+    },
     isAnimating: false,
     keydownHandler: null,
     resizeHandler: null,
@@ -528,9 +559,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
       const url = new URL(window.location.href);
       const requestedPage = Number(url.searchParams.get("page") || 1);
-      if (Number.isFinite(requestedPage) && requestedPage > 0) {
-        this.requestedDisplayPage = requestedPage;
-      }
       if (Number.isFinite(requestedPage) && requestedPage > 0 && requestedPage <= this.pageCount) {
         this.pageIndex = requestedPage - 1;
       }
@@ -541,7 +569,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
       await this.loadCurrentMedia();
 
-      if (window.ResizeObserver && this.$refs.pdfScrollPane) {
+      if (window.ResizeObserver && this.$refs.mediaScrollPane) {
         let pdfRenderedWidth = 0;
         let pdfResizeTimer = null;
         const pdfRO = new ResizeObserver((entries) => {
@@ -557,14 +585,14 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
             });
           }, 100);
         });
-        pdfRO.observe(this.$refs.pdfScrollPane);
         this.$watch("pdfReady", (ready) => {
           if (ready) pdfRenderedWidth = this.$refs.pdfList?.clientWidth || 0;
         });
+        pdfRO.observe(this.$refs.mediaScrollPane);
         window.addEventListener("pagehide", () => pdfRO.disconnect(), { once: true });
       }
 
-      if (window.ResizeObserver && this.$refs.docxScrollPane) {
+      if (window.ResizeObserver && this.$refs.mediaScrollPane) {
         let docxRenderedWidth = 0;
         let docxResizeTimer = null;
         const docxRO = new ResizeObserver((entries) => {
@@ -580,7 +608,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
             });
           }, 100);
         });
-        docxRO.observe(this.$refs.docxScrollPane);
+        docxRO.observe(this.$refs.mediaScrollPane);
         this.$watch("docxReady", (ready) => {
           if (ready) docxRenderedWidth = this.$refs.docxList?.clientWidth || 0;
         });
@@ -621,6 +649,21 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         window.cancelAnimationFrame(this.pdfZoomRafId);
         this.pdfZoomRafId = null;
       }
+      pdfDocCache.forEach((pdfDoc) => {
+        if (pdfDoc && typeof pdfDoc.destroy === "function") {
+          try {
+            pdfDoc.destroy();
+          } catch (error) {
+            // Best-effort cleanup only.
+          }
+        }
+      });
+      pdfDocCache.clear();
+      docxBufferCache.clear();
+      rawPdfDoc = null;
+      rawPdfSrc = "";
+      rawDocxBuffer = null;
+      rawDocxSrc = "";
     },
 
     get pageCount() {
@@ -629,11 +672,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     get currentMedia() {
       return this.media[this.pageIndex] || null;
-    },
-
-    mediaAt(index) {
-      if (index === null || index === undefined) return null;
-      return this.media[index] || null;
     },
 
     get displayPage() {
@@ -686,10 +724,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       const docTranslation = (this.documentTranslation || "").trim();
       const docOcr = (this.documentOcrText || "").trim();
       return mediaOcr || docTranslation || docOcr;
-    },
-
-    get carouselClass() {
-      return "";
     },
 
     get canvasCursorClass() {
@@ -745,18 +779,21 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     clearMediaErrors() {
-      this.mediaErrors = {};
+      if (this.mediaState.status === "error") {
+        this.mediaState = { ...this.mediaState, status: "idle" };
+      }
     },
 
     clearMediaReady() {
-      this.mediaReady = {};
+      if (this.mediaState.status === "ready") {
+        this.mediaState = { ...this.mediaState, status: "idle" };
+      }
     },
 
     setMediaReady(kind) {
       if (!kind) return;
-      this.mediaReady = { ...this.mediaReady, [kind]: true };
       if (this.currentMedia?.media_kind === kind) {
-        this.isMediaLoading = false;
+        this.mediaState = { ...this.mediaState, kind, status: "ready" };
       }
     },
 
@@ -768,10 +805,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         filename: this.currentMedia?.filename || null,
         src: this.currentMedia?.src || null,
       });
-      this.mediaErrors = { ...this.mediaErrors, [kind]: true };
-      this.mediaReady = { ...this.mediaReady, [kind]: false };
       if (this.currentMedia?.media_kind === kind) {
-        this.isMediaLoading = false;
+        this.mediaState = { ...this.mediaState, kind, status: "error" };
       }
     },
 
@@ -795,13 +830,13 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     isKindLoading(kind) {
-      return this.isMediaLoading && this.mediaLoadingKind === kind;
+      return this.mediaState.status === "loading" && this.mediaState.kind === kind;
     },
 
     hasKindError(kind) {
       if (kind === "pdf") return this.pdfError;
       if (kind === "docx") return this.docxError;
-      return Boolean(this.mediaErrors[kind]);
+      return this.mediaState.status === "error" && this.mediaState.kind === kind;
     },
 
     isKindReady(kind) {
@@ -845,9 +880,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     getMediaContainer(kind, isMobile = this.isMobile) {
       if (kind === "pdf") return this.$refs.pdfList;
       if (kind === "docx") return this.$refs.docxList;
-      if (kind === "image") {
-        return isMobile ? this.$refs.imageMobileList : this.$refs.imageDesktopList;
-      }
+      if (kind === "image") return this.$refs.imageList;
       return null;
     },
 
@@ -900,9 +933,9 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     async loadCurrentMedia() {
-      const token = ++this.mediaLoadToken;
-      this.isMediaLoading = true;
-      this.mediaLoadingKind = this.currentMedia?.media_kind || "";
+      const token = this.mediaState.token + 1;
+      const kind = this.currentMedia?.media_kind || "";
+      this.mediaState = { status: "loading", kind, token };
 
       try {
         if (!this.currentMedia) return;
@@ -918,7 +951,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
           pdfModule.reset(this);
           docxModule.reset(this);
           await pdfModule.load(this, this.currentMedia.src);
-          if (token !== this.mediaLoadToken) return;
+          if (token !== this.mediaState.token) return;
           await pdfModule.render(this);
           return;
         }
@@ -934,7 +967,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
           pdfModule.reset(this);
           docxModule.reset(this);
           await docxModule.load(this, this.currentMedia.src);
-          if (token !== this.mediaLoadToken) return;
+          if (token !== this.mediaState.token) return;
           await docxModule.render(this);
           return;
         }
@@ -952,8 +985,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         // Give Alpine a tick so non-async media can show the normalized states cleanly.
         await this.$nextTick();
       } finally {
-        if (token === this.mediaLoadToken) {
-          this.isMediaLoading = false;
+        if (token === this.mediaState.token && this.mediaState.status === "loading") {
+          this.mediaState = { ...this.mediaState, status: "ready" };
         }
         await this.$nextTick();
         this.applyAllZoom();
@@ -1023,7 +1056,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     getImageContainer() {
-      return this.isMobile ? this.$refs.imageMobileList : this.$refs.imageDesktopList;
+      return this.$refs.imageList;
     },
 
     applyZoomToContainer(container, isActive, options = {}) {
@@ -1159,9 +1192,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     getScrollPane() {
-      if (this.isPdfMedia() && this.$refs.pdfScrollPane) return this.$refs.pdfScrollPane;
-      if (this.isDocxMedia() && this.$refs.docxScrollPane) return this.$refs.docxScrollPane;
-      return this.isMobile ? this.$refs.mobileScrollPane : this.$refs.desktopScrollPane;
+      return this.$refs.mediaScrollPane;
     },
 
     captureScrollForZoom(currentZoom, nextZoom, anchor = null) {

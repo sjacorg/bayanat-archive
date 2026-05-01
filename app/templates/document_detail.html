@@ -97,7 +97,7 @@
 {%- endmacro %}
 
 {% macro preview_unavailable_card(title, message, cta_label='Download file', wrapper_classes='w-full') -%}
-    <div class="flex min-h-[42vh] w-full items-center justify-center">
+    <div class="flex min-h-[42vh] w-full items-start justify-center px-3 py-3 md:px-0">
         <div class="{{ wrapper_classes }} mx-auto w-full max-w-2xl border border-slate-300 border-l-4 border-l-primary bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
             <h2 class="m-0 text-lg font-semibold text-slate-900">{{ title }}</h2>
             <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">{{ message }}</p>
@@ -153,7 +153,7 @@
             <span>Back to Search</span>
         </a>
 
-        <p class="m-0 max-w-prose overflow-hidden text-ellipsis whitespace-nowrap text-sm text-primary max-md:max-w-full max-md:text-xs" title="{{ document.title }}">
+        <p class="m-0 max-w-prose overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-5 text-primary max-md:max-w-full max-md:overflow-visible max-md:whitespace-normal max-md:text-xs max-md:leading-5" title="{{ document.title }}">
             <span>Search Document Library</span>
             <span>/</span>
             <span class="font-semibold">{{ document.title }}</span>
@@ -179,10 +179,16 @@
     </section>
 
     <section
-        x-ref="desktopScrollPane"
-        class="relative flex flex-none items-stretch overflow-auto max-md:hidden h-[var(--doc-stage-height)] min-h-[var(--doc-stage-height)] max-h-[var(--doc-stage-height)] [scrollbar-gutter:stable]"
+        x-ref="mediaScrollPane"
+        class="doc-media-stage relative flex flex-none items-stretch overflow-auto h-[var(--doc-stage-height)] min-h-[var(--doc-stage-height)] max-h-[var(--doc-stage-height)] [scrollbar-gutter:stable]"
         :class="activePanel ? 'is-panel-open' : ''"
-        style="padding-bottom: var(--doc-related-toggle-height); overscroll-behavior-x: contain;"
+        style="overscroll-behavior-x: contain; touch-action: pan-y;"
+        @click="onCanvasClick($event)"
+        @wheel="onCanvasWheel($event)"
+        @touchstart="onTouchStart($event)"
+        @touchmove="onTouchMove($event)"
+        @touchend="onTouchEnd($event)"
+        @touchcancel="onTouchEnd($event)"
     >
         <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+var(--doc-mobile-actions-height))] z-[70] hidden w-[var(--doc-desktop-actions-width)] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
             {{ action_button('info', 'Info', 'info', 'desktop') }}
@@ -193,64 +199,31 @@
 
         <div
             x-ref="canvasViewport"
-            class="relative box-border flex min-h-full w-full overflow-hidden"
+            class="relative box-border flex min-h-full w-full"
             style="touch-action: pan-y;"
-            @touchstart="onTouchStart($event)"
-            @touchmove="onTouchMove($event)"
-            @touchend="onTouchEnd($event)"
-            @touchcancel="onTouchEnd($event)"
         >
             <template x-if="!pageCount">
                 {{ empty_media_card() }}
             </template>
 
-            <div class="flex w-full min-w-0 items-start justify-center overflow-hidden" :class="canvasCursorClass">
+            <div class="flex w-full min-w-0 items-start justify-center" :class="canvasCursorClass">
                 {% set mode = 'desktop' %}
                 {% include 'partials/media/renderers/image.html' %}
                 {% include 'partials/media/renderers/video.html' %}
                 {% include 'partials/media/renderers/audio.html' %}
                 {% include 'partials/media/renderers/other.html' %}
+                {% include 'partials/media/renderers/pdf.html' %}
+                {% include 'partials/media/renderers/docx.html' %}
             </div>
 
         </div>
 
-        {{ media_nav_arrow('prev', 'doc-nav-arrow fixed left-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-primary bg-white/80 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400') }}
-        {{ media_nav_arrow('next', 'doc-nav-arrow fixed right-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-30 h-12 w-12 -translate-y-1/2 border border-primary bg-white/80 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400') }}
+        {{ media_nav_arrow('prev', 'doc-nav-arrow fixed left-2 md:left-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-40 h-11 w-11 md:h-12 md:w-12 -translate-y-1/2 border border-primary bg-white/85 md:bg-white/80 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400') }}
+        {{ media_nav_arrow('next', 'doc-nav-arrow fixed right-2 md:right-4 top-[calc(var(--doc-stage-top)+((var(--doc-stage-height)-var(--doc-related-toggle-height))/2))] z-40 h-11 w-11 md:h-12 md:w-12 -translate-y-1/2 border border-primary bg-white/85 md:bg-white/80 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400') }}
 
     </section>
-
-    {% include 'partials/media/renderers/pdf.html' %}
-    {% include 'partials/media/renderers/docx.html' %}
 
     {% include 'partials/document_detail/details_panel.html' %}
-
-    <section
-        x-ref="mobileScrollPane"
-        class="doc-mobile-scroll hidden min-h-0 flex-1 overflow-hidden max-md:block"
-        style="padding-bottom: calc(var(--doc-related-toggle-height) + var(--doc-mobile-actions-height)); overscroll-behavior-x: contain; touch-action: pan-y;"
-        @click="onCanvasClick($event)"
-        @wheel="onCanvasWheel($event)"
-        @touchstart="onTouchStart($event)"
-        @touchmove="onTouchMove($event)"
-        @touchend="onTouchEnd($event)"
-        @touchcancel="onTouchEnd($event)"
-    >
-        <template x-if="!pageCount">
-            {{ empty_media_card('mx-3 my-3 w-auto') }}
-        </template>
-
-        <div class="flex min-w-0 items-start overflow-hidden">
-            {% set mode = 'mobile' %}
-            {% include 'partials/media/renderers/image.html' %}
-            {% include 'partials/media/renderers/video.html' %}
-            {% include 'partials/media/renderers/audio.html' %}
-            {% include 'partials/media/renderers/other.html' %}
-        </div>
-
-    </section>
-
-    {{ media_nav_arrow('prev', 'fixed left-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400 max-md:block') }}
-    {{ media_nav_arrow('next', 'fixed right-2 top-1/2 z-40 hidden h-11 w-11 -translate-y-1/2 border border-[#d2d7d9] bg-white/85 text-primary disabled:cursor-default disabled:border-slate-300 disabled:bg-slate-100 disabled:text-slate-400 max-md:block') }}
 
     <nav class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-cols-4 max-md:grid" aria-label="Document actions">
         {{ action_button('info', 'Info', 'info', 'mobile', true) }}

@@ -1,15 +1,7 @@
 <div
     x-show="currentMedia && currentMedia.media_kind === 'pdf'"
-    class="doc-pdf-universal fixed left-0 right-0 z-[15] overflow-auto [scrollbar-gutter:stable]"
-    style="top: var(--doc-stage-top); touch-action: pan-y; overscroll-behavior: contain;"
+    class="doc-pdf-universal w-full overflow-visible"
     :class="canvasCursorClass"
-    x-ref="pdfScrollPane"
-    @click="onCanvasClick($event)"
-    @wheel="onCanvasWheel($event)"
-    @touchstart="onTouchStart($event)"
-    @touchmove="onTouchMove($event)"
-    @touchend="onTouchEnd($event)"
-    @touchcancel="onTouchEnd($event)"
 >
     <template x-if="currentMedia && currentMedia.media_kind === 'pdf' && isKindLoading('pdf')">
         <div class="grid w-full place-items-center px-3 min-h-[54vh]">

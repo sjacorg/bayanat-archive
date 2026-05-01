@@ -15,11 +15,7 @@
 </template>
 
 <template x-if="currentMedia && currentMedia.media_kind === 'video' && isKindReady('video')">
-    {% if mode == 'desktop' %}
-    <video :src="currentMedia.src" controls preload="metadata" @loadeddata="setMediaReady('video')" @canplay="setMediaReady('video')" @error="setMediaError('video')" class="block h-auto w-auto max-h-[72vh] max-w-[min(100%,60rem)] border border-slate-700/30 bg-black shadow-[0_6px_18px_rgba(15,23,42,0.12)]"></video>
-    {% else %}
-    <div class="grid gap-3 p-3">
-        <video :src="currentMedia.src" controls preload="metadata" @loadeddata="setMediaReady('video')" @canplay="setMediaReady('video')" @error="setMediaError('video')" class="h-auto w-full border border-slate-700/30 bg-black shadow-[0_6px_18px_rgba(15,23,42,0.12)]"></video>
+    <div class="grid w-full gap-3 p-3 place-items-center">
+        <video :src="currentMedia.src" controls preload="metadata" @loadeddata="setMediaReady('video')" @canplay="setMediaReady('video')" @error="setMediaError('video')" class="h-auto w-full border border-slate-700/30 bg-black shadow-[0_6px_18px_rgba(15,23,42,0.12)] md:w-auto md:max-h-[72vh] md:max-w-[min(100%,60rem)]"></video>
     </div>
-    {% endif %}
 </template>
