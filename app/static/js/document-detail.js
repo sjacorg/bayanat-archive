@@ -1,489 +1,8 @@
 window.documentDetailViewer = function documentDetailViewer(payload) {
   const LOG_PREFIX = "[document-detail]";
-  let rawPdfDoc = null;
-  let rawPdfSrc = "";
-  let rawPdfRenderToken = 0;
-  let rawPdfLoadPromise = null;
-  let rawPdfLoadSrc = "";
-  let rawDocxBuffer = null;
-  let rawDocxSrc = "";
-  let rawDocxRenderToken = 0;
-  const pdfDocCache = new Map();
-  const docxBufferCache = new Map();
-
-  const pdfModule = {
-    reset(viewer) {
-      rawPdfRenderToken += 1;
-      rawPdfLoadPromise = null;
-      rawPdfLoadSrc = "";
-      rawPdfDoc = null;
-      rawPdfSrc = "";
-      viewer.pdfReady = false;
-      viewer.pdfTotalPages = 1;
-      viewer.pdfStatusText = "";
-      viewer.pdfError = false;
-    },
-
-    async openPdfDocument(input) {
-      const loadingTask = window.pdfjsLib.getDocument(input);
-      return loadingTask.promise;
-    },
-
-    sleep(ms) {
-      return new Promise((resolve) => {
-        window.setTimeout(resolve, ms);
-      });
-    },
-
-    async loadWithAttempts(viewer, src) {
-      const urlAttempts = [
-        { label: "url-worker", input: src },
-        { label: "url-no-worker", input: { url: src, disableWorker: true } },
-      ];
-
-      for (let i = 0; i < urlAttempts.length; i += 1) {
-        const attempt = urlAttempts[i];
-        try {
-          viewer.logDebug("PDF load attempt started.", { attempt: attempt.label, src });
-          return await this.openPdfDocument(attempt.input);
-        } catch (error) {
-          viewer.logError("PDF load attempt failed.", error, { attempt: attempt.label, src });
-        }
-      }
-
-      try {
-        const response = await fetch(src, { credentials: "same-origin", cache: "no-store" });
-        if (!response.ok) {
-          throw new Error(`Failed to fetch PDF (${response.status})`);
-        }
-        const data = await response.arrayBuffer();
-        const dataAttempts = [
-          { label: "data-no-worker", input: { data, disableWorker: true } },
-          { label: "data-worker", input: { data } },
-        ];
-        for (let i = 0; i < dataAttempts.length; i += 1) {
-          const attempt = dataAttempts[i];
-          try {
-            viewer.logDebug("PDF data attempt started.", { attempt: attempt.label, src });
-            return await this.openPdfDocument(attempt.input);
-          } catch (error) {
-            viewer.logError("PDF data attempt failed.", error, { attempt: attempt.label, src });
-          }
-        }
-      } catch (error) {
-        viewer.logError("PDF fetch fallback failed.", error, { src });
-      }
-
-      return null;
-    },
-
-    async resolveContainer(viewer) {
-      for (let attempt = 0; attempt < 8; attempt += 1) {
-        await viewer.$nextTick();
-        const container = viewer.$refs.pdfList;
-        if (!container) {
-          await new Promise((resolve) => window.setTimeout(resolve, 16));
-          continue;
-        }
-        const width = container.clientWidth || container.getBoundingClientRect().width || 0;
-        if (width > 40) return container;
-        await new Promise((resolve) => window.setTimeout(resolve, 16));
-      }
-      return viewer.$refs.pdfList;
-    },
-
-    async load(viewer, src) {
-      if (!window.pdfjsLib) {
-        viewer.pdfError = true;
-        viewer.pdfStatusText = "PDF viewer failed to load.";
-        return;
-      }
-
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-
-      viewer.pdfStatusText = "Loading PDF...";
-      if (rawPdfDoc && rawPdfSrc === src) {
-        viewer.pdfTotalPages = rawPdfDoc.numPages || 1;
-        viewer.pdfError = false;
-        viewer.pdfStatusText = `${viewer.pdfTotalPages} page PDF`;
-        return;
-      }
-
-      if (pdfDocCache.has(src)) {
-        rawPdfDoc = pdfDocCache.get(src);
-      } else if (rawPdfLoadPromise && rawPdfLoadSrc === src) {
-        rawPdfDoc = await rawPdfLoadPromise;
-      } else {
-        rawPdfLoadSrc = src;
-        rawPdfLoadPromise = this.loadWithAttempts(viewer, src);
-        try {
-          rawPdfDoc = await rawPdfLoadPromise;
-        } finally {
-          if (rawPdfLoadPromise) {
-            rawPdfLoadPromise = null;
-            rawPdfLoadSrc = "";
-          }
-        }
-      }
-      if (rawPdfDoc) {
-        pdfDocCache.set(src, rawPdfDoc);
-        rawPdfSrc = src;
-        viewer.pdfTotalPages = rawPdfDoc.numPages || 1;
-        viewer.pdfError = false;
-        viewer.pdfStatusText = `${viewer.pdfTotalPages} page PDF`;
-        return;
-      }
-
-      rawPdfDoc = null;
-      rawPdfSrc = "";
-      viewer.pdfError = true;
-      viewer.pdfReady = false;
-      viewer.pdfStatusText = "Unable to render PDF.";
-    },
-
-    async render(viewer) {
-      if (!rawPdfDoc) return;
-      const token = ++rawPdfRenderToken;
-      const pdfDoc = rawPdfDoc;
-      viewer.pdfReady = false;
-      const container = await this.resolveContainer(viewer);
-      if (!container) {
-        if (token === rawPdfRenderToken && pdfDoc === rawPdfDoc) {
-          viewer.logError("PDF render skipped: container ref unavailable.", null, {
-            isMobile: viewer.isMobile,
-          });
-          viewer.pdfError = true;
-          viewer.pdfStatusText = "Unable to render PDF.";
-        }
-        return;
-      }
-
-      try {
-        let renderedPages = 0;
-        if (viewer.isMobile) {
-          renderedPages = await this.renderPages(viewer, pdfDoc, token, container, {
-            className: "doc-mobile-pdf-canvas",
-            gutter: 8,
-            minWidth: 220,
-            preferredScale: 1.1,
-            minScale: 0.35,
-            initialPages: 1,
-          });
-        } else {
-          renderedPages = await this.renderPages(viewer, pdfDoc, token, container, {
-            className: "doc-pdf-canvas",
-            gutter: 12,
-            minWidth: 280,
-            preferredScale: 1.35,
-            minScale: 0,
-            initialPages: 1,
-          });
-        }
-
-        if (token === rawPdfRenderToken && pdfDoc === rawPdfDoc) {
-          if (renderedPages > 0) {
-            viewer.pdfReady = true;
-            viewer.rememberRenderedWidth("pdf", container);
-          } else {
-            viewer.logDebug("PDF render produced zero pages; retrying once.", {
-              pageCount: viewer.pdfTotalPages,
-              zoom: viewer.zoom,
-              isMobile: viewer.isMobile,
-            });
-            await this.sleep(120);
-            if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-            const retryContainer = await this.resolveContainer(viewer);
-            const retryRenderedPages = await this.renderPages(viewer, pdfDoc, token, retryContainer, viewer.isMobile
-              ? {
-                className: "doc-mobile-pdf-canvas",
-                gutter: 8,
-                minWidth: 220,
-                preferredScale: 1.1,
-                minScale: 0.35,
-                initialPages: 1,
-              }
-              : {
-                className: "doc-pdf-canvas",
-                gutter: 12,
-                minWidth: 280,
-                preferredScale: 1.35,
-                minScale: 0,
-                initialPages: 1,
-              });
-            if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-            if (retryRenderedPages > 0) {
-              viewer.pdfReady = true;
-              viewer.rememberRenderedWidth("pdf", retryContainer || container);
-              return;
-            }
-            viewer.pdfError = true;
-            viewer.pdfReady = false;
-            viewer.pdfStatusText = "Unable to render PDF.";
-          }
-        }
-      } catch (error) {
-        if (token === rawPdfRenderToken && pdfDoc === rawPdfDoc) {
-          viewer.logError("PDF render failed.", error, {
-            pageCount: viewer.pdfTotalPages,
-            zoom: viewer.zoom,
-            isMobile: viewer.isMobile,
-          });
-          viewer.pdfError = true;
-          viewer.pdfReady = false;
-          viewer.pdfStatusText = "Unable to render PDF.";
-        }
-      }
-    },
-
-    async renderPage(viewer, pdfDoc, token, container, opts, pageNumber) {
-      if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return false;
-
-      const page = await pdfDoc.getPage(pageNumber);
-      if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return false;
-
-      const baseViewport = page.getViewport({ scale: 1 });
-      const availableWidth = Math.max((container.clientWidth || 0) - opts.gutter, opts.minWidth);
-      const fitScale = availableWidth / Math.max(baseViewport.width, 1);
-      const scaled = Math.min(opts.preferredScale, fitScale);
-      const cssScale = Math.max(opts.minScale || 0, scaled);
-
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const viewport = page.getViewport({ scale: cssScale });
-      const renderViewport = page.getViewport({ scale: cssScale * dpr });
-      const canvas = document.createElement("canvas");
-      canvas.className = opts.className;
-      canvas.width = Math.floor(renderViewport.width);
-      canvas.height = Math.floor(renderViewport.height);
-      canvas.style.width = `${Math.floor(viewport.width)}px`;
-      canvas.style.height = "auto";
-
-      const context = canvas.getContext("2d", { alpha: false });
-      if (!context) {
-        throw new Error("Unable to initialize PDF canvas context.");
-      }
-      await page.render({ canvasContext: context, viewport: renderViewport }).promise;
-
-      if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return false;
-      container.appendChild(canvas);
-      return true;
-    },
-
-    scheduleRemainingPages(viewer, pdfDoc, token, container, opts, startPage) {
-      const run = async () => {
-        for (let pageNumber = startPage; pageNumber <= viewer.pdfTotalPages; pageNumber += 1) {
-          if (token !== rawPdfRenderToken || pdfDoc !== rawPdfDoc) return;
-          await this.renderPage(viewer, pdfDoc, token, container, opts, pageNumber);
-          viewer.applyPdfZoom();
-          await this.sleep(0);
-        }
-      };
-      if (window.requestIdleCallback) {
-        window.requestIdleCallback(() => { run(); }, { timeout: 500 });
-      } else {
-        window.setTimeout(run, 0);
-      }
-    },
-
-    async renderPages(viewer, pdfDoc, token, container, opts) {
-      if (!container || !pdfDoc) return 0;
-
-      container.innerHTML = "";
-      let renderedPages = 0;
-      const initialPages = Math.min(opts.initialPages || 1, viewer.pdfTotalPages);
-      for (let pageNumber = 1; pageNumber <= initialPages; pageNumber += 1) {
-        const rendered = await this.renderPage(viewer, pdfDoc, token, container, opts, pageNumber);
-        if (!rendered) return renderedPages;
-        renderedPages += 1;
-      }
-      if (initialPages < viewer.pdfTotalPages) {
-        this.scheduleRemainingPages(viewer, pdfDoc, token, container, opts, initialPages + 1);
-      }
-      return renderedPages;
-    },
-  };
-
-  const docxModule = {
-    normalizeInlineMedia(container) {
-      if (!container) return;
-      const fixedInlineBlocks = container.querySelectorAll(
-        "div[style*='display: inline-block'][style*='width'][style*='pt']",
-      );
-      fixedInlineBlocks.forEach((node) => {
-        // DOCX often injects fixed pt wrappers around images that overflow on mobile.
-        node.style.maxWidth = "100%";
-        node.style.width = "100%";
-        node.style.height = "auto";
-        node.style.left = "auto";
-        node.style.right = "auto";
-      });
-
-      const media = container.querySelectorAll("img[style], svg[style], canvas[style], video[style]");
-      media.forEach((node) => {
-        node.style.maxWidth = "100%";
-        node.style.height = "auto";
-        node.style.left = "auto";
-        node.style.right = "auto";
-        // Neutralize fixed DOCX pt widths that overflow on responsive layouts.
-        if (node.tagName === "IMG" || node.tagName === "VIDEO") {
-          node.style.width = "auto";
-        }
-      });
-    },
-
-    reset(viewer) {
-      rawDocxRenderToken += 1;
-      rawDocxBuffer = null;
-      rawDocxSrc = "";
-      viewer.docxReady = false;
-      viewer.docxError = false;
-    },
-
-    getRenderer() {
-      if (window.docx && typeof window.docx.renderAsync === "function") {
-        return window.docx.renderAsync;
-      }
-      if (window.docxPreview && typeof window.docxPreview.renderAsync === "function") {
-        return window.docxPreview.renderAsync;
-      }
-      if (typeof window.renderAsync === "function") {
-        return window.renderAsync;
-      }
-      return null;
-    },
-
-    async resolveContainer(viewer) {
-      for (let attempt = 0; attempt < 8; attempt += 1) {
-        await viewer.$nextTick();
-        const container = viewer.$refs.docxList;
-        if (!container) {
-          await new Promise((resolve) => window.setTimeout(resolve, 16));
-          continue;
-        }
-        return container;
-      }
-      return viewer.$refs.docxList;
-    },
-
-    async load(viewer, src) {
-      const docxRenderer = this.getRenderer();
-      if (!docxRenderer) {
-        viewer.docxError = true;
-        return;
-      }
-
-      try {
-        if (docxBufferCache.has(src)) {
-          rawDocxBuffer = docxBufferCache.get(src);
-        } else {
-          const response = await fetch(src, { credentials: "same-origin" });
-          if (!response.ok) {
-            throw new Error(`Failed to load DOCX (${response.status})`);
-          }
-          rawDocxBuffer = await response.arrayBuffer();
-          docxBufferCache.set(src, rawDocxBuffer);
-        }
-        const header = new Uint8Array(rawDocxBuffer.slice(0, 4));
-        const isZip =
-          header.length === 4 &&
-          header[0] === 0x50 &&
-          header[1] === 0x4b &&
-          (header[2] === 0x03 || header[2] === 0x05 || header[2] === 0x07) &&
-          (header[3] === 0x04 || header[3] === 0x06 || header[3] === 0x08);
-
-        if (!isZip) {
-          throw new Error("Loaded file is not a valid DOCX package.");
-        }
-
-        rawDocxSrc = src;
-        viewer.docxError = false;
-      } catch (error) {
-        viewer.logError("DOCX load failed.", error, { src });
-        rawDocxBuffer = null;
-        rawDocxSrc = "";
-        viewer.docxError = true;
-        viewer.docxReady = false;
-      }
-    },
-
-    async render(viewer) {
-      if (!rawDocxBuffer || viewer.docxError) return;
-
-      const docxRenderer = this.getRenderer();
-      if (!docxRenderer) {
-        viewer.docxError = true;
-        viewer.docxReady = false;
-        return;
-      }
-
-      const token = ++rawDocxRenderToken;
-      const container = await this.resolveContainer(viewer);
-      if (!container) {
-        if (token === rawDocxRenderToken) {
-          viewer.logError("DOCX render skipped: container ref unavailable.", null, {
-            isMobile: viewer.isMobile,
-          });
-          viewer.docxError = true;
-          viewer.docxReady = false;
-        }
-        return;
-      }
-
-      container.innerHTML = "";
-      viewer.docxReady = false;
-      try {
-        await docxRenderer(rawDocxBuffer, container, container, {
-          className: "docx-preview",
-          inWrapper: false,
-          breakPages: true,
-          ignoreWidth: false,
-          ignoreHeight: false,
-          renderHeaders: true,
-          renderFooters: true,
-          renderFootnotes: true,
-          renderEndnotes: true,
-          useBase64URL: true,
-        });
-        if (token !== rawDocxRenderToken) return;
-        viewer.docxReady = true;
-        await viewer.$nextTick();
-        this.normalizeInlineMedia(container);
-        viewer.syncDocxBaseWidth(container);
-        viewer.rememberRenderedWidth("docx", container);
-      } catch (error) {
-        viewer.logError("DOCX render failed (arrayBuffer), trying blob fallback.", error);
-        try {
-          const blob = new Blob(
-            [rawDocxBuffer],
-            { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" },
-          );
-          await docxRenderer(blob, container, container, {
-            className: "docx-preview",
-            inWrapper: false,
-            breakPages: true,
-            ignoreWidth: false,
-            ignoreHeight: false,
-            renderHeaders: true,
-            renderFooters: true,
-            renderFootnotes: true,
-            renderEndnotes: true,
-            useBase64URL: true,
-          });
-          if (token !== rawDocxRenderToken) return;
-          viewer.docxReady = true;
-          await viewer.$nextTick();
-          this.normalizeInlineMedia(container);
-          viewer.syncDocxBaseWidth(container);
-          viewer.rememberRenderedWidth("docx", container);
-        } catch (fallbackError) {
-          if (token !== rawDocxRenderToken) return;
-          viewer.logError("DOCX render failed (blob fallback).", fallbackError);
-          viewer.docxError = true;
-          viewer.docxReady = false;
-        }
-      }
-    },
-  };
+  const pdfModule = window.createDocumentPdfModule();
+  const docxModule = window.createDocumentDocxModule();
+  const zoomModule = window.createDocumentZoomModule();
 
   return {
     media: payload.media || [],
@@ -649,25 +168,16 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         window.cancelAnimationFrame(this.pdfZoomRafId);
         this.pdfZoomRafId = null;
       }
-      pdfDocCache.forEach((pdfDoc) => {
-        if (pdfDoc && typeof pdfDoc.destroy === "function") {
-          try {
-            pdfDoc.destroy();
-          } catch (error) {
-            // Best-effort cleanup only.
-          }
-        }
-      });
-      pdfDocCache.clear();
-      docxBufferCache.clear();
-      rawPdfDoc = null;
-      rawPdfSrc = "";
-      rawDocxBuffer = null;
-      rawDocxSrc = "";
+      pdfModule.destroy();
+      docxModule.destroy();
     },
 
     get mediaCount() {
       return this.media.length;
+    },
+
+    get pageCount() {
+      return this.mediaCount;
     },
 
     get currentMedia() {
@@ -679,8 +189,16 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       return this.mediaIndex + 1;
     },
 
+    get displayPage() {
+      return this.displayMediaNumber;
+    },
+
     get displayMediaTotal() {
       return this.mediaCount;
+    },
+
+    get displayTotal() {
+      return this.displayMediaTotal;
     },
 
     get hasPrevMedia() {
@@ -759,15 +277,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     isZoomableMedia(item = this.currentMedia) {
       return this.isImageMedia(item) || this.isPdfMedia(item) || this.isDocxMedia(item);
-    },
-
-    shouldIgnoreZoomInteraction(target) {
-      if (!target || typeof target.closest !== "function") return false;
-      return Boolean(
-        target.closest(
-          "a, button, input, textarea, select, label, summary, iframe, video, audio, [contenteditable='true'], [data-no-zoom]",
-        ),
-      );
     },
 
     clearMediaErrors() {
@@ -933,7 +442,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         if (!this.currentMedia) return;
 
         if (this.isPdfMedia()) {
-          if (this.pdfReady && rawPdfSrc === this.currentMedia.src) {
+          if (this.pdfReady && pdfModule.src === this.currentMedia.src) {
             await this.$nextTick();
             this.applyAllZoom();
             return;
@@ -949,7 +458,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         }
 
         if (this.isDocxMedia()) {
-          if (this.docxReady && rawDocxSrc === this.currentMedia.src) {
+          if (this.docxReady && docxModule.src === this.currentMedia.src) {
             await this.$nextTick();
             this.applyAllZoom();
             return;
@@ -1028,301 +537,39 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     resetZoomState() {
-      this.zoom = 1;
-      this.pinchStartDistance = null;
-      this.pinchStartZoom = this.zoom;
-      this.pendingScrollRestore = null;
-      if (this.scrollRestoreRafId !== null) {
-        window.cancelAnimationFrame(this.scrollRestoreRafId);
-        this.scrollRestoreRafId = null;
-      }
-      this.applyAllZoom();
+      zoomModule.reset(this);
     },
 
     getImageContainer() {
-      return this.$refs.imageList;
-    },
-
-    applyZoomToContainer(container, isActive, options = {}) {
-      const transformOrigin = options.transformOrigin || "top left";
-      if (!container) return;
-      if (!isActive) {
-        container.classList.remove("is-zoomed");
-        container.style.zoom = "";
-        container.style.transform = "";
-        container.style.transformOrigin = "";
-        container.style.width = "";
-        return;
-      }
-      container.classList.toggle("is-zoomed", this.zoom > 1.001);
-      if (this.nativeCssZoomSupported) {
-        container.style.zoom = String(this.zoom);
-        container.style.transform = "";
-        container.style.transformOrigin = transformOrigin;
-        container.style.width = "";
-      } else {
-        container.style.zoom = "";
-        container.style.transform = `scale(${this.zoom})`;
-        container.style.transformOrigin = transformOrigin;
-        container.style.width = `${(100 / this.zoom).toFixed(4)}%`;
-      }
-    },
-
-    applyImageZoom() {
-      const container = this.getImageContainer();
-      if (!container) return;
-      const image = container.querySelector("img");
-
-      if (!this.isImageMedia() || !image) {
-        if (image) {
-          image.style.width = "";
-          image.style.maxWidth = "";
-          image.style.height = "";
-          image.style.maxHeight = "";
-          delete image.dataset.baseRenderWidth;
-        }
-        this.applyZoomToContainer(container, false);
-        return;
-      }
-
-      // Keep 100% as the baseline rendered size, then zoom from that baseline.
-      if (this.zoom <= 1.001) {
-        image.style.width = "";
-        image.style.maxWidth = "";
-        image.style.height = "";
-        image.style.maxHeight = "";
-        this.applyZoomToContainer(container, true);
-        const measuredWidth = image.getBoundingClientRect().width;
-        if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
-          image.dataset.baseRenderWidth = String(measuredWidth);
-        } else {
-          delete image.dataset.baseRenderWidth;
-        }
-        return;
-      }
-
-      let baseWidth = Number(image.dataset.baseRenderWidth || 0);
-      if (!Number.isFinite(baseWidth) || baseWidth <= 0) {
-        const measuredWidth = image.getBoundingClientRect().width;
-        if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
-          const divisor = Math.max(this.zoom, 1);
-          baseWidth = measuredWidth / divisor;
-          if (Number.isFinite(baseWidth) && baseWidth > 0) {
-            image.dataset.baseRenderWidth = String(baseWidth);
-          }
-        }
-      }
-
-      if (Number.isFinite(baseWidth) && baseWidth > 0) {
-        image.style.width = `${baseWidth}px`;
-        image.style.maxWidth = "none";
-        image.style.height = "auto";
-        image.style.maxHeight = "none";
-      }
-
-      this.applyZoomToContainer(container, true);
+      return zoomModule.getImageContainer(this);
     },
 
     getPdfContainer() {
-      return this.$refs.pdfList;
-    },
-
-    applyPdfZoom() {
-      if (this.pdfZoomRafId !== null) {
-        window.cancelAnimationFrame(this.pdfZoomRafId);
-      }
-      this.pdfZoomRafId = window.requestAnimationFrame(() => {
-        this.pdfZoomRafId = null;
-        this.applyPdfZoomNow();
-      });
-    },
-
-    applyPdfZoomNow() {
-      const container = this.getPdfContainer();
-      if (!container) return;
-
-      if (!this.isPdfMedia()) {
-        container.style.width = "";
-        container.style.maxWidth = "";
-        container.querySelectorAll("canvas").forEach((canvas) => {
-          canvas.style.width = "";
-          delete canvas.dataset.baseRenderWidth;
-        });
-        this.applyZoomToContainer(container, false);
-        return;
-      }
-
-      // For PDF use layout-based canvas sizing instead of transform-based scaling.
-      // This preserves real scroll bounds on Firefox and avoids left-edge clipping at high zoom.
-      this.applyZoomToContainer(container, false);
-      container.classList.toggle("is-zoomed", this.zoom > 1.001);
-
-      const canvases = container.querySelectorAll("canvas");
-      canvases.forEach((canvas) => {
-        let baseWidth = Number(canvas.dataset.baseRenderWidth || 0);
-        if (!Number.isFinite(baseWidth) || baseWidth <= 0) {
-          const styleWidth = Number.parseFloat(canvas.style.width || "");
-          const measuredWidth = styleWidth || canvas.getBoundingClientRect().width || 0;
-          if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
-            baseWidth = measuredWidth;
-            canvas.dataset.baseRenderWidth = String(baseWidth);
-          }
-        }
-        if (!Number.isFinite(baseWidth) || baseWidth <= 0) return;
-        canvas.style.width = `${baseWidth * this.zoom}px`;
-        canvas.style.height = "auto";
-        canvas.style.maxWidth = "none";
-      });
-    },
-
-    getScrollPane() {
-      return this.$refs.mediaScrollPane;
-    },
-
-    captureScrollForZoom(currentZoom, nextZoom, anchor = null) {
-      if (nextZoom <= 0 || currentZoom <= 0) {
-        this.pendingScrollRestore = null;
-        return;
-      }
-      const pane = this.getScrollPane();
-      if (!pane) {
-        this.pendingScrollRestore = null;
-        return;
-      }
-      const rect = pane.getBoundingClientRect();
-      const localX = anchor ? anchor.clientX - rect.left : (pane.clientWidth / 2);
-      const localY = anchor ? anchor.clientY - rect.top : (pane.clientHeight / 2);
-      const worldX = pane.scrollLeft + localX;
-      const worldY = pane.scrollTop + localY;
-      const ratio = nextZoom / currentZoom;
-      this.pendingScrollRestore = {
-        left: (worldX * ratio) - localX,
-        top: (worldY * ratio) - localY,
-      };
-    },
-
-    restoreScrollAfterZoom() {
-      if (!this.pendingScrollRestore) return;
-      if (this.scrollRestoreRafId !== null) {
-        window.cancelAnimationFrame(this.scrollRestoreRafId);
-        this.scrollRestoreRafId = null;
-      }
-      const restore = this.pendingScrollRestore;
-      this.pendingScrollRestore = null;
-      this.scrollRestoreRafId = window.requestAnimationFrame(() => {
-        this.scrollRestoreRafId = null;
-        const pane = this.getScrollPane();
-        if (!pane) return;
-        const maxLeft = Math.max((pane.scrollWidth || 0) - pane.clientWidth, 0);
-        const maxTop = Math.max((pane.scrollHeight || 0) - pane.clientHeight, 0);
-        pane.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
-        pane.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
-      });
+      return zoomModule.getPdfContainer(this);
     },
 
     getDocxContainer() {
-      return this.$refs.docxList;
+      return zoomModule.getDocxContainer(this);
+    },
+
+    applyImageZoom() {
+      zoomModule.applyImage(this);
+    },
+
+    applyPdfZoom() {
+      zoomModule.applyPdf(this);
     },
 
     applyDocxZoom() {
-      const container = this.getDocxContainer();
-      if (!container) return;
-
-      const preview = container.querySelector(".docx-preview");
-      const wrapper = container.querySelector(".docx-wrapper");
-      const zoomTarget = wrapper || preview || container;
-      if (!this.isDocxMedia()) {
-        this.applyZoomToContainer(container, false);
-        if (preview && preview !== container) {
-          this.applyZoomToContainer(preview, false);
-        }
-        if (zoomTarget && zoomTarget !== preview && zoomTarget !== container) {
-          this.applyZoomToContainer(zoomTarget, false);
-          zoomTarget.style.width = "";
-          zoomTarget.style.maxWidth = "";
-        }
-        return;
-      }
-
-      // Keep container/preview neutral and scale only the DOCX wrapper surface to preserve page proportions.
-      container.classList.remove("is-zoomed");
-      container.style.zoom = "";
-      container.style.transform = "";
-      container.style.transformOrigin = "";
-      container.style.width = "";
-      if (preview && preview !== container) {
-        preview.classList.remove("is-zoomed");
-        preview.style.zoom = "";
-        preview.style.transform = "";
-        preview.style.transformOrigin = "";
-        preview.style.width = "";
-      }
-
-      if (zoomTarget) {
-        let baseWidth = Number(zoomTarget.dataset.baseRenderWidth || 0);
-        if (!Number.isFinite(baseWidth) || baseWidth <= 0) {
-          // Freeze DOCX at its initially rendered size, then zoom from that baseline.
-          const measuredWidth = zoomTarget.getBoundingClientRect().width;
-          if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
-            baseWidth = measuredWidth / Math.max(this.zoom, 1);
-            zoomTarget.dataset.baseRenderWidth = String(baseWidth);
-          }
-        }
-
-        this.applyZoomToContainer(zoomTarget, true);
-
-        if (Number.isFinite(baseWidth) && baseWidth > 0) {
-          zoomTarget.style.width = `${baseWidth}px`;
-          zoomTarget.style.maxWidth = "none";
-        } else {
-          zoomTarget.style.width = "";
-          zoomTarget.style.maxWidth = "";
-        }
-        return;
-      }
-
-      this.applyZoomToContainer(zoomTarget, true);
+      zoomModule.applyDocx(this);
     },
 
     applyAllZoom() {
-      this.applyImageZoom();
-      this.applyPdfZoom();
-      this.applyDocxZoom();
+      zoomModule.applyAll(this);
     },
 
     setZoom(nextZoom, options = {}) {
-      if (!this.isZoomableMedia()) return;
-      const current = this.zoom;
-      const minAllowed = this.currentMinZoom;
-      const maxAllowed = this.currentMaxZoom;
-      const clamped = Math.max(minAllowed, Math.min(maxAllowed, nextZoom));
-      if (Math.abs(clamped - current) < 0.001) return;
-
-      const anchor = options.anchor || null;
-      if (this.isImageMedia() || this.isPdfMedia() || this.isDocxMedia()) {
-        this.captureScrollForZoom(current, clamped, anchor);
-      } else {
-        this.pendingScrollRestore = null;
-      }
-
-      this.zoom = clamped;
-
-      if (this.isImageMedia()) {
-        this.applyImageZoom();
-        this.restoreScrollAfterZoom();
-      } else if (this.isPdfMedia()) {
-        this.applyPdfZoom();
-        this.restoreScrollAfterZoom();
-      } else if (this.isDocxMedia()) {
-        this.applyDocxZoom();
-        this.restoreScrollAfterZoom();
-      }
-    },
-
-    snapZoomToStep(value, step) {
-      if (!Number.isFinite(value)) return this.zoom;
-      if (!Number.isFinite(step) || step <= 0) return value;
-      return Math.round(value / step) * step;
+      zoomModule.set(this, nextZoom, options);
     },
 
     zoomIn() {
@@ -1343,7 +590,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     onCanvasClick(event) {
       if (!this.isZoomableMedia()) return;
-      if (this.shouldIgnoreZoomInteraction(event.target)) return;
+      if (zoomModule.shouldIgnoreInteraction(event.target)) return;
       const targetZoom = this.zoom >= (this.tapZoomLevel - 0.01) ? 1 : this.tapZoomLevel;
       this.setZoom(targetZoom, { anchor: event });
     },
@@ -1376,118 +623,19 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     onCanvasWheel(event) {
-      if (!this.isZoomableMedia()) return;
-      if (this.shouldIgnoreZoomInteraction(event.target)) return;
-      if (event.metaKey) {
-        // Keep cmd+wheel disabled.
-        return;
-      }
-      if (event.ctrlKey) {
-        // Trackpad pinch on desktop commonly emits ctrl+wheel.
-        event.preventDefault();
-        const factor = Math.exp((-event.deltaY || 0) * 0.0015);
-        this.setZoom(this.zoom * factor, { anchor: event });
-        return;
-      }
-
-      const pane = this.getScrollPane();
-      if (!pane) return;
-
-      const viewportHeight = pane.clientHeight || window.innerHeight || 900;
-      const deltaMultiplier =
-        event.deltaMode === 1
-          ? 16
-          : event.deltaMode === 2
-            ? viewportHeight
-            : 1;
-      const rawDx = (event.deltaX || 0) * deltaMultiplier;
-      const rawDy = (event.deltaY || 0) * deltaMultiplier;
-      const dx = event.shiftKey && Math.abs(rawDx) < 0.001 ? rawDy : rawDx;
-      const dy = event.shiftKey && Math.abs(rawDx) < 0.001 ? 0 : rawDy;
-
-      if (Math.abs(dx) < 0.001 && Math.abs(dy) < 0.001) return;
-
-      const canScrollX = pane.scrollWidth > pane.clientWidth + 1;
-      const canScrollY = pane.scrollHeight > pane.clientHeight + 1;
-      if (!canScrollX && !canScrollY) return;
-
-      // Keep gestures inside the viewer so horizontal swipes do not trigger browser history navigation.
-      event.preventDefault();
-      if (canScrollX && Math.abs(dx) > 0.001) {
-        pane.scrollLeft += dx;
-      }
-      if (canScrollY && Math.abs(dy) > 0.001) {
-        pane.scrollTop += dy;
-      }
+      zoomModule.onWheel(this, event);
     },
 
     onTouchStart(event) {
-      if (event.touches.length === 2) {
-        if (!this.isZoomableMedia()) return;
-        if (this.shouldIgnoreZoomInteraction(event.target)) return;
-        this.pinchStartDistance = this.touchDistance(event.touches[0], event.touches[1]);
-        this.pinchStartZoom = this.zoom;
-        this.swipeStartX = null;
-        this.swipeStartY = null;
-        this.swipeAxis = null;
-      } else if (event.touches.length === 1 && this.zoom === 1) {
-        this.swipeStartX = event.touches[0].clientX;
-        this.swipeStartY = event.touches[0].clientY;
-        this.swipeAxis = null;
-      }
+      zoomModule.onTouchStart(this, event);
     },
 
     onTouchMove(event) {
-      if (event.touches.length === 2 && this.pinchStartDistance) {
-        if (!this.isZoomableMedia()) return;
-        event.preventDefault();
-        const currentDistance = this.touchDistance(event.touches[0], event.touches[1]);
-        const scale = currentDistance / this.pinchStartDistance;
-        const smoothedScale = 1 + ((scale - 1) * this.pinchSensitivity);
-        const nextZoomRaw = this.pinchStartZoom * smoothedScale;
-        const nextZoom = this.snapZoomToStep(nextZoomRaw, this.pinchZoomStep);
-        const firstTouch = event.touches[0];
-        const secondTouch = event.touches[1];
-        const anchor = {
-          clientX: (firstTouch.clientX + secondTouch.clientX) / 2,
-          clientY: (firstTouch.clientY + secondTouch.clientY) / 2,
-        };
-        this.setZoom(nextZoom, { anchor });
-      } else if (event.touches.length === 1 && this.swipeStartX !== null) {
-        const dx = event.touches[0].clientX - this.swipeStartX;
-        const dy = event.touches[0].clientY - this.swipeStartY;
-        if (!this.swipeAxis) {
-          if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
-            this.swipeAxis = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
-          }
-        }
-        if (this.swipeAxis === "x") {
-          event.preventDefault();
-        }
-      }
+      zoomModule.onTouchMove(this, event);
     },
 
     onTouchEnd(event) {
-      if (this.swipeStartX !== null && this.swipeAxis === "x") {
-        const endX = event?.changedTouches?.[0]?.clientX ?? this.swipeStartX;
-        const dx = endX - this.swipeStartX;
-        const canGo = dx < 0 ? this.hasNextMedia : this.hasPrevMedia;
-        if (Math.abs(dx) > 60 && canGo) {
-          this.goToMediaIndex(this.mediaIndex + (dx < 0 ? 1 : -1));
-        }
-      }
-      this.pinchStartDistance = null;
-      this.pinchStartZoom = this.zoom;
-      this.pendingScrollRestore = null;
-      this.swipeStartX = null;
-      this.swipeStartY = null;
-      this.swipeAxis = null;
-    },
-
-    touchDistance(a, b) {
-      const dx = a.clientX - b.clientX;
-      const dy = a.clientY - b.clientY;
-      return Math.sqrt((dx * dx) + (dy * dy));
+      zoomModule.onTouchEnd(this, event);
     },
 
     onKeydown(event) {

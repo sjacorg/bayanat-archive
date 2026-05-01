@@ -211,6 +211,11 @@
     max-height: none !important;
 }
 
+.doc-image-scroll.is-zoomed {
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
 .doc-pdf-scroll.is-zoomed {
     align-items: flex-start;
 }
