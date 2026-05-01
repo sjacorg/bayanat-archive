@@ -50,11 +50,27 @@
   {% endif %}
 </template>
 
-{# PDF / DOCX / other: show a simple placeholder card #}
-<template x-if="['pdf','docx','other'].includes(mediaAt({{ slot_expr }})?.media_kind)">
-  <div class="flex min-h-[50vh] w-full items-center justify-center">
-    <div class="text-center text-slate-400">
-      <p class="text-sm" x-text="mediaAt({{ slot_expr }})?.filename || ''"></p>
+{# PDF / DOCX: match the dedicated renderer loading state instead of flashing a filename tile #}
+<template x-if="['pdf','docx'].includes(mediaAt({{ slot_expr }})?.media_kind)">
+  <div class="grid w-full place-items-center px-3 min-h-[54vh]">
+    <div class="mx-auto w-full max-w-[56rem] border border-slate-300 bg-slate-50 p-4">
+      <div class="animate-pulse space-y-3">
+        <div class="h-4 w-2/5 bg-slate-300/80"></div>
+        <div class="h-3 w-full bg-slate-200"></div>
+        <div class="h-3 w-4/5 bg-slate-200"></div>
+        <div class="mx-auto aspect-[1/1.414] w-full max-w-[40rem] border border-slate-300 bg-white"></div>
+      </div>
+      <p
+        class="mt-3 text-xs text-slate-600"
+        x-text="mediaAt({{ slot_expr }})?.media_kind === 'docx' ? 'Loading DOCX preview...' : 'Loading PDF preview...'"
+      ></p>
     </div>
+  </div>
+</template>
+
+{# Other files: no inline renderer exists, so keep a neutral holding space #}
+<template x-if="mediaAt({{ slot_expr }})?.media_kind === 'other'">
+  <div class="flex min-h-[50vh] w-full items-center justify-center">
+    <div class="h-40 w-full max-w-2xl border border-slate-300 bg-slate-50"></div>
   </div>
 </template>
