@@ -204,39 +204,12 @@
                 {{ empty_media_card() }}
             </template>
 
-            <div
-                x-ref="carouselStripDesktop"
-                class="flex w-[300%]"
-                style="transform: translateX(-33.333%); will-change: transform;"
-            >
-                <!-- Prev slot -->
-                <div class="flex w-1/3 min-w-0 items-start justify-center overflow-hidden">
-                    <template x-if="prevSlotIndex !== null">
-                        <div class="w-full">
-                            {% set slot_expr = "prevSlotIndex" %}
-                            {% set mode = 'desktop' %}
-                            {% include 'partials/media/slot_renderer.html' %}
-                        </div>
-                    </template>
-                </div>
-                <!-- Current slot -->
-                <div class="flex w-1/3 min-w-0 items-start justify-center overflow-hidden" :class="canvasCursorClass">
-                    {% set mode = 'desktop' %}
-                    {% include 'partials/media/renderers/image.html' %}
-                    {% include 'partials/media/renderers/video.html' %}
-                    {% include 'partials/media/renderers/audio.html' %}
-                    {% include 'partials/media/renderers/other.html' %}
-                </div>
-                <!-- Next slot -->
-                <div class="flex w-1/3 min-w-0 items-start justify-center overflow-hidden">
-                    <template x-if="nextSlotIndex !== null">
-                        <div class="w-full">
-                            {% set slot_expr = "nextSlotIndex" %}
-                            {% set mode = 'desktop' %}
-                            {% include 'partials/media/slot_renderer.html' %}
-                        </div>
-                    </template>
-                </div>
+            <div class="flex w-full min-w-0 items-start justify-center overflow-hidden" :class="canvasCursorClass">
+                {% set mode = 'desktop' %}
+                {% include 'partials/media/renderers/image.html' %}
+                {% include 'partials/media/renderers/video.html' %}
+                {% include 'partials/media/renderers/audio.html' %}
+                {% include 'partials/media/renderers/other.html' %}
             </div>
 
         </div>
@@ -266,39 +239,12 @@
             {{ empty_media_card('mx-3 my-3 w-auto') }}
         </template>
 
-        <div
-            x-ref="carouselStripMobile"
-            class="flex w-[300%]"
-            style="transform: translateX(-33.333%); will-change: transform;"
-        >
-            <!-- Prev slot -->
-            <div class="flex w-1/3 min-w-0 items-start overflow-hidden">
-                <template x-if="prevSlotIndex !== null">
-                    <div class="w-full">
-                        {% set slot_expr = "prevSlotIndex" %}
-                        {% set mode = 'mobile' %}
-                        {% include 'partials/media/slot_renderer.html' %}
-                    </div>
-                </template>
-            </div>
-            <!-- Current slot -->
-            <div class="flex w-1/3 min-w-0 items-start overflow-hidden">
-                {% set mode = 'mobile' %}
-                {% include 'partials/media/renderers/image.html' %}
-                {% include 'partials/media/renderers/video.html' %}
-                {% include 'partials/media/renderers/audio.html' %}
-                {% include 'partials/media/renderers/other.html' %}
-            </div>
-            <!-- Next slot -->
-            <div class="flex w-1/3 min-w-0 items-start overflow-hidden">
-                <template x-if="nextSlotIndex !== null">
-                    <div class="w-full">
-                        {% set slot_expr = "nextSlotIndex" %}
-                        {% set mode = 'mobile' %}
-                        {% include 'partials/media/slot_renderer.html' %}
-                    </div>
-                </template>
-            </div>
+        <div class="flex min-w-0 items-start overflow-hidden">
+            {% set mode = 'mobile' %}
+            {% include 'partials/media/renderers/image.html' %}
+            {% include 'partials/media/renderers/video.html' %}
+            {% include 'partials/media/renderers/audio.html' %}
+            {% include 'partials/media/renderers/other.html' %}
         </div>
 
     </section>

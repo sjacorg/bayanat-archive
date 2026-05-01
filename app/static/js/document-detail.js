@@ -489,8 +489,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     mediaLoadToken: 0,
     requestedDisplayPage: null,
     isAnimating: false,
-    carouselPhase: null,
-    carouselDirection: 1,
     keydownHandler: null,
     resizeHandler: null,
     pagehideHandler: null,
@@ -631,14 +629,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     get currentMedia() {
       return this.media[this.pageIndex] || null;
-    },
-
-    get prevSlotIndex() {
-      return this.pageIndex > 0 ? this.pageIndex - 1 : null;
-    },
-
-    get nextSlotIndex() {
-      return this.pageIndex < this.media.length - 1 ? this.pageIndex + 1 : null;
     },
 
     mediaAt(index) {
@@ -981,61 +971,28 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     async prevMedia() {
       if (!this.pageCount) return;
       if (!this.hasPrevMedia || this.isAnimating) return;
-      await this._runStripNav("prev");
+      await this.goToMediaIndex(this.pageIndex - 1);
     },
 
     async nextMedia() {
       if (!this.pageCount) return;
       if (!this.hasNextMedia || this.isAnimating) return;
-      await this._runStripNav("next");
+      await this.goToMediaIndex(this.pageIndex + 1);
     },
 
-    async _runStripNav(direction) {
+    async goToMediaIndex(nextIndex) {
+      if (!Number.isInteger(nextIndex) || nextIndex < 0 || nextIndex >= this.pageCount) return;
+      if (nextIndex === this.pageIndex || this.isAnimating) return;
       this.isAnimating = true;
-      const goNext = direction === "next";
-      const targetDx = goNext ? -window.innerWidth : window.innerWidth;
-      const duration = 220;
-      const easing = `transform ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-      for (const el of this._swipeDragTargets()) {
-        el.style.transition = easing;
-        el.style.transform = `translateX(calc(-33.333% + ${targetDx}px))`;
-      }
-      const overlay = this._overlayTarget();
-      if (overlay) {
-        overlay.style.transition = easing;
-        overlay.style.transform = `translateX(${targetDx}px)`;
-      }
-      await this.sleep(duration);
-      if (goNext) this.pageIndex += 1;
-      else this.pageIndex -= 1;
-      this.resetZoomState();
-      this.persistPageInUrl();
-      for (const el of this._swipeDragTargets()) {
-        el.style.transition = "none";
-        el.style.transform = "translateX(-33.333%)";
-      }
-      if (overlay) {
-        overlay.style.transition = "none";
-        overlay.style.transform = "";
-      }
-      await this.loadCurrentMedia();
-      this.isAnimating = false;
-    },
-
-    async runCarouselTransition(direction, applyChange) {
-      this.isAnimating = true;
-      this.carouselDirection = direction === "next" ? 1 : -1;
       try {
-        this.carouselPhase = "out";
-        await this.sleep(120);
-        await applyChange();
+        this.pageIndex = nextIndex;
+        this.resetZoomState();
+        this.persistPageInUrl();
         await this.$nextTick();
-        this.carouselPhase = "in";
-        await this.sleep(180);
+        await this.loadCurrentMedia();
       } catch (error) {
-        console.error("Carousel transition failed", error);
+        console.error("Media navigation failed", error);
       } finally {
-        this.carouselPhase = null;
         this.isAnimating = false;
       }
     },
@@ -1491,84 +1448,8 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         }
         if (this.swipeAxis === "x") {
           event.preventDefault();
-          const atEdge = (dx < 0 && !this.hasNextMedia) || (dx > 0 && !this.hasPrevMedia);
-          const clamped = atEdge ? dx * 0.25 : dx;
-          this._applySwipeDrag(clamped);
         }
       }
-    },
-
-    _swipeDragTargets() {
-      return [this.$refs.carouselStripDesktop, this.$refs.carouselStripMobile].filter(Boolean);
-    },
-
-    _overlayTarget() {
-      if (this.isPdfMedia()) return this.$refs.pdfScrollPane || null;
-      if (this.isDocxMedia()) return this.$refs.docxScrollPane || null;
-      return null;
-    },
-
-    _applySwipeDrag(dx) {
-      for (const el of this._swipeDragTargets()) {
-        el.style.transition = "none";
-        el.style.transform = `translateX(calc(-33.333% + ${dx}px))`;
-      }
-      const overlay = this._overlayTarget();
-      if (overlay) {
-        overlay.style.transition = "none";
-        overlay.style.transform = `translateX(${dx}px)`;
-      }
-    },
-
-    _clearSwipeDrag() {
-      for (const el of this._swipeDragTargets()) {
-        el.style.transition = "none";
-        el.style.transform = "translateX(-33.333%)";
-      }
-      const overlay = this._overlayTarget();
-      if (overlay) {
-        overlay.style.transition = "none";
-        overlay.style.transform = "";
-      }
-    },
-
-    async _runSwipeTransition(dx, goNext) {
-      if (this.isAnimating) return;
-      this.isAnimating = true;
-
-      const viewportW = window.innerWidth;
-      const targetDx = goNext ? -viewportW : viewportW;
-      const remaining = Math.abs(targetDx - dx);
-      const duration = Math.max(60, Math.round((remaining / viewportW) * 220));
-      const easing = `transform ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
-
-      for (const el of this._swipeDragTargets()) {
-        el.style.transition = easing;
-        el.style.transform = `translateX(calc(-33.333% + ${targetDx}px))`;
-      }
-      const overlay = this._overlayTarget();
-      if (overlay) {
-        overlay.style.transition = easing;
-        overlay.style.transform = `translateX(${targetDx}px)`;
-      }
-      await this.sleep(duration);
-
-      if (goNext) this.pageIndex += 1;
-      else this.pageIndex -= 1;
-      this.resetZoomState();
-      this.persistPageInUrl();
-
-      for (const el of this._swipeDragTargets()) {
-        el.style.transition = "none";
-        el.style.transform = "translateX(-33.333%)";
-      }
-      if (overlay) {
-        overlay.style.transition = "none";
-        overlay.style.transform = "";
-      }
-
-      await this.loadCurrentMedia();
-      this.isAnimating = false;
     },
 
     onTouchEnd(event) {
@@ -1577,20 +1458,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         const dx = endX - this.swipeStartX;
         const canGo = dx < 0 ? this.hasNextMedia : this.hasPrevMedia;
         if (Math.abs(dx) > 60 && canGo) {
-          this._runSwipeTransition(dx, dx < 0);
-        } else {
-          const snapEasing = "transform 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-          for (const el of this._swipeDragTargets()) {
-            el.style.transition = snapEasing;
-            el.style.transform = "translateX(-33.333%)";
-            el.addEventListener("transitionend", () => { el.style.transition = "none"; }, { once: true });
-          }
-          const overlay = this._overlayTarget();
-          if (overlay) {
-            overlay.style.transition = snapEasing;
-            overlay.style.transform = "";
-            overlay.addEventListener("transitionend", () => { overlay.style.transition = ""; }, { once: true });
-          }
+          this.goToMediaIndex(this.pageIndex + (dx < 0 ? 1 : -1));
         }
       }
       this.pinchStartDistance = null;
