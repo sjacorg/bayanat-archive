@@ -193,24 +193,50 @@
 
         <div
             x-ref="canvasViewport"
-            class="relative box-border grid min-h-full w-full place-items-center overflow-visible p-3"
-            style="touch-action: manipulation;"
+            class="relative box-border flex min-h-full w-full overflow-hidden"
+            style="touch-action: pan-y;"
+            @touchstart="onTouchStart($event)"
+            @touchmove="onTouchMove($event)"
+            @touchend="onTouchEnd($event)"
+            @touchcancel="onTouchEnd($event)"
         >
             <template x-if="!pageCount">
                 {{ empty_media_card() }}
             </template>
 
             <div
-                x-ref="canvasStage"
-                class="doc-canvas flex w-full items-start justify-center"
-                :class="[carouselClass, canvasCursorClass]"
-                :style="`view-transition-name: doc-${docId}; --slide-direction: ${carouselDirection};`"
+                x-ref="carouselStripDesktop"
+                class="flex w-[300%]"
+                style="transform: translateX(-33.333%); will-change: transform;"
             >
-                {% set mode = 'desktop' %}
-                {% include 'partials/media/renderers/image.html' %}
-                {% include 'partials/media/renderers/video.html' %}
-                {% include 'partials/media/renderers/audio.html' %}
-                {% include 'partials/media/renderers/other.html' %}
+                <!-- Prev slot -->
+                <div class="flex w-1/3 min-w-0 items-start justify-center overflow-hidden">
+                    <template x-if="prevSlotIndex !== null">
+                        <div class="w-full">
+                            {% set slot_expr = "prevSlotIndex" %}
+                            {% set mode = 'desktop' %}
+                            {% include 'partials/media/slot_renderer.html' %}
+                        </div>
+                    </template>
+                </div>
+                <!-- Current slot -->
+                <div class="flex w-1/3 min-w-0 items-start justify-center overflow-hidden" :class="canvasCursorClass">
+                    {% set mode = 'desktop' %}
+                    {% include 'partials/media/renderers/image.html' %}
+                    {% include 'partials/media/renderers/video.html' %}
+                    {% include 'partials/media/renderers/audio.html' %}
+                    {% include 'partials/media/renderers/other.html' %}
+                </div>
+                <!-- Next slot -->
+                <div class="flex w-1/3 min-w-0 items-start justify-center overflow-hidden">
+                    <template x-if="nextSlotIndex !== null">
+                        <div class="w-full">
+                            {% set slot_expr = "nextSlotIndex" %}
+                            {% set mode = 'desktop' %}
+                            {% include 'partials/media/slot_renderer.html' %}
+                        </div>
+                    </template>
+                </div>
             </div>
 
         </div>
@@ -227,24 +253,53 @@
 
     <section
         x-ref="mobileScrollPane"
-        class="doc-mobile-scroll hidden min-h-0 flex-1 overflow-auto max-md:block"
-        style="padding-bottom: calc(var(--doc-related-toggle-height) + var(--doc-mobile-actions-height)); overscroll-behavior-x: contain; touch-action: manipulation;"
+        class="doc-mobile-scroll hidden min-h-0 flex-1 overflow-hidden max-md:block"
+        style="padding-bottom: calc(var(--doc-related-toggle-height) + var(--doc-mobile-actions-height)); overscroll-behavior-x: contain; touch-action: pan-y;"
         @click="onCanvasClick($event)"
         @wheel="onCanvasWheel($event)"
         @touchstart="onTouchStart($event)"
         @touchmove="onTouchMove($event)"
-        @touchend="onTouchEnd()"
-        @touchcancel="onTouchEnd()"
+        @touchend="onTouchEnd($event)"
+        @touchcancel="onTouchEnd($event)"
     >
         <template x-if="!pageCount">
             {{ empty_media_card('mx-3 my-3 w-auto') }}
         </template>
 
-        {% set mode = 'mobile' %}
-        {% include 'partials/media/renderers/image.html' %}
-        {% include 'partials/media/renderers/video.html' %}
-        {% include 'partials/media/renderers/audio.html' %}
-        {% include 'partials/media/renderers/other.html' %}
+        <div
+            x-ref="carouselStripMobile"
+            class="flex w-[300%]"
+            style="transform: translateX(-33.333%); will-change: transform;"
+        >
+            <!-- Prev slot -->
+            <div class="flex w-1/3 min-w-0 items-start overflow-hidden">
+                <template x-if="prevSlotIndex !== null">
+                    <div class="w-full">
+                        {% set slot_expr = "prevSlotIndex" %}
+                        {% set mode = 'mobile' %}
+                        {% include 'partials/media/slot_renderer.html' %}
+                    </div>
+                </template>
+            </div>
+            <!-- Current slot -->
+            <div class="flex w-1/3 min-w-0 items-start overflow-hidden">
+                {% set mode = 'mobile' %}
+                {% include 'partials/media/renderers/image.html' %}
+                {% include 'partials/media/renderers/video.html' %}
+                {% include 'partials/media/renderers/audio.html' %}
+                {% include 'partials/media/renderers/other.html' %}
+            </div>
+            <!-- Next slot -->
+            <div class="flex w-1/3 min-w-0 items-start overflow-hidden">
+                <template x-if="nextSlotIndex !== null">
+                    <div class="w-full">
+                        {% set slot_expr = "nextSlotIndex" %}
+                        {% set mode = 'mobile' %}
+                        {% include 'partials/media/slot_renderer.html' %}
+                    </div>
+                </template>
+            </div>
+        </div>
 
     </section>
 
@@ -322,5 +377,5 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script defer src="https://unpkg.com/docx-preview@0.3.6/dist/docx-preview.js"></script>
-<script defer src="{{ url_for('static', filename='js/document-detail.js') }}"></script>
+<script src="{{ url_for('static', filename='js/document-detail.js') }}"></script>
 {% endblock %}

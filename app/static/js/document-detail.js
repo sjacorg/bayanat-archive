@@ -6,6 +6,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
   let rawPdfLoadPromise = null;
   let rawPdfLoadSrc = "";
   let rawDocxBuffer = null;
+  let rawDocxSrc = "";
   let rawDocxRenderToken = 0;
 
   const pdfModule = {
@@ -305,6 +306,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     reset(viewer) {
       rawDocxRenderToken += 1;
       rawDocxBuffer = null;
+      rawDocxSrc = "";
       viewer.docxReady = false;
       viewer.docxError = false;
     },
@@ -361,10 +363,12 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
           throw new Error("Loaded file is not a valid DOCX package.");
         }
 
+        rawDocxSrc = src;
         viewer.docxError = false;
       } catch (error) {
         viewer.logError("DOCX load failed.", error, { src });
         rawDocxBuffer = null;
+        rawDocxSrc = "";
         viewer.docxError = true;
         viewer.docxReady = false;
       }
@@ -468,6 +472,9 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     relatedOpen: false,
     pinchStartDistance: null,
     pinchStartZoom: 1,
+    swipeStartX: null,
+    swipeStartY: null,
+    swipeAxis: null,
     isMobile: window.matchMedia("(max-width: 767px)").matches,
     pdfTotalPages: 1,
     pdfStatusText: "",
@@ -626,6 +633,19 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       return this.media[this.pageIndex] || null;
     },
 
+    get prevSlotIndex() {
+      return this.pageIndex > 0 ? this.pageIndex - 1 : null;
+    },
+
+    get nextSlotIndex() {
+      return this.pageIndex < this.media.length - 1 ? this.pageIndex + 1 : null;
+    },
+
+    mediaAt(index) {
+      if (index === null || index === undefined) return null;
+      return this.media[index] || null;
+    },
+
     get displayPage() {
       if (!this.currentMedia) return 0;
       return this.pageIndex + 1;
@@ -679,8 +699,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     get carouselClass() {
-      if (this.carouselPhase === "out") return "is-sliding-out";
-      if (this.carouselPhase === "in") return "is-sliding-in";
       return "";
     },
 
@@ -895,16 +913,20 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       const token = ++this.mediaLoadToken;
       this.isMediaLoading = true;
       this.mediaLoadingKind = this.currentMedia?.media_kind || "";
-      this.clearMediaErrors();
-      this.clearMediaReady();
-
-      pdfModule.reset(this);
-      docxModule.reset(this);
 
       try {
         if (!this.currentMedia) return;
 
         if (this.isPdfMedia()) {
+          if (this.pdfReady && rawPdfSrc === this.currentMedia.src) {
+            await this.$nextTick();
+            this.applyAllZoom();
+            return;
+          }
+          this.clearMediaErrors();
+          this.clearMediaReady();
+          pdfModule.reset(this);
+          docxModule.reset(this);
           await pdfModule.load(this, this.currentMedia.src);
           if (token !== this.mediaLoadToken) return;
           await pdfModule.render(this);
@@ -912,11 +934,25 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         }
 
         if (this.isDocxMedia()) {
+          if (this.docxReady && rawDocxSrc === this.currentMedia.src) {
+            await this.$nextTick();
+            this.applyAllZoom();
+            return;
+          }
+          this.clearMediaErrors();
+          this.clearMediaReady();
+          pdfModule.reset(this);
+          docxModule.reset(this);
           await docxModule.load(this, this.currentMedia.src);
           if (token !== this.mediaLoadToken) return;
           await docxModule.render(this);
           return;
         }
+
+        this.clearMediaErrors();
+        this.clearMediaReady();
+        pdfModule.reset(this);
+        docxModule.reset(this);
 
         if (this.currentMedia?.media_kind === "other") {
           this.setMediaReady("other");
@@ -945,23 +981,45 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     async prevMedia() {
       if (!this.pageCount) return;
       if (!this.hasPrevMedia || this.isAnimating) return;
-      await this.runCarouselTransition("prev", async () => {
-        this.pageIndex -= 1;
-        this.resetZoomState();
-        await this.loadCurrentMedia();
-        this.persistPageInUrl();
-      });
+      await this._runStripNav("prev");
     },
 
     async nextMedia() {
       if (!this.pageCount) return;
       if (!this.hasNextMedia || this.isAnimating) return;
-      await this.runCarouselTransition("next", async () => {
-        this.pageIndex += 1;
-        this.resetZoomState();
-        await this.loadCurrentMedia();
-        this.persistPageInUrl();
-      });
+      await this._runStripNav("next");
+    },
+
+    async _runStripNav(direction) {
+      this.isAnimating = true;
+      const goNext = direction === "next";
+      const targetDx = goNext ? -window.innerWidth : window.innerWidth;
+      const duration = 220;
+      const easing = `transform ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+      for (const el of this._swipeDragTargets()) {
+        el.style.transition = easing;
+        el.style.transform = `translateX(calc(-33.333% + ${targetDx}px))`;
+      }
+      const overlay = this._overlayTarget();
+      if (overlay) {
+        overlay.style.transition = easing;
+        overlay.style.transform = `translateX(${targetDx}px)`;
+      }
+      await this.sleep(duration);
+      if (goNext) this.pageIndex += 1;
+      else this.pageIndex -= 1;
+      this.resetZoomState();
+      this.persistPageInUrl();
+      for (const el of this._swipeDragTargets()) {
+        el.style.transition = "none";
+        el.style.transform = "translateX(-33.333%)";
+      }
+      if (overlay) {
+        overlay.style.transition = "none";
+        overlay.style.transform = "";
+      }
+      await this.loadCurrentMedia();
+      this.isAnimating = false;
     },
 
     async runCarouselTransition(direction, applyChange) {
@@ -1392,17 +1450,24 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     onTouchStart(event) {
-      if (!this.isZoomableMedia()) return;
-      if (this.shouldIgnoreZoomInteraction(event.target)) return;
       if (event.touches.length === 2) {
+        if (!this.isZoomableMedia()) return;
+        if (this.shouldIgnoreZoomInteraction(event.target)) return;
         this.pinchStartDistance = this.touchDistance(event.touches[0], event.touches[1]);
         this.pinchStartZoom = this.zoom;
+        this.swipeStartX = null;
+        this.swipeStartY = null;
+        this.swipeAxis = null;
+      } else if (event.touches.length === 1 && this.zoom === 1) {
+        this.swipeStartX = event.touches[0].clientX;
+        this.swipeStartY = event.touches[0].clientY;
+        this.swipeAxis = null;
       }
     },
 
     onTouchMove(event) {
-      if (!this.isZoomableMedia()) return;
       if (event.touches.length === 2 && this.pinchStartDistance) {
+        if (!this.isZoomableMedia()) return;
         event.preventDefault();
         const currentDistance = this.touchDistance(event.touches[0], event.touches[1]);
         const scale = currentDistance / this.pinchStartDistance;
@@ -1416,13 +1481,124 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
           clientY: (firstTouch.clientY + secondTouch.clientY) / 2,
         };
         this.setZoom(nextZoom, { anchor });
+      } else if (event.touches.length === 1 && this.swipeStartX !== null) {
+        const dx = event.touches[0].clientX - this.swipeStartX;
+        const dy = event.touches[0].clientY - this.swipeStartY;
+        if (!this.swipeAxis) {
+          if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+            this.swipeAxis = Math.abs(dx) >= Math.abs(dy) ? "x" : "y";
+          }
+        }
+        if (this.swipeAxis === "x") {
+          event.preventDefault();
+          const atEdge = (dx < 0 && !this.hasNextMedia) || (dx > 0 && !this.hasPrevMedia);
+          const clamped = atEdge ? dx * 0.25 : dx;
+          this._applySwipeDrag(clamped);
+        }
       }
     },
 
-    onTouchEnd() {
+    _swipeDragTargets() {
+      return [this.$refs.carouselStripDesktop, this.$refs.carouselStripMobile].filter(Boolean);
+    },
+
+    _overlayTarget() {
+      if (this.isPdfMedia()) return this.$refs.pdfScrollPane || null;
+      if (this.isDocxMedia()) return this.$refs.docxScrollPane || null;
+      return null;
+    },
+
+    _applySwipeDrag(dx) {
+      for (const el of this._swipeDragTargets()) {
+        el.style.transition = "none";
+        el.style.transform = `translateX(calc(-33.333% + ${dx}px))`;
+      }
+      const overlay = this._overlayTarget();
+      if (overlay) {
+        overlay.style.transition = "none";
+        overlay.style.transform = `translateX(${dx}px)`;
+      }
+    },
+
+    _clearSwipeDrag() {
+      for (const el of this._swipeDragTargets()) {
+        el.style.transition = "none";
+        el.style.transform = "translateX(-33.333%)";
+      }
+      const overlay = this._overlayTarget();
+      if (overlay) {
+        overlay.style.transition = "none";
+        overlay.style.transform = "";
+      }
+    },
+
+    async _runSwipeTransition(dx, goNext) {
+      if (this.isAnimating) return;
+      this.isAnimating = true;
+
+      const viewportW = window.innerWidth;
+      const targetDx = goNext ? -viewportW : viewportW;
+      const remaining = Math.abs(targetDx - dx);
+      const duration = Math.max(60, Math.round((remaining / viewportW) * 220));
+      const easing = `transform ${duration}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+
+      for (const el of this._swipeDragTargets()) {
+        el.style.transition = easing;
+        el.style.transform = `translateX(calc(-33.333% + ${targetDx}px))`;
+      }
+      const overlay = this._overlayTarget();
+      if (overlay) {
+        overlay.style.transition = easing;
+        overlay.style.transform = `translateX(${targetDx}px)`;
+      }
+      await this.sleep(duration);
+
+      if (goNext) this.pageIndex += 1;
+      else this.pageIndex -= 1;
+      this.resetZoomState();
+      this.persistPageInUrl();
+
+      for (const el of this._swipeDragTargets()) {
+        el.style.transition = "none";
+        el.style.transform = "translateX(-33.333%)";
+      }
+      if (overlay) {
+        overlay.style.transition = "none";
+        overlay.style.transform = "";
+      }
+
+      await this.loadCurrentMedia();
+      this.isAnimating = false;
+    },
+
+    onTouchEnd(event) {
+      if (this.swipeStartX !== null && this.swipeAxis === "x") {
+        const endX = event?.changedTouches?.[0]?.clientX ?? this.swipeStartX;
+        const dx = endX - this.swipeStartX;
+        const canGo = dx < 0 ? this.hasNextMedia : this.hasPrevMedia;
+        if (Math.abs(dx) > 60 && canGo) {
+          this._runSwipeTransition(dx, dx < 0);
+        } else {
+          const snapEasing = "transform 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+          for (const el of this._swipeDragTargets()) {
+            el.style.transition = snapEasing;
+            el.style.transform = "translateX(-33.333%)";
+            el.addEventListener("transitionend", () => { el.style.transition = "none"; }, { once: true });
+          }
+          const overlay = this._overlayTarget();
+          if (overlay) {
+            overlay.style.transition = snapEasing;
+            overlay.style.transform = "";
+            overlay.addEventListener("transitionend", () => { overlay.style.transition = ""; }, { once: true });
+          }
+        }
+      }
       this.pinchStartDistance = null;
       this.pinchStartZoom = this.zoom;
       this.pendingScrollRestore = null;
+      this.swipeStartX = null;
+      this.swipeStartY = null;
+      this.swipeAxis = null;
     },
 
     touchDistance(a, b) {

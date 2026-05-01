@@ -21,7 +21,7 @@
     </div>
     {% else %}
     <div class="doc-image-scroll grid gap-3 p-3" x-ref="imageMobileList">
-        <img :src="currentMedia.src" :alt="`${title} page ${displayPage}`" loading="lazy" draggable="false" @dragstart.prevent @load="setMediaReady('image')" @error="setMediaError('image')" class="h-auto w-full select-none bg-white">
+        <img :src="currentMedia.src" :alt="`${title} page ${displayPage}`" loading="eager" draggable="false" @dragstart.prevent @load="setMediaReady('image')" @error="setMediaError('image')" class="h-auto w-full select-none bg-white">
     </div>
     {% endif %}
 </template>
