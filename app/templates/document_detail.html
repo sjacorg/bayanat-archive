@@ -373,9 +373,9 @@
 </div>
 {% endblock %}
 
-{% block scripts %}
+{% block before_alpine_scripts %}
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script defer src="https://unpkg.com/docx-preview@0.3.6/dist/docx-preview.js"></script>
-<script src="{{ url_for('static', filename='js/document-detail.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/document-detail.js') }}"></script>
 {% endblock %}
