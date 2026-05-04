@@ -94,6 +94,11 @@
 /* Alpine.js: hide x-cloak elements before hydration */
 [x-cloak] { display: none !important; }
 
+html.timeline-overscroll-locked,
+body.timeline-overscroll-locked {
+    overscroll-behavior-y: none;
+}
+
 /* HTMX request indicators: hidden by default, visible during request */
 .htmx-indicator {
     display: none;

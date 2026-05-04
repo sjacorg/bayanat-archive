@@ -15,7 +15,7 @@
         hydrateYearRangeFromUrl(p);
         if (p.get('q')) $refs.searchInput.value = p.get('q');
     "
-    @keydown.escape.window="open = null; closeMobileFilters(); timePanelOpen = false"
+    @keydown.escape.window="open = null; closeMobileFilters(); setTimePanelOpen(false)"
     {# Shared sync event: partial responses emit current facet/view state. #}
     @facets-sync.document="syncMobileFromDetail($event.detail)"
 >

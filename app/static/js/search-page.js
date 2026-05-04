@@ -312,14 +312,20 @@
                 this.$nextTick(() => this.$refs.mobileApplyTrigger?.click());
             },
 
+            setTimePanelOpen(isOpen) {
+                this.timePanelOpen = Boolean(isOpen);
+                document.documentElement.classList.toggle('timeline-overscroll-locked', this.timePanelOpen);
+                document.body.classList.toggle('timeline-overscroll-locked', this.timePanelOpen);
+            },
+
             toggleTimePanel() {
                 if (this.timePanelOpen) {
-                    this.timePanelOpen = false;
+                    this.setTimePanelOpen(false);
                     this.applyTimeRange();
                     return;
                 }
                 this.open = null;
-                this.timePanelOpen = true;
+                this.setTimePanelOpen(true);
             },
 
             emitFacetSync(detail) {
