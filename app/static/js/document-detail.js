@@ -185,7 +185,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     get displayMediaNumber() {
-      if (!this.currentMedia) return 0;
+      if (!this.currentMedia) return 1;
       return this.mediaIndex + 1;
     },
 
@@ -194,7 +194,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     get displayMediaTotal() {
-      return this.mediaCount;
+      return Math.max(this.mediaCount, 1);
     },
 
     get displayTotal() {
