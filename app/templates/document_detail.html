@@ -146,7 +146,7 @@
     x-init="init(); return () => destroy()"
 >
     <header x-ref="topHeader" class="flex flex-none min-h-16 items-center justify-between gap-4 bg-slate-50 px-8 py-[7.5px] max-md:flex-col max-md:items-start max-md:px-[20px] max-md:py-[20px]">
-        <a href="{{ url_for('search.index') }}" class="inline-flex md:h-[49px] flex-none items-center gap-2 font-semibold no-underline" data-print-no-href>
+        <a href="{{ back_url }}" class="inline-flex md:h-[49px] flex-none items-center gap-2 font-semibold no-underline" data-print-no-href>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-5 w-5">
                 <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
@@ -253,7 +253,7 @@
                 {% set related_filename = (related.related_filename or '') | lower %}
                 {% set related_is_image = related_media_type.startswith('image/') %}
                 {% set related_is_pdf = related_media_type == 'application/pdf' or related_filename.endswith('.pdf') %}
-                <a href="/documents/{{ related.related_document_id }}/{{ related.slug }}" class="group block border border-white/20 bg-[#5c6269] text-white">
+                <a href="/documents/{{ related.related_document_id }}/{{ related.slug }}?back={{ back_url | urlencode }}" class="group block border border-white/20 bg-[#5c6269] text-white">
                     <article>
                         <div class="relative h-[170px] w-full overflow-hidden bg-slate-400">
                             {% if related.related_filename and related_is_image %}

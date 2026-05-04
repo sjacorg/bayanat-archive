@@ -207,6 +207,8 @@
 }
 
 .doc-image-scroll.is-zoomed img {
+    flex: none;
+    margin: 0 auto;
     max-width: none !important;
     max-height: none !important;
 }

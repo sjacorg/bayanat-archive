@@ -246,6 +246,7 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
       viewer.pendingScrollRestore = {
         left: (worldX * ratio) - localX,
         top: (worldY * ratio) - localY,
+        centerX: !anchor && viewer.isImageMedia(),
       };
     },
 
@@ -263,7 +264,9 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
         if (!pane) return;
         const maxLeft = Math.max((pane.scrollWidth || 0) - pane.clientWidth, 0);
         const maxTop = Math.max((pane.scrollHeight || 0) - pane.clientHeight, 0);
-        pane.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
+        pane.scrollLeft = restore.centerX
+          ? maxLeft / 2
+          : Math.max(0, Math.min(maxLeft, restore.left));
         pane.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
       });
     },
@@ -309,7 +312,10 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
       if (event.metaKey) return;
       if (event.ctrlKey) {
         event.preventDefault();
-        const factor = Math.exp((-event.deltaY || 0) * 0.0015);
+        const sensitivity = viewer.isMobile
+          ? (viewer.wheelZoomSensitivityMobile || 0.0015)
+          : (viewer.wheelZoomSensitivityDesktop || 0.0015);
+        const factor = Math.exp((-event.deltaY || 0) * sensitivity);
         this.set(viewer, viewer.zoom * factor, { anchor: event });
         return;
       }
@@ -366,8 +372,13 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
         event.preventDefault();
         const currentDistance = this.touchDistance(event.touches[0], event.touches[1]);
         const scale = currentDistance / viewer.pinchStartDistance;
-        const smoothedScale = 1 + ((scale - 1) * viewer.pinchSensitivity);
-        const nextZoomRaw = viewer.pinchStartZoom * smoothedScale;
+        const rawSensitivity = viewer.isMobile
+          ? viewer.pinchSensitivityMobile
+          : viewer.pinchSensitivityDesktop;
+        const sensitivity = Number.isFinite(rawSensitivity)
+          ? Math.max(rawSensitivity, 0.1)
+          : 1;
+        const nextZoomRaw = viewer.pinchStartZoom * Math.pow(scale, sensitivity);
         const nextZoom = this.snapToStep(viewer, nextZoomRaw, viewer.pinchZoomStep);
         const firstTouch = event.touches[0];
         const secondTouch = event.touches[1];

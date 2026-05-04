@@ -131,6 +131,8 @@
 {% endif %}
 {% endmacro %}
 
+{% set search_back_url = request.full_path if request.query_string else request.path %}
+
 <p id="result-count" hx-swap-oob="innerHTML" class="pt-2 text-4xl font-semibold text-base-content lg:pt-1">
     {% if total == 0 %}0 results
     {% elif total == 1 %}1 result
@@ -305,7 +307,7 @@
 {% elif view != "list" %}
 <div class="grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-4">
     {% for doc in results %}
-    <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block border border-gray-300">
+    <a href="/documents/{{ doc.id }}/{{ doc.slug }}?back={{ search_back_url | urlencode }}" class="group block border border-gray-300">
         <article>
             <div class="relative h-[224px] w-full overflow-hidden bg-base-200/70">
                 {{ thumbnail_media(doc, "h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]", "h-12 w-12") }}
@@ -350,7 +352,7 @@
 {% else %}
 <div class="flex flex-col gap-4">
     {% for doc in results %}
-    <a href="/documents/{{ doc.id }}/{{ doc.slug }}" class="group block border border-gray-300">
+    <a href="/documents/{{ doc.id }}/{{ doc.slug }}?back={{ search_back_url | urlencode }}" class="group block border border-gray-300">
         <article class="flex cursor-pointer gap-4">
             <div class="relative h-[110px] w-[138px] shrink-0 overflow-hidden bg-base-200/70 md:h-[225px] md:w-[378px]">
                 {{ thumbnail_media(doc, "h-full w-full object-cover", "h-10 w-10") }}

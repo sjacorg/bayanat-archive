@@ -17,7 +17,10 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     maxZoom: 5,
     zoomStep: 0.25,
     pinchZoomStep: 0.01,
-    pinchSensitivity: 0.35,
+    pinchSensitivityMobile: 1.2,
+    pinchSensitivityDesktop: 1.45,
+    wheelZoomSensitivityMobile: 0.0015,
+    wheelZoomSensitivityDesktop: 0.0022,
     activePanel: null,
     showDocumentDetails: false,
     relatedOpen: false,
@@ -516,6 +519,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         this.persistPageInUrl();
         await this.$nextTick();
         await this.loadCurrentMedia();
+        this.resetMediaScroll();
       } catch (error) {
         console.error("Media navigation failed", error);
       } finally {
@@ -538,6 +542,15 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     resetZoomState() {
       zoomModule.reset(this);
+    },
+
+    resetMediaScroll() {
+      const pane = this.$refs.mediaScrollPane;
+      if (!pane) return;
+      window.requestAnimationFrame(() => {
+        pane.scrollLeft = 0;
+        pane.scrollTop = 0;
+      });
     },
 
     getImageContainer() {
