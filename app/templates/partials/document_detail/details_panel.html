@@ -1,5 +1,5 @@
 <aside
-    class="fixed bottom-[var(--doc-related-toggle-height)] left-0 right-0 z-[58] bg-slate-100/90 max-md:bottom-[calc(var(--doc-related-toggle-height)+var(--doc-mobile-actions-height))]"
+    class="fixed bottom-[var(--doc-related-toggle-height)] left-0 right-0 z-[58] bg-slate-100/98 max-md:bottom-[calc(var(--doc-related-toggle-height)+var(--doc-mobile-actions-height))]"
     x-cloak
     x-show="activePanel"
     x-transition.opacity
@@ -13,7 +13,7 @@
             <p class="mb-1 max-w-5xl text-xs font-semibold uppercase tracking-wider text-slate-700">
                 Reference Number: {{ document.id }}
             </p>
-            <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex items-center gap-2 border-0 bg-transparent p-0 text-xl font-semibold leading-none text-slate-900">
+            <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-xl font-semibold leading-none text-slate-900">
                 <span aria-hidden="true">
                     <svg class="size-5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
