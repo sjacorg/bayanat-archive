@@ -67,6 +67,7 @@
             startIndex: 0,
             endIndex: Math.max(timelineCount - 1, 0),
             timelineApplyTimer: null,
+            timelineLastTapAt: 0,
             lastSubmittedYearRange: `${cfg.minYear}-${cfg.maxYear}`,
             mobileDrawerOpen: false,
             mobileFacetOpen: null,
@@ -225,6 +226,23 @@
                 this.syncYearsFromIndices();
                 clearTimeout(this.timelineApplyTimer);
                 this.applyTimeRange();
+            },
+
+            resetTimeRange() {
+                this.startIndex = 0;
+                this.endIndex = Math.max(this.timelineCount - 1, 0);
+                this.syncYearsFromIndices();
+                clearTimeout(this.timelineApplyTimer);
+                this.applyTimeRange();
+            },
+
+            handleTimelineTap(event) {
+                const now = Date.now();
+                const isDoubleTap = now - this.timelineLastTapAt < 320;
+                this.timelineLastTapAt = now;
+                if (!isDoubleTap) return;
+                event.preventDefault();
+                this.resetTimeRange();
             },
 
             leftSliderStyle() {
