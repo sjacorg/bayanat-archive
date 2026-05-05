@@ -91,7 +91,7 @@
 
     <div class="pointer-events-none fixed inset-x-0 bottom-0 z-[55]">
         <div class="mx-auto flex w-full max-w-[1200px] justify-end px-0 sm:px-6 lg:px-10">
-            <div class="relative pointer-events-auto flex flex-col items-end">
+            <div class="relative pointer-events-auto flex flex-col items-end w-full sm:w-auto">
                 {{ feedback_toggle_button(
                     aria_expanded='true',
                     click_action='closePanel()',
@@ -110,7 +110,7 @@
                         x-transition:leave="transition ease-in duration-120"
                         x-transition:leave-start="opacity-100 translate-y-0"
                         x-transition:leave-end="opacity-0 translate-y-2"
-                        class="w-full sm:w-[min(96vw,37rem)] border border-primary/40 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.14)]"
+                        class="w-screen sm:w-[min(96vw,37rem)] border border-primary/40 bg-white shadow-[0_-8px_24px_rgba(15,23,42,0.14)]"
                     >
                         <div
                             x-ref="panelContent"
