@@ -52,8 +52,11 @@
     transition: background-color 0.15s;
 }
 
-.sidebar-btn:hover {
+.sidebar-btn:hover,
+.sidebar-btn:focus-visible {
     background: #1A4540;
+    outline: 2px solid #fff;
+    outline-offset: -3px;
 }
 
 /* Document chip (mimics physical tab folder) */
@@ -82,8 +85,19 @@
     animation: fade-in 1000ms ease both;
 }
 
+/* Global focus-visible ring — applies to all interactive elements */
+:focus-visible {
+    outline: 2px solid oklch(0.61 0.085 180);
+    outline-offset: 2px;
+}
+
 /* Alpine.js: hide x-cloak elements before hydration */
 [x-cloak] { display: none !important; }
+
+html.timeline-overscroll-locked,
+body.timeline-overscroll-locked {
+    overscroll-behavior-y: none;
+}
 
 /* HTMX request indicators: hidden by default, visible during request */
 .htmx-indicator {
@@ -156,26 +170,10 @@
     overscroll-behavior: none;
 }
 
-.doc-mobile-scroll {
+.doc-media-stage {
+    padding-bottom: calc(var(--doc-related-toggle-height) + env(safe-area-inset-bottom, 0px));
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
-}
-
-.doc-canvas {
-    translate: 0 0;
-    opacity: 1;
-}
-
-.doc-canvas.is-sliding-out {
-    translate: calc(var(--slide-direction, 1) * -2.2rem) 0;
-    opacity: 0.06;
-    transition: translate 120ms ease, opacity 120ms ease;
-}
-
-.doc-canvas.is-sliding-in {
-    translate: calc(var(--slide-direction, 1) * 2.2rem) 0;
-    opacity: 0.06;
-    animation: doc-carousel-in 180ms ease forwards;
 }
 
 .doc-image-scroll,
@@ -185,6 +183,14 @@
 }
 
 @media (max-width: 767px) {
+    .doc-media-stage {
+        padding-bottom: calc(
+            var(--doc-related-toggle-height) +
+            var(--doc-mobile-actions-height) +
+            env(safe-area-inset-bottom, 0px)
+        );
+    }
+
     .doc-image-scroll,
     .doc-pdf-scroll,
     .doc-docx-scope {
@@ -193,17 +199,6 @@
             var(--doc-mobile-actions-height) +
             env(safe-area-inset-bottom, 0px)
         );
-    }
-}
-
-@keyframes doc-carousel-in {
-    from {
-        translate: calc(var(--slide-direction, 1) * 2.2rem) 0;
-        opacity: 0.06;
-    }
-    to {
-        translate: 0 0;
-        opacity: 1;
     }
 }
 
@@ -217,8 +212,15 @@
 }
 
 .doc-image-scroll.is-zoomed img {
+    flex: none;
+    margin: 0 auto;
     max-width: none !important;
     max-height: none !important;
+}
+
+.doc-image-scroll.is-zoomed {
+    justify-content: flex-start;
+    align-items: flex-start;
 }
 
 .doc-pdf-scroll.is-zoomed {

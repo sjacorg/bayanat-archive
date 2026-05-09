@@ -1,4 +1,6 @@
-from flask import Blueprint, abort, redirect, render_template, request
+from urllib.parse import urlencode
+
+from flask import Blueprint, abort, redirect, render_template, request, url_for
 
 from app import get_db
 
@@ -146,6 +148,13 @@ def _get_related_documents(db, document_id, limit=4):
     return rows
 
 
+def _get_search_back_url():
+    back_url = request.args.get("back", "")
+    if back_url == "/search" or back_url.startswith("/search?"):
+        return back_url
+    return url_for("search.index")
+
+
 @bp.route("/documents/<int:document_id>/<slug>")
 def detail(document_id, slug):
     db = get_db()
@@ -163,8 +172,10 @@ def detail(document_id, slug):
         abort(404)
 
     if slug != document["slug"]:
+        back_url = _get_search_back_url()
+        query = f"?{urlencode({'back': back_url})}" if back_url else ""
         return redirect(
-            f"/documents/{document['id']}/{document['slug']}",
+            f"/documents/{document['id']}/{document['slug']}{query}",
             code=301,
         )
 
@@ -204,6 +215,7 @@ def detail(document_id, slug):
         related_count=related_count,
         metadata=metadata,
         relations=relations,
+        back_url=_get_search_back_url(),
         canonical_url=request.url_root.rstrip("/")
         + f"/documents/{document['id']}/{document['slug']}",
     )

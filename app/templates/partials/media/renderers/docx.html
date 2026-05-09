@@ -1,19 +1,29 @@
-<template x-if="currentMedia && currentMedia.media_kind === 'docx' && isKindLoading('docx')">
-    {% set loading_text = 'Loading DOCX preview...' %}
-    {% set loading_max_class = 'max-w-[60rem]' %}
-    {% set loading_stage_class = 'min-h-[54vh]' %}
-    {% set loading_frame_class = 'mx-auto aspect-[1/1.414] max-w-[40rem]' %}
-    {% include 'partials/media/loading.html' %}
-</template>
-
-<template x-if="currentMedia && currentMedia.media_kind === 'docx' && hasKindError('docx')">
-    {% if mode == 'desktop' %}
-    {{ docx_error_card() }}
-    {% else %}
-    {{ docx_error_card('mx-3 my-3 w-auto') }}
-    {% endif %}
-</template>
-
-<div x-show="currentMedia && currentMedia.media_kind === 'docx' && !hasKindError('docx')" class="flex min-h-64 w-full flex-col items-center bg-transparent px-2 py-3 text-left {% if mode == 'desktop' %}min-h-96 px-0 py-3{% endif %}" :class="isKindLoading('docx') ? 'invisible pointer-events-none absolute inset-0' : ''">
-    <div class="doc-docx-scope flex w-full flex-col items-center gap-3 bg-transparent py-2 [&_.docx-preview]:!rounded-none [&_.docx-preview]:!bg-slate-50 [&_.docx-preview]:p-6 [&_.docx-preview_p]:my-4 [&_.docx]:!bg-white [&_.docx]:shadow-[0_2px_12px_rgba(15,23,42,0.08)] [&_.docx]:!rounded-none [&_.docx]:!mb-6 max-md:[&_.docx-preview]:p-1 max-md:[&_.docx]:!mb-3" x-ref="{{ 'docxDesktopList' if mode == 'desktop' else 'docxMobileList' }}"></div>
+<div
+    x-show="currentMedia && currentMedia.media_kind === 'docx'"
+    class="doc-pdf-universal w-full overflow-visible"
+    :class="canvasCursorClass"
+>
+    <template x-if="currentMedia && currentMedia.media_kind === 'docx' && isKindLoading('docx')">
+        <div class="grid w-full place-items-center px-3 min-h-[54vh]">
+            <div class="mx-auto w-full max-w-[60rem] border border-slate-300 bg-slate-50 p-4">
+                <div class="animate-pulse space-y-3">
+                    <div class="h-4 w-2/5 bg-slate-300/80"></div>
+                    <div class="h-3 w-full bg-slate-200"></div>
+                    <div class="h-3 w-4/5 bg-slate-200"></div>
+                    <div class="mx-auto aspect-[1/1.414] w-full max-w-[40rem] border border-slate-300 bg-white"></div>
+                </div>
+                <p class="mt-3 text-xs text-slate-600">Loading DOCX preview...</p>
+            </div>
+        </div>
+    </template>
+    <template x-if="currentMedia && currentMedia.media_kind === 'docx' && hasKindError('docx')">
+        {{ docx_error_card() }}
+    </template>
+    <div
+        x-show="currentMedia && currentMedia.media_kind === 'docx' && !hasKindError('docx')"
+        class="flex w-full flex-col items-center min-h-96 px-0 py-3"
+        :class="isKindLoading('docx') ? 'invisible pointer-events-none absolute inset-0' : ''"
+    >
+        <div class="doc-docx-scope flex w-full flex-col items-center gap-3 bg-transparent py-2 [&_.docx-preview]:!rounded-none [&_.docx-preview]:!bg-slate-50 [&_.docx-preview]:p-6 [&_.docx-preview_p]:my-4 [&_.docx]:!bg-white [&_.docx]:shadow-[0_2px_12px_rgba(15,23,42,0.08)] [&_.docx]:!rounded-none [&_.docx]:!mb-6 max-md:[&_.docx-preview]:p-1 max-md:[&_.docx]:!mb-3" x-ref="docxList"></div>
+    </div>
 </div>

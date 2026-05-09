@@ -42,15 +42,15 @@
     }"
     @submit.prevent="submitForm()"
     novalidate
-    class="space-y-5 text-base-content"
+    class="space-y-4 sm:space-y-5 text-base-content"
 >
-    <p class="text-[0.95rem] font-semibold leading-snug">
+    <p class="text-sm sm:text-[0.95rem] font-semibold leading-snug">
         Help us improve the Bayanat Document Archive by sharing your feedback.
     </p>
 
-    <section class="space-y-2">
-        <h3 class="text-[1.15rem] font-semibold">Rating</h3>
-        <p class="text-[0.95rem] leading-relaxed text-base-content/85">
+    <section class="space-y-1 sm:space-y-2">
+        <h3 class="text-base sm:text-[1.15rem] font-semibold">Rating</h3>
+        <p class="text-xs sm:text-[0.95rem] leading-relaxed text-base-content/85">
             Select a score that reflects your overall experience with the archive.
         </p>
 
@@ -100,9 +100,9 @@
         </div>
     </section>
 
-    <section class="space-y-2">
-        <h3 class="text-[1.15rem] font-semibold">Comments</h3>
-        <p class="text-[0.95rem] leading-relaxed text-base-content/85">
+    <section class="space-y-1 sm:space-y-2">
+        <h3 class="text-base sm:text-[1.15rem] font-semibold">Comments</h3>
+        <p class="text-xs sm:text-[0.95rem] leading-relaxed text-base-content/85">
             Share your thoughts, suggestions, or concerns. Your insights help us refine the platform and better serve documentation needs.
         </p>
         <textarea
@@ -114,12 +114,12 @@
         ></textarea>
     </section>
 
-    <section class="space-y-2">
-        <h3 class="text-[1.15rem] font-semibold">
+    <section class="space-y-1 sm:space-y-2">
+        <h3 class="text-base sm:text-[1.15rem] font-semibold">
             Email <span class="italic font-normal text-base-content/80">(Optional)</span>
             <span x-show="emailError" x-text="emailError" class="ml-2 font-normal italic text-error"></span>
         </h3>
-        <p class="text-[0.95rem] leading-relaxed text-base-content/85">
+        <p class="text-xs sm:text-[0.95rem] leading-relaxed text-base-content/85">
             Provide your email if you'd like us to follow up on your feedback.
         </p>
         <input
