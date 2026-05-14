@@ -261,6 +261,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     get currentMaxZoom() {
+      if (this.isCatalogOnlyDocument()) return this.maxZoom;
       if (this.isImageMedia()) return this.maxZoom;
       if (this.isPdfMedia() || this.isDocxMedia()) return this.maxZoom;
       return 1;
@@ -278,7 +279,12 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       return item?.media_kind === "docx";
     },
 
+    isCatalogOnlyDocument() {
+      return !this.mediaCount;
+    },
+
     isZoomableMedia(item = this.currentMedia) {
+      if (this.isCatalogOnlyDocument()) return true;
       return this.isImageMedia(item) || this.isPdfMedia(item) || this.isDocxMedia(item);
     },
 
@@ -360,6 +366,9 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         this.syncLayoutMetrics();
         if (this.isImageMedia() && !this.hasKindError("image")) {
           this.applyImageZoom();
+        }
+        if (this.isCatalogOnlyDocument()) {
+          this.applyCatalogZoom();
         }
       }, 120);
     },
@@ -563,6 +572,10 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     getDocxContainer() {
       return zoomModule.getDocxContainer(this);
+    },
+
+    applyCatalogZoom() {
+      zoomModule.applyCatalog(this);
     },
 
     applyImageZoom() {

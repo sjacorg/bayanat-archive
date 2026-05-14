@@ -178,7 +178,8 @@ body.timeline-overscroll-locked {
 
 .doc-image-scroll,
 .doc-pdf-scroll,
-.doc-docx-scope {
+.doc-docx-scope,
+.doc-catalog-scroll {
     padding-bottom: calc(var(--doc-related-toggle-height) + env(safe-area-inset-bottom, 0px));
 }
 
@@ -193,7 +194,8 @@ body.timeline-overscroll-locked {
 
     .doc-image-scroll,
     .doc-pdf-scroll,
-    .doc-docx-scope {
+    .doc-docx-scope,
+    .doc-catalog-scroll {
         padding-bottom: calc(
             var(--doc-related-toggle-height) +
             var(--doc-mobile-actions-height) +

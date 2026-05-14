@@ -1,0 +1,111 @@
+<template x-if="!mediaCount">
+    <div class="doc-catalog-scroll flex w-full justify-center px-3 py-5 md:px-[calc(var(--doc-desktop-actions-width)+2rem)] md:py-8" x-ref="catalogTextList">
+        <div x-ref="catalogTextZoomFrame" class="inline-block">
+            <article
+                x-ref="catalogTextPage"
+                class="w-[min(56rem,calc(100vw-1.5rem))] border border-slate-300 bg-white p-6 shadow-[0_8px_20px_rgba(15,23,42,0.06)] md:w-[56rem] md:p-8"
+            >
+                <p class="text-xs font-semibold uppercase tracking-wider text-primary">Document Text</p>
+                <h1 class="mt-2 text-xl font-semibold leading-tight text-slate-950 md:text-3xl">{{ document.title }}</h1>
+
+                {% if document.description %}
+                <section class="mt-6 border-t border-slate-200 pt-5">
+                    <h2 class="text-lg font-semibold text-slate-950">Description</h2>
+                    <div dir="auto" class="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-800 md:text-base md:leading-7">{{ document.description | strip_html }}</div>
+                </section>
+                {% endif %}
+
+                {% if document.ocr_text %}
+                <section class="mt-6 border-t border-slate-200 pt-5">
+                    <h2 class="text-lg font-semibold text-slate-950">Extracted Text</h2>
+                    <div dir="auto" class="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-800 md:text-base md:leading-7">{{ document.ocr_text }}</div>
+                </section>
+                {% endif %}
+
+                {% if not document.description and not document.ocr_text %}
+                <section class="mt-6 border-t border-slate-200 pt-5">
+                    <h2 class="text-lg font-semibold text-slate-950">Record Details</h2>
+                    <p class="mt-3 text-sm leading-6 text-slate-700 md:text-base md:leading-7">
+                        This catalog record does not include a description or extracted text yet. Metadata is available in the Info panel.
+                    </p>
+                </section>
+                {% endif %}
+
+                <section class="mt-6 border-t border-slate-200 pt-5">
+                    <h2 class="text-lg font-semibold text-slate-950">Record Details</h2>
+                    <dl class="mt-4 grid gap-x-6 gap-y-4 text-sm text-slate-800 md:grid-cols-2">
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Reference Number</dt>
+                            <dd class="mt-1">{{ document.id }}</dd>
+                        </div>
+
+                        {% if document.title_ar %}
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Arabic Title</dt>
+                            <dd class="mt-1" dir="auto">{{ document.title_ar }}</dd>
+                        </div>
+                        {% endif %}
+
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Published Date</dt>
+                            <dd class="mt-1">{{ document.publish_date[:10] if document.publish_date else 'N/A' }}</dd>
+                        </div>
+
+                        <div>
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Documentation Date</dt>
+                            <dd class="mt-1">{{ document.documentation_date[:10] if document.documentation_date else 'N/A' }}</dd>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Labels</dt>
+                            <dd class="mt-1">{{ document_labels | join(', ') if document_labels else 'N/A' }}</dd>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Locations</dt>
+                            <dd class="mt-1">{{ document_locations | join(', ') if document_locations else 'N/A' }}</dd>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Sources</dt>
+                            <dd class="mt-1">{{ document_sources | join(', ') if document_sources else 'N/A' }}</dd>
+                        </div>
+
+                        {% if document.source_link %}
+                        <div class="md:col-span-2">
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Source Link</dt>
+                            <dd class="mt-1 break-all">
+                                <a href="{{ document.source_link }}" target="_blank" rel="noopener noreferrer" class="font-medium text-primary hover:text-secondary">
+                                    {{ document.source_link }}
+                                </a>
+                            </dd>
+                        </div>
+                        {% endif %}
+
+                        <div class="md:col-span-2">
+                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Events</dt>
+                            <dd class="mt-1">
+                                {% if document_events %}
+                                <ul class="m-0 list-disc space-y-1 pl-5">
+                                    {% for event in document_events %}
+                                    <li>
+                                        {{ event.title or 'Untitled event' }}
+                                        {% if event.event_type %} ({{ event.event_type }}){% endif %}
+                                        {% if event.from_date or event.to_date %}
+                                            — {{ event.from_date[:10] if event.from_date else '?' }} to {{ event.to_date[:10] if event.to_date else '?' }}
+                                        {% endif %}
+                                        {% if event.location %} — {{ event.location }}{% endif %}
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
+            </article>
+        </div>
+    </div>
+</template>

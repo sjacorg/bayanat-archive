@@ -73,27 +73,18 @@
     <button
         type="button"
         title="{{ label }}"
-        class="{% if layout == 'desktop' %}flex w-full items-center gap-3 px-4 py-3 text-left text-sm{% else %}text-xs inline-flex flex-col items-center justify-center gap-2{% endif %} border-0 {% if layout == 'desktop' and not is_last %}border-b border-[#5AB5A9]{% endif %}{% if layout == 'mobile' and has_divider %}border-r border-r-[rgba(26,69,64,0.25)]{% endif %} rounded-none bg-secondary text-base font-semibold leading-none text-white transition-colors hover:bg-primary"
+        class="{% if layout == 'desktop' %}flex w-full items-center gap-3 px-4 py-3 text-left text-sm{% else %}text-xs inline-flex flex-col items-center justify-center gap-2{% endif %} border-0 {% if layout == 'desktop' and not is_last %}border-b border-[#5AB5A9]{% endif %}{% if layout == 'mobile' and has_divider %}border-r border-r-[rgba(26,69,64,0.25)]{% endif %} rounded-none bg-secondary text-base font-semibold leading-none text-white transition-colors hover:bg-primary disabled:cursor-default disabled:opacity-50 disabled:hover:bg-secondary"
         {% if panel %}
         :class="{ 'bg-primary': activePanel === '{{ panel }}' }"
         @click="togglePanel('{{ panel }}')"
         {% else %}
         @click="handleDownload"
+        :disabled="!currentMedia"
         {% endif %}
     >
         {{ action_icon(kind, "h-4 w-4 shrink-0" if layout == 'desktop' else "h-6 w-6 shrink-0") }}
         <span>{{ label }}</span>
     </button>
-{%- endmacro %}
-
-{% macro empty_media_card(wrapper_classes='w-full') -%}
-    <div class="flex min-h-[42vh] w-full items-start justify-center px-3 py-3 md:px-0">
-        <div class="{{ wrapper_classes }} mx-auto w-full max-w-2xl border border-slate-300 border-l-4 border-l-primary bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-            <h2 class="m-0 text-lg font-semibold text-slate-900">No media available</h2>
-            <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
-            <a href="{{ url_for('search.index') }}" class="inline-block border border-primary bg-primary px-3 py-1.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-white hover:text-primary">Back to Search</a>
-        </div>
-    </div>
 {%- endmacro %}
 
 {% macro preview_unavailable_card(title, message, cta_label='Download file', wrapper_classes='w-full') -%}
@@ -117,6 +108,8 @@
 {% macro media_nav_arrow(direction, classes) -%}
     <button
         type="button"
+        x-show="mediaCount > 1"
+        x-cloak
         class="{{ classes }}"
         @touchstart.stop
         @click.stop.prevent="{{ 'prevMedia()' if direction == 'prev' else 'nextMedia()' }}"
@@ -203,11 +196,8 @@
             :style="`touch-action: ${zoom > 1.001 ? 'pan-x pan-y' : 'pan-y'};`"
         >
             <div class="flex w-full min-w-0 items-start justify-center" :class="canvasCursorClass">
-                <template x-if="!mediaCount">
-                    {{ empty_media_card() }}
-                </template>
-
                 {% set mode = 'desktop' %}
+                {% include 'partials/media/renderers/catalog.html' %}
                 {% include 'partials/media/renderers/image.html' %}
                 {% include 'partials/media/renderers/video.html' %}
                 {% include 'partials/media/renderers/audio.html' %}
