@@ -385,7 +385,7 @@ def _get_document_labels(db, doc_ids):
     return labels
 
 
-def _search_shell_context(db):
+def search_shell_context(db):
     try:
         total = db.execute("SELECT COUNT(*) FROM documents").fetchone()[0]
         facets = _get_facets(
@@ -481,7 +481,7 @@ def _render_results_partial_response(
 @bp.route("/")
 def index():
     db = get_db()
-    return render_template("search.html", **_search_shell_context(db))
+    return render_template("search.html", **search_shell_context(db))
 
 
 @bp.route("/search")
@@ -492,7 +492,7 @@ def search():
     if not is_htmx:
         # Direct loads of /search must render the full page shell (with CSS/JS assets),
         # while HTMX requests to this endpoint still return only partial results.
-        return render_template("search.html", **_search_shell_context(db))
+        return render_template("search.html", **search_shell_context(db))
 
     params = _parse_search_request(request.args)
     q = params["q"]
