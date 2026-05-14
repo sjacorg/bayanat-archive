@@ -4,36 +4,75 @@
 
 {% block og_title %}Page Not Found — Bayanat Document Archive{% endblock %}
 
+{% block main_container_class %}mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10{% endblock %}
+
+{% block page_feedback %}{% endblock %}
+
 {% block content %}
-<div class="flex flex-col items-center justify-center py-24 text-center gap-6">
+<div
+    x-data='searchPageState({
+        minYear: {{ timeline_min_year }},
+        maxYear: {{ timeline_max_year }},
+        timelineYears: {{ timeline_bins | map(attribute="year") | list | tojson }}
+    })'
+    x-init="hydrateYearRangeFromUrl(new URLSearchParams())"
+    class="relative"
+>
+    <section class="flex min-h-[calc(100svh-11rem)] items-center justify-center py-12 text-center sm:min-h-[calc(100svh-12rem)] lg:min-h-[calc(100svh-13rem)] lg:py-16">
+        <div class="mx-auto max-w-md">
+            <p class="select-none text-[5.5rem] font-light leading-none text-secondary/40 sm:text-[7rem] lg:text-[8rem]">404</p>
+            <h1 class="mt-2 text-xl font-semibold tracking-tight text-secondary sm:text-2xl">Page Not Found</h1>
+            <p class="mx-auto mt-5 max-w-sm text-sm leading-snug text-base-content sm:text-base">
+                The page you're looking for doesn't exist. Continue your search below in the archives.
+            </p>
+            <a href="{{ url_for('search.index') }}" class="mt-4 inline-flex text-sm font-medium text-primary transition-colors hover:text-secondary">
+                Back to archive home
+            </a>
+        </div>
+    </section>
 
-    <p class="text-8xl font-light text-primary/20 select-none">404</p>
+    <form
+        action="{{ url_for('search.search') }}"
+        method="get"
+        class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60"
+    >
+        <div class="mx-auto w-full max-w-[1200px] px-4 pb-20 pt-5 sm:px-6 sm:pb-10 sm:pt-7 lg:px-10">
+            <div class="grid gap-4 border-b border-gray-300/70 pb-5 sm:grid-cols-[9rem_1fr] sm:items-center lg:gap-10">
+                <h2 class="text-xl font-semibold tracking-tight text-primary">Search</h2>
+                <label for="not-found-q-input" class="input h-[44px] w-full border-base-300 bg-base-100 md:h-[54px]">
+                    <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </g>
+                    </svg>
+                    <input
+                        x-ref="searchInput"
+                        id="not-found-q-input"
+                        type="search"
+                        name="q"
+                        aria-label="Search for a document"
+                        placeholder="Search for a document"
+                        autocomplete="off"
+                        class="text-base"
+                        autofocus
+                    >
+                </label>
+            </div>
 
-    <div class="space-y-2">
-        <h1 class="text-2xl font-semibold tracking-tight">Page not found</h1>
-        <p class="text-base-content/60 max-w-sm">The page you're looking for doesn't exist. Try searching the archive instead.</p>
-    </div>
+            <input type="hidden" name="date_from" :value="yearStart > minYear ? `${yearStart}-01-01` : ''">
+            <input type="hidden" name="date_to" :value="yearEnd < maxYear ? `${yearEnd}-12-31` : ''">
 
-    <form action="{{ url_for('search.index') }}" method="get" class="w-full max-w-md" hx-boost="true">
-        <label class="input w-full">
-            <svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.3-4.3"></path>
-                </g>
-            </svg>
-            <input
-                type="search"
-                name="q"
-                placeholder="Search documents..."
-                class="text-base"
-                autofocus
-            >
-        </label>
+            {% with timeline_panel_always_open=true, timeline_panel_transparent=true %}
+                {% include "partials/search_timeline_panel.html" %}
+            {% endwith %}
+
+            <div class="flex justify-center pt-1 sm:justify-end">
+                <button type="submit" class="btn btn-secondary min-h-12 px-6 text-white">
+                    Search Document
+                </button>
+            </div>
+        </div>
     </form>
-
-    <a href="{{ url_for('search.index') }}" class="btn btn-ghost btn-sm text-base-content/60">
-        Back to search
-    </a>
 </div>
 {% endblock %}

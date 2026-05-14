@@ -49,7 +49,7 @@ def create_app():
 
     from app.routes.documents import bp as documents_bp
     from app.routes.pages import bp as pages_bp
-    from app.routes.search import bp as search_bp
+    from app.routes.search import bp as search_bp, _search_shell_context
 
     app.register_blueprint(documents_bp)
     app.register_blueprint(pages_bp)
@@ -57,6 +57,6 @@ def create_app():
 
     @app.errorhandler(404)
     def not_found(e):
-        return render_template("404.html"), 404
+        return render_template("404.html", **_search_shell_context(get_db())), 404
 
     return app
