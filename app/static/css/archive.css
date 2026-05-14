@@ -178,9 +178,12 @@ body.timeline-overscroll-locked {
 
 .doc-image-scroll,
 .doc-pdf-scroll,
-.doc-docx-scope,
-.doc-catalog-scroll {
+.doc-docx-scope {
     padding-bottom: calc(var(--doc-related-toggle-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.doc-catalog-scroll {
+    padding-bottom: calc(var(--doc-related-toggle-height) + 3rem + env(safe-area-inset-bottom, 0px));
 }
 
 @media (max-width: 767px) {
@@ -194,11 +197,19 @@ body.timeline-overscroll-locked {
 
     .doc-image-scroll,
     .doc-pdf-scroll,
-    .doc-docx-scope,
+    .doc-docx-scope {
+        padding-bottom: calc(
+            var(--doc-related-toggle-height) +
+            var(--doc-mobile-actions-height) +
+            env(safe-area-inset-bottom, 0px)
+        );
+    }
+
     .doc-catalog-scroll {
         padding-bottom: calc(
             var(--doc-related-toggle-height) +
             var(--doc-mobile-actions-height) +
+            4rem +
             env(safe-area-inset-bottom, 0px)
         );
     }

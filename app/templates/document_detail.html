@@ -73,13 +73,16 @@
     <button
         type="button"
         title="{{ label }}"
+        {% if not panel %}
+        x-show="currentMedia"
+        x-cloak
+        {% endif %}
         class="{% if layout == 'desktop' %}flex w-full items-center gap-3 px-4 py-3 text-left text-sm{% else %}text-xs inline-flex flex-col items-center justify-center gap-2{% endif %} border-0 {% if layout == 'desktop' and not is_last %}border-b border-[#5AB5A9]{% endif %}{% if layout == 'mobile' and has_divider %}border-r border-r-[rgba(26,69,64,0.25)]{% endif %} rounded-none bg-secondary text-base font-semibold leading-none text-white transition-colors hover:bg-primary disabled:cursor-default disabled:opacity-50 disabled:hover:bg-secondary"
         {% if panel %}
         :class="{ 'bg-primary': activePanel === '{{ panel }}' }"
         @click="togglePanel('{{ panel }}')"
         {% else %}
         @click="handleDownload"
-        :disabled="!currentMedia"
         {% endif %}
     >
         {{ action_icon(kind, "h-4 w-4 shrink-0" if layout == 'desktop' else "h-6 w-6 shrink-0") }}
@@ -215,7 +218,11 @@
 
     {% include 'partials/document_detail/details_panel.html' %}
 
-    <nav class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-cols-4 max-md:grid" aria-label="Document actions">
+    <nav
+        class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] max-md:grid"
+        :class="currentMedia ? 'grid-cols-4' : 'grid-cols-3'"
+        aria-label="Document actions"
+    >
         {{ action_button('info', 'Info', 'info', 'mobile', true) }}
         {{ action_button('arabic', 'Extract Text', 'arabic', 'mobile', true) }}
         {{ action_button('translation', 'Translate', 'translation', 'mobile', true) }}
