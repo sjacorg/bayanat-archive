@@ -18,15 +18,15 @@
     x-init="hydrateYearRangeFromUrl(new URLSearchParams())"
     class="relative"
 >
-    <section class="flex min-h-[calc(100svh-11rem)] items-center justify-center py-12 text-center sm:min-h-[calc(100svh-12rem)] lg:min-h-[calc(100svh-13rem)] lg:py-16">
+    <section class="flex min-h-[calc(100svh-16rem)] items-center justify-center py-10 text-center sm:min-h-[calc(100svh-12rem)] sm:py-12 lg:min-h-[calc(100svh-13rem)] lg:py-16">
         <div class="mx-auto max-w-md">
             <p class="select-none text-[5.5rem] font-light leading-none text-secondary/40 sm:text-[7rem] lg:text-[8rem]">404</p>
             <h1 class="mt-2 text-xl font-semibold tracking-tight text-secondary sm:text-2xl">Page Not Found</h1>
             <p class="mx-auto mt-5 max-w-sm text-sm leading-snug text-base-content sm:text-base">
                 The page you're looking for doesn't exist. Continue your search below in the archives.
             </p>
-            <a href="{{ url_for('search.index') }}" class="mt-4 inline-flex text-sm font-medium text-primary transition-colors hover:text-secondary">
-                Back to archive home
+            <a href="{{ url_for('search.index') }}" class="btn btn-outline btn-primary btn-sm mt-5 hidden sm:inline-flex">
+                Browse the Archive
             </a>
         </div>
     </section>
@@ -36,9 +36,9 @@
         method="get"
         class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60"
     >
-        <div class="mx-auto w-full max-w-[1200px] px-4 pb-20 pt-5 sm:px-6 sm:pb-10 sm:pt-7 lg:px-10">
-            <div class="grid gap-4 border-b border-gray-300/70 pb-5 sm:grid-cols-[9rem_1fr] sm:items-center lg:gap-10">
-                <h2 class="text-xl font-semibold tracking-tight text-primary">Search</h2>
+        <div class="mx-auto w-full max-w-[1200px] px-4 pb-20 pt-7 sm:px-6 sm:pb-10 sm:pt-8 lg:px-10">
+            <div class="grid gap-4 border-b border-gray-300/70 pb-7 sm:grid-cols-[9rem_1fr] sm:items-center lg:gap-10">
+                <h2 class="hidden text-xl font-semibold tracking-tight text-primary sm:block">Search</h2>
                 <label for="not-found-q-input" class="input h-[44px] w-full border-base-300 bg-base-100 md:h-[54px]">
                     <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
                         <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
@@ -67,7 +67,7 @@
                 {% include "partials/search_timeline_panel.html" %}
             {% endwith %}
 
-            <div class="flex justify-center pt-1 sm:justify-end">
+            <div class="flex justify-end pt-1">
                 <button type="submit" class="btn btn-secondary min-h-12 px-6 text-white">
                     Search Document
                 </button>
