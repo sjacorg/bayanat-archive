@@ -8,6 +8,10 @@
 
 {% block page_feedback %}{% endblock %}
 
+{% block main_class %}pt-16{% endblock %}
+
+{% block page_header_class %}fixed inset-x-0 top-0 z-50 border-b border-base-300/70 bg-base-200/95 backdrop-blur-md{% endblock %}
+
 {% block content %}
 <div
     x-data='searchPageState({
@@ -25,7 +29,7 @@
             <p class="mx-auto mt-5 max-w-sm text-sm leading-snug text-base-content sm:text-base">
                 The page you're looking for doesn't exist. Continue your search below in the archives.
             </p>
-            <a href="{{ url_for('search.index') }}" class="btn btn-outline btn-primary btn-sm mt-5 hidden sm:inline-flex">
+            <a href="{{ url_for('search.index') }}" class="btn btn-outline btn-primary btn-sm mt-5">
                 Browse the Archive
             </a>
         </div>
