@@ -67,6 +67,7 @@
             startIndex: 0,
             endIndex: Math.max(timelineCount - 1, 0),
             timelineApplyTimer: null,
+            timelineLastTapAt: 0,
             lastSubmittedYearRange: `${cfg.minYear}-${cfg.maxYear}`,
             mobileDrawerOpen: false,
             mobileFacetOpen: null,
@@ -227,6 +228,23 @@
                 this.applyTimeRange();
             },
 
+            resetTimeRange() {
+                this.startIndex = 0;
+                this.endIndex = Math.max(this.timelineCount - 1, 0);
+                this.syncYearsFromIndices();
+                clearTimeout(this.timelineApplyTimer);
+                this.applyTimeRange();
+            },
+
+            handleTimelineTap(event) {
+                const now = Date.now();
+                const isDoubleTap = now - this.timelineLastTapAt < 320;
+                this.timelineLastTapAt = now;
+                if (!isDoubleTap) return;
+                event.preventDefault();
+                this.resetTimeRange();
+            },
+
             leftSliderStyle() {
                 if (this.timelineCount <= 1) return 'left:0; width:100%;';
                 const step = 100 / this.timelineCount;
@@ -294,14 +312,20 @@
                 this.$nextTick(() => this.$refs.mobileApplyTrigger?.click());
             },
 
+            setTimePanelOpen(isOpen) {
+                this.timePanelOpen = Boolean(isOpen);
+                document.documentElement.classList.toggle('timeline-overscroll-locked', this.timePanelOpen);
+                document.body.classList.toggle('timeline-overscroll-locked', this.timePanelOpen);
+            },
+
             toggleTimePanel() {
                 if (this.timePanelOpen) {
-                    this.timePanelOpen = false;
+                    this.setTimePanelOpen(false);
                     this.applyTimeRange();
                     return;
                 }
                 this.open = null;
-                this.timePanelOpen = true;
+                this.setTimePanelOpen(true);
             },
 
             emitFacetSync(detail) {

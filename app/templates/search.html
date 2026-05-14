@@ -15,7 +15,7 @@
         hydrateYearRangeFromUrl(p);
         if (p.get('q')) $refs.searchInput.value = p.get('q');
     "
-    @keydown.escape.window="open = null; closeMobileFilters(); timePanelOpen = false"
+    @keydown.escape.window="open = null; closeMobileFilters(); setTimePanelOpen(false)"
     {# Shared sync event: partial responses emit current facet/view state. #}
     @facets-sync.document="syncMobileFromDetail($event.detail)"
 >
@@ -24,8 +24,8 @@
     <div :class="timePanelOpen ? '' : 'mb-8'" class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60">
         <div class="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-4 py-6 sm:gap-8 sm:px-6 lg:px-10">
             <h1 class="hidden text-2xl font-semibold tracking-tight text-primary shrink-0 sm:block">Search</h1>
-            <label class="input w-full border-base-300 bg-base-100 h-[40px] md:h-[54px]">
-                <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <label for="q-input" class="input w-full border-base-300 bg-base-100 h-[40px] md:h-[54px]">
+                <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
                     <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
                         <circle cx="11" cy="11" r="8"></circle>
                         <path d="m21 21-4.3-4.3"></path>
@@ -36,6 +36,7 @@
                     type="search"
                     name="q"
                     id="q-input"
+                    aria-label="Search for a document"
                     placeholder="Search for a document"
                     autocomplete="off"
                     class="search-param text-base"
@@ -52,6 +53,8 @@
                 type="button"
                 class="inline-flex h-10 w-10 items-center justify-center text-5xl leading-none text-primary/80"
                 :aria-expanded="timePanelOpen ? 'true' : 'false'"
+                aria-label="Toggle time range filter"
+                aria-controls="timeline-panel"
                 @click="toggleTimePanel()"
             >
                 <svg
@@ -96,6 +99,7 @@
             class="flex w-full items-center justify-between gap-3 px-3 h-[33px] select-none bg-gray-500/8 border border-gray-400"
             aria-haspopup="listbox"
             :aria-expanded="open === 'facet:{{ key }}'"
+            aria-label="{{ label }} filter"
         >
             <span class="flex min-w-0 items-baseline gap-2 truncate">
                 <span class="truncate text-xs uppercase text-base-content/70">{{ label }}</span>
@@ -200,6 +204,7 @@
                 <input
                     type="search"
                     :placeholder="'Search ' + '{{ label | lower }}'"
+                    :aria-label="'Search {{ label | lower }}'"
                     x-model="mobileSearch['{{ key }}']"
                 >
             </label>
@@ -236,11 +241,13 @@
     {% endmacro %}
 
     <div class="relative mb-8 flex items-center gap-6 lg:gap-8">
-        <p id="result-count" class="text-base font-semibold text-base-content">0 results</p>
+        <p id="result-count" role="status" aria-live="polite" class="text-base font-semibold text-base-content">0 results</p>
 
         <button
             type="button"
             class="ml-auto inline-flex items-center gap-2 border border-primary bg-base-100 px-3 py-1.5 text-sm font-medium text-primary lg:hidden"
+            aria-label="Open filters"
+            aria-haspopup="dialog"
             @click="openMobileFilters()"
         >
             <svg class="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
@@ -272,6 +279,7 @@
         ></button>
 
         <aside
+            aria-label="Filters"
             class="absolute inset-y-0 right-0 z-10 w-full bg-base-100"
             x-transition:enter="transition ease-out duration-180"
             x-transition:enter-start="translate-x-full"
@@ -311,7 +319,7 @@
     <div id="toolbar" class="mb-5 flex flex-col gap-3"></div>
 
     <!-- Loading skeleton -->
-    <div id="loading" class="htmx-indicator">
+    <div id="loading" class="htmx-indicator" role="status" aria-label="Loading results">
         <div class="mb-5 skeleton h-6 w-32 opacity-40"></div>
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {% for _ in range(4) %}

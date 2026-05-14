@@ -7,9 +7,5 @@
 </template>
 
 <template x-if="currentMedia && currentMedia.media_kind === 'other' && !isKindLoading('other')">
-    {% if mode == 'desktop' %}
-    {{ preview_unavailable_card('Preview unavailable', 'This file type cannot be previewed inline yet, but you can still download it.', 'Download file') }}
-    {% else %}
     {{ preview_unavailable_card('Preview unavailable', 'This file type cannot be previewed inline yet, but you can still download it.', 'Download file', 'mx-3 my-3 w-auto') }}
-    {% endif %}
 </template>

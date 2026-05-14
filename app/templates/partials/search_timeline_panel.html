@@ -35,7 +35,7 @@
                 </div>
             </div>
 
-            <div class="relative mt-4 h-28 mx-9">
+            <div class="relative mt-4 h-28 mx-9" @touchend="handleTimelineTap($event)" @dblclick.prevent="resetTimeRange()">
                 <div
                     class="absolute inset-x-0 bottom-8 grid h-16 items-end"
                     style="grid-template-columns: repeat({{ timeline_count }}, minmax(0, 1fr));"

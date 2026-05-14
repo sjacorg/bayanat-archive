@@ -1,0 +1,228 @@
+<aside
+    class="fixed bottom-[var(--doc-related-toggle-height)] left-0 right-0 z-[58] bg-slate-100/98 max-md:bottom-[calc(var(--doc-related-toggle-height)+var(--doc-mobile-actions-height))]"
+    x-cloak
+    x-show="activePanel"
+    x-transition.opacity
+    @keydown.escape.window="closePanel"
+    @click="closePanel"
+    :style="`top: var(--doc-header-height);`"
+    :aria-label="panelTitle + ' panel'"
+>
+    <div class="h-full overflow-auto px-4 py-5 md:pl-[calc(var(--doc-desktop-actions-width)+2rem)] md:pr-6 md:pt-6" @click.stop>
+        <div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
+            <p class="mb-1 max-w-5xl text-xs font-semibold uppercase tracking-wider text-slate-700">
+                Reference Number: {{ document.id }}
+            </p>
+            <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-xl font-semibold leading-none text-slate-900">
+                <span aria-hidden="true">
+                    <svg class="size-5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
+                    </svg>
+                </span>
+                <span class="text-base">Close View</span>
+            </button>
+        </div>
+
+        <div class="mx-auto mt-3 max-w-5xl border-t border-slate-300 pt-3 text-base leading-6 text-slate-800 max-md:text-sm max-md:leading-5">
+            <p x-text="panelTitle" class="mb-3 inline-block bg-[#3D9B8F] px-4 py-2 text-xl font-semibold leading-none text-white max-md:text-base"></p>
+            <div class="break-all" x-show="activePanel === 'info'">
+                <div role="tablist" aria-label="Detail scope" class="detail-scope-tabs tabs tabs-border tabs-xl">
+                    <button
+                        type="button"
+                        role="tab"
+                        class="tab text-sm font-semibold"
+                        :class="!showDocumentDetails ? 'tab-active text-primary [--tab-border-color:var(--color-primary)]' : 'text-slate-600'"
+                        :aria-selected="!showDocumentDetails"
+                        @click="showDocumentDetails = false"
+                    >
+                        <span class="md:px-4">Page details</span>
+                    </button>
+                    <button
+                        type="button"
+                        role="tab"
+                        class="tab text-sm font-semibold"
+                        :class="showDocumentDetails ? 'tab-active text-primary [--tab-border-color:var(--color-primary)]' : 'text-slate-600'"
+                        :aria-selected="showDocumentDetails"
+                        @click="showDocumentDetails = true"
+                    >
+                        <span class="md:px-4">Full document details</span>
+                    </button>
+                </div>
+
+                <table x-show="!showDocumentDetails" class="w-full border-collapse text-base max-md:text-sm">
+                    <tbody>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Page</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="`${displayMediaNumber} / ${displayMediaTotal}`"></td>
+                        </tr>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Filename</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top break-all" x-text="currentMedia?.filename || 'N/A'"></td>
+                        </tr>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Media ID</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.media_id || 'N/A'"></td>
+                        </tr>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Type</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.media_type || 'N/A'"></td>
+                        </tr>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Title</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.title || 'N/A'"></td>
+                        </tr>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Arabic Title</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.title_ar || 'N/A'"></td>
+                        </tr>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Language</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.language || 'N/A'"></td>
+                        </tr>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Has OCR Text</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.ocr_text ? 'Yes' : 'No'"></td>
+                        </tr>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">Has Original Text</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.original_text ? 'Yes' : 'No'"></td>
+                        </tr>
+                        <tr>
+                            <th class="w-44 border-t border-slate-300 px-2.5 py-1.5 text-left align-top font-semibold">OCR Confidence</th>
+                            <td class="border-t border-slate-300 px-2.5 py-1.5 text-left align-top" x-text="currentMedia?.confidence !== null && currentMedia?.confidence !== undefined ? `${Number(currentMedia.confidence).toFixed(1)}%` : 'N/A'"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div x-show="showDocumentDetails">
+                    <table class="w-full border-collapse text-sm">
+                        <tbody>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">ID</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.id }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Title</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.title }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Arabic Title</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.title_ar if document.title_ar else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Slug</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top break-all">{{ document.slug }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Description</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.description | strip_html if document.description else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">OCR Text</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.ocr_text if document.ocr_text else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Translation</th>
+                                <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.translation if document.translation else 'N/A' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <table x-show="showDocumentDetails" class="mt-2 w-full border-collapse text-sm">
+                    <tbody>
+                        <tr>
+                            <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Published Date</th>
+                            <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.publish_date if document.publish_date else 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Documentation Date</th>
+                            <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ document.documentation_date if document.documentation_date else 'N/A' }}</td>
+                        </tr>
+                        <tr>
+                            <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Labels</th>
+                            <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                {% if document_labels %}
+                                    {{ document_labels | join(', ') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Locations</th>
+                            <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                {% if document_locations %}
+                                    {{ document_locations | join(', ') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Sources</th>
+                            <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                {% if document_sources %}
+                                    {{ document_sources | join(', ') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Events</th>
+                            <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                {% if document_events %}
+                                    <ul class="m-0 list-disc pl-4">
+                                        {% for event in document_events %}
+                                            <li>
+                                                {{ event.title or 'Untitled event' }}
+                                                {% if event.event_type %} ({{ event.event_type }}){% endif %}
+                                                {% if event.from_date or event.to_date %}
+                                                    — {{ event.from_date or '?' }} to {{ event.to_date or '?' }}
+                                                {% endif %}
+                                                {% if event.location %} — {{ event.location }}{% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Media Summary</th>
+                            <td class="border-t border-slate-300 px-2 py-1 text-left align-top">
+                                {{ media_summary.total }} total
+                                ({{ media_summary.images }} images, {{ media_summary.pdfs }} PDFs{% if media_summary.videos %}, {{ media_summary.videos }} videos{% endif %}{% if media_summary.audios %}, {{ media_summary.audios }} audio{% if media_summary.audios != 1 %}s{% endif %}{% endif %}{% if media_summary.docx %}, {{ media_summary.docx }} DOCX{% endif %}{% if media_summary.other %}, {{ media_summary.other }} other{% endif %})
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Related Items</th>
+                            <td class="border-t border-slate-300 px-2 py-1 text-left align-top">{{ related_count }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="whitespace-pre-wrap break-all text-right" x-show="activePanel === 'arabic'">
+                <template x-if="currentArabicText">
+                    <div :dir="arabicTextDir" x-text="currentArabicText"></div>
+                </template>
+                <template x-if="!currentArabicText">
+                    <p>No Arabic/OCR text is available for this page.</p>
+                </template>
+            </div>
+
+            <div class="whitespace-pre-wrap break-all" x-show="activePanel === 'translation'">
+                <template x-if="currentTranslationText">
+                    <div x-text="currentTranslationText"></div>
+                </template>
+                <template x-if="!currentTranslationText">
+                    <p>No English translation is available for this page.</p>
+                </template>
+            </div>
+
+        </div>
+    </div>
+</aside>
