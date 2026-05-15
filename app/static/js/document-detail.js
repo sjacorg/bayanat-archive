@@ -22,7 +22,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     wheelZoomSensitivityMobile: 0.0015,
     wheelZoomSensitivityDesktop: 0.0022,
     activePanel: null,
-    showDocumentDetails: false,
     relatedOpen: false,
     pinchStartDistance: null,
     pinchStartZoom: 1,
@@ -261,7 +260,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     get currentMaxZoom() {
-      if (this.isCatalogOnlyDocument()) return this.maxZoom;
+      if (this.isCatalogMedia()) return this.maxZoom;
       if (this.isImageMedia()) return this.maxZoom;
       if (this.isPdfMedia() || this.isDocxMedia()) return this.maxZoom;
       return 1;
@@ -279,12 +278,12 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       return item?.media_kind === "docx";
     },
 
-    isCatalogOnlyDocument() {
-      return !this.mediaCount;
+    isCatalogMedia(item = this.currentMedia) {
+      return item?.media_kind === "catalog";
     },
 
     isZoomableMedia(item = this.currentMedia) {
-      if (this.isCatalogOnlyDocument()) return true;
+      if (this.isCatalogMedia(item)) return true;
       return this.isImageMedia(item) || this.isPdfMedia(item) || this.isDocxMedia(item);
     },
 
@@ -367,7 +366,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         if (this.isImageMedia() && !this.hasKindError("image")) {
           this.applyImageZoom();
         }
-        if (this.isCatalogOnlyDocument()) {
+        if (this.isCatalogMedia()) {
           this.applyCatalogZoom();
         }
       }, 120);
@@ -624,16 +623,13 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     togglePanel(panelName) {
       if (this.activePanel === panelName) {
         this.activePanel = null;
-        this.showDocumentDetails = false;
         return;
       }
       this.activePanel = panelName;
-      this.showDocumentDetails = false;
     },
 
     closePanel() {
       this.activePanel = null;
-      this.showDocumentDetails = false;
     },
 
     handleDownload() {

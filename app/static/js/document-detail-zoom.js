@@ -231,7 +231,7 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
       const page = viewer.$refs.catalogTextPage;
       if (!container || !frame || !page) return;
 
-      if (!viewer.isCatalogOnlyDocument()) {
+      if (!viewer.isCatalogMedia()) {
         frame.classList.remove("is-zoomed");
         frame.style.width = "";
         frame.style.minHeight = "";
@@ -341,7 +341,7 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
       if (Math.abs(clamped - current) < 0.001) return;
 
       const anchor = options.anchor || null;
-      if (viewer.isImageMedia() || viewer.isPdfMedia() || viewer.isDocxMedia() || viewer.isCatalogOnlyDocument()) {
+      if (viewer.isImageMedia() || viewer.isPdfMedia() || viewer.isDocxMedia() || viewer.isCatalogMedia()) {
         this.captureScroll(viewer, current, clamped, anchor);
       } else {
         viewer.pendingScrollRestore = null;
@@ -358,7 +358,7 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
       } else if (viewer.isDocxMedia()) {
         this.applyDocx(viewer);
         this.restoreScroll(viewer);
-      } else if (viewer.isCatalogOnlyDocument()) {
+      } else if (viewer.isCatalogMedia()) {
         this.applyCatalog(viewer);
         this.restoreScroll(viewer);
       }

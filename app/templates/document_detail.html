@@ -17,7 +17,20 @@
 {% block page_feedback %}{% endblock %}
 
 {% block content %}
-{% set media_payload = [] %}
+{% set media_payload = [{
+    "id": "catalog",
+    "media_id": "catalog",
+    "filename": "",
+    "src": "",
+    "title": "Document Text",
+    "title_ar": "",
+    "media_type": "Catalog record",
+    "language": "",
+    "ocr_text": document.ocr_text or '',
+    "original_text": document.ocr_text or '',
+    "confidence": none,
+    "media_kind": "catalog"
+}] %}
 {% for item in media_rows %}
     {% set media_type = (item.media_type or '') | lower %}
     {% set media_kind = 'other' %}
@@ -73,8 +86,15 @@
     <button
         type="button"
         title="{{ label }}"
+        {% if panel == 'arabic' %}
+        x-show="currentArabicText"
+        x-cloak
+        {% elif panel == 'translation' %}
+        x-show="currentTranslationText"
+        x-cloak
+        {% endif %}
         {% if not panel %}
-        x-show="currentMedia"
+        x-show="currentMedia && currentMedia.media_kind !== 'catalog'"
         x-cloak
         {% endif %}
         class="{% if layout == 'desktop' %}flex w-full items-center gap-3 px-4 py-3 text-left text-sm{% else %}text-xs inline-flex flex-col items-center justify-center gap-2{% endif %} border-0 {% if layout == 'desktop' and not is_last %}border-b border-[#5AB5A9]{% endif %}{% if layout == 'mobile' and has_divider %}border-r border-r-[rgba(26,69,64,0.25)]{% endif %} rounded-none bg-secondary text-base font-semibold leading-none text-white transition-colors hover:bg-primary disabled:cursor-default disabled:opacity-50 disabled:hover:bg-secondary"
@@ -111,12 +131,11 @@
 {% macro media_nav_arrow(direction, classes) -%}
     <button
         type="button"
-        x-show="mediaCount > 1"
+        x-show="{{ 'hasPrevMedia' if direction == 'prev' else 'hasNextMedia' }}"
         x-cloak
         class="{{ classes }}"
         @touchstart.stop
         @click.stop.prevent="{{ 'prevMedia()' if direction == 'prev' else 'nextMedia()' }}"
-        :disabled="{{ '!hasPrevMedia || isAnimating' if direction == 'prev' else '!hasNextMedia || isAnimating' }}"
         aria-label="{{ 'Previous media' if direction == 'prev' else 'Next media' }}"
     >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="mx-auto h-6 w-6">
@@ -219,8 +238,7 @@
     {% include 'partials/document_detail/details_panel.html' %}
 
     <nav
-        class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] max-md:grid"
-        :class="currentMedia ? 'grid-cols-4' : 'grid-cols-3'"
+        class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-flow-col auto-cols-fr max-md:grid"
         aria-label="Document actions"
     >
         {{ action_button('info', 'Info', 'info', 'mobile', true) }}

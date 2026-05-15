@@ -1,4 +1,4 @@
-<template x-if="!mediaCount">
+<template x-if="currentMedia && currentMedia.media_kind === 'catalog'">
     <div class="doc-catalog-scroll flex w-full justify-center px-3 py-5 md:px-[calc(var(--doc-desktop-actions-width)+2rem)] md:py-8" x-ref="catalogTextList">
         <div x-ref="catalogTextZoomFrame" class="inline-block">
             <article
@@ -26,7 +26,7 @@
                 <section class="mt-6 border-t border-slate-200 pt-5">
                     <h2 class="text-lg font-semibold text-slate-950">Record Details</h2>
                     <p class="mt-3 text-sm leading-6 text-slate-700 md:text-base md:leading-7">
-                        This catalog record does not include a description or extracted text yet. Metadata is available in the Info panel.
+                        This catalog record does not include a description or extracted text yet. Metadata is available below and in the Info panel.
                     </p>
                 </section>
                 {% endif %}
