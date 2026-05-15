@@ -66,7 +66,7 @@
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
         <path d="M7.79163 12.042H9.20829V7.79199H7.79163V12.042ZM8.49996 1.41699C4.58996 1.41699 1.41663 4.59033 1.41663 8.50033C1.41663 12.4103 4.58996 15.5837 8.49996 15.5837C12.41 15.5837 15.5833 12.4103 15.5833 8.50033C15.5833 4.59033 12.41 1.41699 8.49996 1.41699ZM8.49996 14.167C5.37621 14.167 2.83329 11.6241 2.83329 8.50033C2.83329 5.37658 5.37621 2.83366 8.49996 2.83366C11.6237 2.83366 14.1666 5.37658 14.1666 8.50033C14.1666 11.6241 11.6237 14.167 8.49996 14.167ZM7.79163 6.37533H9.20829V4.95866H7.79163V6.37533Z" fill="white"/>
     </svg>
-    {% elif kind == 'arabic' %}
+    {% elif kind == 'extract' %}
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
         <path d="M12.0416 15.5837V14.167H14.1666V12.042H15.5833V14.5212C15.5833 14.7974 15.47 15.0453 15.2575 15.2578C15.045 15.4703 14.797 15.5837 14.5208 15.5837H12.0416ZM4.95829 15.5837H2.47913C2.20288 15.5837 1.95496 15.4703 1.74246 15.2578C1.52996 15.0453 1.41663 14.7974 1.41663 14.5212V12.042H2.83329V14.167H4.95829V15.5837ZM12.0416 1.41699H14.5208C14.797 1.41699 15.045 1.53033 15.2575 1.74283C15.47 1.95533 15.5833 2.20324 15.5833 2.47949V4.95866H14.1666V2.83366H12.0416V1.41699ZM4.95829 1.41699V2.83366H2.83329V4.95866H1.41663V2.47949C1.41663 2.20324 1.52996 1.95533 1.74246 1.74283C1.95496 1.53033 2.20288 1.41699 2.47913 1.41699H4.95829Z" fill="white"/>
         <path d="M8.14587 7.4375H7.08337V6.375H10.2709V7.4375H9.20837V10.625H8.14587V7.4375Z" fill="white"/>
@@ -86,8 +86,8 @@
     <button
         type="button"
         title="{{ label }}"
-        {% if panel == 'arabic' %}
-        x-show="currentArabicText"
+        {% if panel == 'extracted' %}
+        x-show="currentExtractedText"
         x-cloak
         {% elif panel == 'translation' %}
         x-show="currentTranslationText"
@@ -207,7 +207,7 @@
     >
         <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+var(--doc-mobile-actions-height))] z-[70] hidden w-[var(--doc-desktop-actions-width)] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
             {{ action_button('info', 'Info', 'info', 'desktop') }}
-            {{ action_button('arabic', 'Extract Text', 'arabic', 'desktop') }}
+            {{ action_button('extract', 'Extracted Text', 'extracted', 'desktop') }}
             {{ action_button('translation', 'Translate', 'translation', 'desktop') }}
             {{ action_button('download', 'Download', none, 'desktop', false, true) }}
         </aside>
@@ -242,7 +242,7 @@
         aria-label="Document actions"
     >
         {{ action_button('info', 'Info', 'info', 'mobile', true) }}
-        {{ action_button('arabic', 'Extract Text', 'arabic', 'mobile', true) }}
+        {{ action_button('extract', 'Extracted Text', 'extracted', 'mobile', true) }}
         {{ action_button('translation', 'Translate', 'translation', 'mobile', true) }}
         {{ action_button('download', 'Download', none, 'mobile') }}
     </nav>

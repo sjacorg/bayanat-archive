@@ -184,12 +184,12 @@
                 </details>
             </div>
 
-            <div class="whitespace-pre-wrap break-words text-right" x-show="activePanel === 'arabic'">
-                <template x-if="currentArabicText">
-                    <div :dir="arabicTextDir" x-text="currentArabicText"></div>
+            <div class="whitespace-pre-wrap break-words" x-show="activePanel === 'extracted'">
+                <template x-if="currentExtractedText">
+                    <div dir="auto" x-text="currentExtractedText"></div>
                 </template>
-                <template x-if="!currentArabicText">
-                    <p>No Arabic/OCR text is available for this page.</p>
+                <template x-if="!currentExtractedText">
+                    <p>No extracted text is available for this page.</p>
                 </template>
             </div>
 

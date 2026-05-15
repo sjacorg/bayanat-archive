@@ -213,29 +213,21 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     get panelTitle() {
       if (this.activePanel === "info") return "Info";
-      if (this.activePanel === "arabic") return "Arabic Text";
+      if (this.activePanel === "extracted") return "Extracted Text";
       if (this.activePanel === "translation") return "English Translation";
       return "";
     },
 
-    get currentArabicText() {
+    get currentExtractedText() {
       const mediaOriginal = (this.currentMedia?.original_text || "").trim();
       const mediaOcr = (this.currentMedia?.ocr_text || "").trim();
       const docOcr = (this.documentOcrText || "").trim();
       return mediaOriginal || mediaOcr || docOcr;
     },
 
-    get arabicTextDir() {
-      const text = this.currentArabicText;
-      if (!text) return "rtl";
-      return /[\u0600-\u06FF]/.test(text) ? "rtl" : "auto";
-    },
-
     get currentTranslationText() {
-      const mediaOcr = (this.currentMedia?.ocr_text || "").trim();
       const docTranslation = (this.documentTranslation || "").trim();
-      const docOcr = (this.documentOcrText || "").trim();
-      return mediaOcr || docTranslation || docOcr;
+      return docTranslation;
     },
 
     get canvasCursorClass() {
