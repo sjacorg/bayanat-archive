@@ -75,17 +75,28 @@
                 hx-swap="outerHTML transition:true"
             >
                 <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
-                    <div class="flex min-h-16 items-center justify-between gap-4 py-2">
-                        <div class="flex items-center gap-2">
+                    <div class="flex min-h-16 items-center justify-between gap-3 py-2 sm:gap-4">
+                        <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
                             <label for="main-nav-drawer" class="btn btn-ghost btn-square md:hidden" aria-label="Open navigation menu">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path d="M4 7h16M4 12h16M4 17h16" stroke-width="2" stroke-linecap="round"></path>
                                 </svg>
                             </label>
-                            <a href="{{ url_for('search.index') }}" class="text-lg font-light tracking-tight text-primary sm:text-xl">
-                                Bayanat <span class="font-semibold">Document Archive</span>
+                            <a href="{{ url_for('search.index') }}" class="min-w-0 shrink whitespace-nowrap text-base font-light leading-tight tracking-tight text-primary sm:text-xl">
+                                Bayanat <span class="font-semibold"><span class="hidden sm:inline">Document </span>Archive</span>
                             </a>
                         </div>
+
+                        <a
+                            href="https://syriaaccountability.org/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            hx-boost="false"
+                            class="inline-flex shrink-0 items-center opacity-90 transition-opacity hover:opacity-100"
+                            aria-label="Syria Justice and Accountability Centre"
+                        >
+                            <img src="{{ url_for('static', filename='assets/sjac-logo-dt.svg') }}" alt="Syria Justice and Accountability Centre" class="h-5 w-auto max-w-[6.25rem] sm:h-7 sm:max-w-[9rem]">
+                        </a>
 
                         <nav class="hidden items-center gap-6 text-sm md:flex">
                             {% for link in nav_links %}
