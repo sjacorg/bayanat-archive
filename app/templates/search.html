@@ -22,57 +22,70 @@
 
     <!-- Search row -->
     <div :class="timePanelOpen ? '' : 'mb-8'" class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60">
-        <div class="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-4 py-6 sm:gap-8 sm:px-6 lg:px-10">
-            <h1 class="hidden text-2xl font-semibold tracking-tight text-primary shrink-0 sm:block">Search</h1>
-            <label for="q-input" class="input w-full border-base-300 bg-base-100 h-[40px] md:h-[54px]">
-                <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-                    <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.3-4.3"></path>
-                    </g>
-                </svg>
-                <input
-                    x-ref="searchInput"
-                    type="search"
-                    name="q"
-                    id="q-input"
-                    aria-label="Search for a document"
-                    placeholder="Search for a document"
-                    autocomplete="off"
-                    class="search-param text-base"
-                    hx-get="/search"
-                    hx-trigger="input changed delay:500ms, search"
-                    hx-target="#results"
-                    hx-push-url="true"
-                    hx-include=".search-param"
-                    hx-vals='{"page": "1"}'
-                    hx-indicator="#loading"
+        <div class="mx-auto w-full max-w-[1200px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
+            <div class="mb-6 max-w-4xl sm:mb-7">
+                <h1 class="m-0 text-[28px] font-light leading-[1.12] tracking-tight text-primary sm:text-[40px] sm:leading-[1.08]">
+                    Search Documentation for Accountability in Syria.
+                </h1>
+                <p class="mt-4 max-w-[760px] text-[15px] font-light leading-[1.52] text-base-content sm:hidden">
+                    Search public records preserved by SJAC, including documents, photos, videos, interviews, and other materials supporting documentation, research, and accountability efforts.
+                </p>
+                <p class="mt-5 hidden max-w-[760px] text-base font-light leading-[1.62] text-base-content sm:block">
+                    The Bayanat Document Archive provides public access to records preserved by the Syria Justice and Accountability Centre (SJAC) to support documentation, research, and accountability efforts. The collection includes government documents, photos, videos, interviews, and other materials gathered from multiple sources and catalogued according to human rights documentation standards.
+                </p>
+            </div>
+
+            <div class="flex items-center gap-4 sm:gap-8">
+                <label for="q-input" class="input w-full border-base-300 bg-base-100 h-[40px] md:h-[54px]">
+                    <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </g>
+                    </svg>
+                    <input
+                        x-ref="searchInput"
+                        type="search"
+                        name="q"
+                        id="q-input"
+                        aria-label="Search for a document"
+                        placeholder="Search for a document"
+                        autocomplete="off"
+                        class="search-param text-base"
+                        hx-get="/search"
+                        hx-trigger="input changed delay:500ms, search"
+                        hx-target="#results"
+                        hx-push-url="true"
+                        hx-include=".search-param"
+                        hx-vals='{"page": "1"}'
+                        hx-indicator="#loading"
+                    >
+                </label>
+                <button
+                    type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center text-5xl leading-none text-primary/80"
+                    :aria-expanded="timePanelOpen ? 'true' : 'false'"
+                    aria-label="Toggle time range filter"
+                    aria-controls="timeline-panel"
+                    @click="toggleTimePanel()"
                 >
-            </label>
-            <button
-                type="button"
-                class="inline-flex h-10 w-10 items-center justify-center text-5xl leading-none text-primary/80"
-                :aria-expanded="timePanelOpen ? 'true' : 'false'"
-                aria-label="Toggle time range filter"
-                aria-controls="timeline-panel"
-                @click="toggleTimePanel()"
-            >
-                <svg
-                    aria-hidden="true"
-                    class="size-9 origin-center transform-gpu"
-                    :class="timePanelOpen ? 'rotate-45' : 'rotate-0'"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path d="M12 5v14"></path>
-                    <path d="M5 12h14"></path>
-                </svg>
-                <span class="sr-only">Toggle time range</span>
-            </button>
+                    <svg
+                        aria-hidden="true"
+                        class="size-9 origin-center transform-gpu"
+                        :class="timePanelOpen ? 'rotate-45' : 'rotate-0'"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
+                    </svg>
+                    <span class="sr-only">Toggle time range</span>
+                </button>
+            </div>
         </div>
     </div>
 
