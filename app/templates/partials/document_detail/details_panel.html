@@ -123,6 +123,12 @@
                                         <th class="w-40 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Description</th>
                                         <td class="border-t border-slate-300 px-2 py-1 align-top" dir="auto">{{ document.description | strip_html if document.description else 'N/A' }}</td>
                                     </tr>
+                                    {% if document.public_description %}
+                                    <tr>
+                                        <th class="w-40 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">SJAC Context</th>
+                                        <td class="border-t border-slate-300 px-2 py-1 align-top" dir="auto">{{ document.public_description | strip_html }}</td>
+                                    </tr>
+                                    {% endif %}
                                     <tr>
                                         <th class="w-40 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Source Link</th>
                                         <td class="border-t border-slate-300 px-2 py-1 align-top break-all">

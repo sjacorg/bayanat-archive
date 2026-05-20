@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
-{% block description %}{{ document.description | strip_html | truncate(180) if document.description else (document.translation | truncate(180) if document.translation else 'Document detail in the Bayanat Document Archive') }}{% endblock %}
+{% block description %}{{ document.public_description | strip_html | truncate(180) if document.public_description else (document.description | strip_html | truncate(180) if document.description else (document.translation | truncate(180) if document.translation else 'Document detail in the Bayanat Document Archive')) }}{% endblock %}
 {% block og_type %}article{% endblock %}
 {% block og_title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
 {% block og_description %}{{ self.description() }}{% endblock %}

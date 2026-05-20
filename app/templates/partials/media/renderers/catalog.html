@@ -8,6 +8,13 @@
                 <p class="text-xs font-semibold uppercase tracking-wider text-primary">Document Text</p>
                 <h1 class="mt-2 text-xl font-semibold leading-tight text-slate-950 md:text-3xl">{{ document.title }}</h1>
 
+                {% if document.public_description %}
+                <section class="mt-6 border-l-4 border-secondary bg-slate-50 px-4 py-4">
+                    <p class="m-0 text-xs font-semibold uppercase tracking-[0.14em] text-secondary">SJAC Context</p>
+                    <div dir="auto" class="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-800 md:text-base md:leading-7">{{ document.public_description | strip_html }}</div>
+                </section>
+                {% endif %}
+
                 {% if document.description %}
                 <section class="mt-6 border-t border-slate-200 pt-5">
                     <h2 class="text-lg font-semibold text-slate-950">Description</h2>
@@ -19,15 +26,6 @@
                 <section class="mt-6 border-t border-slate-200 pt-5">
                     <h2 class="text-lg font-semibold text-slate-950">Extracted Text</h2>
                     <div dir="auto" class="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-800 md:text-base md:leading-7">{{ document.ocr_text }}</div>
-                </section>
-                {% endif %}
-
-                {% if not document.description and not document.ocr_text %}
-                <section class="mt-6 border-t border-slate-200 pt-5">
-                    <h2 class="text-lg font-semibold text-slate-950">Record Details</h2>
-                    <p class="mt-3 text-sm leading-6 text-slate-700 md:text-base md:leading-7">
-                        This catalog record does not include a description or extracted text yet. Metadata is available below and in the Info panel.
-                    </p>
                 </section>
                 {% endif %}
 
