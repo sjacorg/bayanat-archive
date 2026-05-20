@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
-{% block description %}{{ document.description | strip_html | truncate(180) if document.description else (document.translation | truncate(180) if document.translation else 'Document detail in the Bayanat Document Archive') }}{% endblock %}
+{% block description %}{{ document.public_description | strip_html | truncate(180) if document.public_description else (document.description | strip_html | truncate(180) if document.description else (document.translation | truncate(180) if document.translation else 'Document detail in the Bayanat Document Archive')) }}{% endblock %}
 {% block og_type %}article{% endblock %}
 {% block og_title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
 {% block og_description %}{{ self.description() }}{% endblock %}
@@ -17,7 +17,20 @@
 {% block page_feedback %}{% endblock %}
 
 {% block content %}
-{% set media_payload = [] %}
+{% set media_payload = [{
+    "id": "catalog",
+    "media_id": "catalog",
+    "filename": "",
+    "src": "",
+    "title": "Document Text",
+    "title_ar": "",
+    "media_type": "Catalog record",
+    "language": "",
+    "ocr_text": document.ocr_text or '',
+    "original_text": document.ocr_text or '',
+    "confidence": none,
+    "media_kind": "catalog"
+}] %}
 {% for item in media_rows %}
     {% set media_type = (item.media_type or '') | lower %}
     {% set media_kind = 'other' %}
@@ -53,7 +66,7 @@
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
         <path d="M7.79163 12.042H9.20829V7.79199H7.79163V12.042ZM8.49996 1.41699C4.58996 1.41699 1.41663 4.59033 1.41663 8.50033C1.41663 12.4103 4.58996 15.5837 8.49996 15.5837C12.41 15.5837 15.5833 12.4103 15.5833 8.50033C15.5833 4.59033 12.41 1.41699 8.49996 1.41699ZM8.49996 14.167C5.37621 14.167 2.83329 11.6241 2.83329 8.50033C2.83329 5.37658 5.37621 2.83366 8.49996 2.83366C11.6237 2.83366 14.1666 5.37658 14.1666 8.50033C14.1666 11.6241 11.6237 14.167 8.49996 14.167ZM7.79163 6.37533H9.20829V4.95866H7.79163V6.37533Z" fill="white"/>
     </svg>
-    {% elif kind == 'arabic' %}
+    {% elif kind == 'extract' %}
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" fill="none" aria-hidden="true" class="{{ classes }}">
         <path d="M12.0416 15.5837V14.167H14.1666V12.042H15.5833V14.5212C15.5833 14.7974 15.47 15.0453 15.2575 15.2578C15.045 15.4703 14.797 15.5837 14.5208 15.5837H12.0416ZM4.95829 15.5837H2.47913C2.20288 15.5837 1.95496 15.4703 1.74246 15.2578C1.52996 15.0453 1.41663 14.7974 1.41663 14.5212V12.042H2.83329V14.167H4.95829V15.5837ZM12.0416 1.41699H14.5208C14.797 1.41699 15.045 1.53033 15.2575 1.74283C15.47 1.95533 15.5833 2.20324 15.5833 2.47949V4.95866H14.1666V2.83366H12.0416V1.41699ZM4.95829 1.41699V2.83366H2.83329V4.95866H1.41663V2.47949C1.41663 2.20324 1.52996 1.95533 1.74246 1.74283C1.95496 1.53033 2.20288 1.41699 2.47913 1.41699H4.95829Z" fill="white"/>
         <path d="M8.14587 7.4375H7.08337V6.375H10.2709V7.4375H9.20837V10.625H8.14587V7.4375Z" fill="white"/>
@@ -73,7 +86,18 @@
     <button
         type="button"
         title="{{ label }}"
-        class="{% if layout == 'desktop' %}flex w-full items-center gap-3 px-4 py-3 text-left text-sm{% else %}text-xs inline-flex flex-col items-center justify-center gap-2{% endif %} border-0 {% if layout == 'desktop' and not is_last %}border-b border-[#5AB5A9]{% endif %}{% if layout == 'mobile' and has_divider %}border-r border-r-[rgba(26,69,64,0.25)]{% endif %} rounded-none bg-secondary text-base font-semibold leading-none text-white transition-colors hover:bg-primary"
+        {% if panel == 'extracted' %}
+        x-show="currentExtractedText"
+        x-cloak
+        {% elif panel == 'translation' %}
+        x-show="currentTranslationText"
+        x-cloak
+        {% endif %}
+        {% if not panel %}
+        x-show="currentMedia && currentMedia.media_kind !== 'catalog'"
+        x-cloak
+        {% endif %}
+        class="{% if layout == 'desktop' %}flex w-full items-center gap-3 px-4 py-3 text-left text-sm{% else %}text-xs inline-flex flex-col items-center justify-center gap-2{% endif %} border-0 {% if layout == 'desktop' and not is_last %}border-b border-[#5AB5A9]{% endif %}{% if layout == 'mobile' and has_divider %}border-r border-r-[rgba(26,69,64,0.25)]{% endif %} rounded-none bg-secondary text-base font-semibold leading-none text-white transition-colors hover:bg-primary disabled:cursor-default disabled:opacity-50 disabled:hover:bg-secondary"
         {% if panel %}
         :class="{ 'bg-primary': activePanel === '{{ panel }}' }"
         @click="togglePanel('{{ panel }}')"
@@ -84,16 +108,6 @@
         {{ action_icon(kind, "h-4 w-4 shrink-0" if layout == 'desktop' else "h-6 w-6 shrink-0") }}
         <span>{{ label }}</span>
     </button>
-{%- endmacro %}
-
-{% macro empty_media_card(wrapper_classes='w-full') -%}
-    <div class="flex min-h-[42vh] w-full items-start justify-center px-3 py-3 md:px-0">
-        <div class="{{ wrapper_classes }} mx-auto w-full max-w-2xl border border-slate-300 border-l-4 border-l-primary bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-            <h2 class="m-0 text-lg font-semibold text-slate-900">No media available</h2>
-            <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
-            <a href="{{ url_for('search.index') }}" class="inline-block border border-primary bg-primary px-3 py-1.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-white hover:text-primary">Back to Search</a>
-        </div>
-    </div>
 {%- endmacro %}
 
 {% macro preview_unavailable_card(title, message, cta_label='Download file', wrapper_classes='w-full') -%}
@@ -117,10 +131,11 @@
 {% macro media_nav_arrow(direction, classes) -%}
     <button
         type="button"
+        x-show="{{ 'hasPrevMedia' if direction == 'prev' else 'hasNextMedia' }}"
+        x-cloak
         class="{{ classes }}"
         @touchstart.stop
         @click.stop.prevent="{{ 'prevMedia()' if direction == 'prev' else 'nextMedia()' }}"
-        :disabled="{{ '!hasPrevMedia || isAnimating' if direction == 'prev' else '!hasNextMedia || isAnimating' }}"
         aria-label="{{ 'Previous media' if direction == 'prev' else 'Next media' }}"
     >
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="mx-auto h-6 w-6">
@@ -192,7 +207,7 @@
     >
         <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+var(--doc-mobile-actions-height))] z-[70] hidden w-[var(--doc-desktop-actions-width)] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
             {{ action_button('info', 'Info', 'info', 'desktop') }}
-            {{ action_button('arabic', 'Extract Text', 'arabic', 'desktop') }}
+            {{ action_button('extract', 'Extracted Text', 'extracted', 'desktop') }}
             {{ action_button('translation', 'Translate', 'translation', 'desktop') }}
             {{ action_button('download', 'Download', none, 'desktop', false, true) }}
         </aside>
@@ -203,11 +218,8 @@
             :style="`touch-action: ${zoom > 1.001 ? 'pan-x pan-y' : 'pan-y'};`"
         >
             <div class="flex w-full min-w-0 items-start justify-center" :class="canvasCursorClass">
-                <template x-if="!mediaCount">
-                    {{ empty_media_card() }}
-                </template>
-
                 {% set mode = 'desktop' %}
+                {% include 'partials/media/renderers/catalog.html' %}
                 {% include 'partials/media/renderers/image.html' %}
                 {% include 'partials/media/renderers/video.html' %}
                 {% include 'partials/media/renderers/audio.html' %}
@@ -225,9 +237,12 @@
 
     {% include 'partials/document_detail/details_panel.html' %}
 
-    <nav class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-cols-4 max-md:grid" aria-label="Document actions">
+    <nav
+        class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-flow-col auto-cols-fr max-md:grid"
+        aria-label="Document actions"
+    >
         {{ action_button('info', 'Info', 'info', 'mobile', true) }}
-        {{ action_button('arabic', 'Extract Text', 'arabic', 'mobile', true) }}
+        {{ action_button('extract', 'Extracted Text', 'extracted', 'mobile', true) }}
         {{ action_button('translation', 'Translate', 'translation', 'mobile', true) }}
         {{ action_button('download', 'Download', none, 'mobile') }}
     </nav>

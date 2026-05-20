@@ -22,7 +22,6 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     wheelZoomSensitivityMobile: 0.0015,
     wheelZoomSensitivityDesktop: 0.0022,
     activePanel: null,
-    showDocumentDetails: false,
     relatedOpen: false,
     pinchStartDistance: null,
     pinchStartZoom: 1,
@@ -214,29 +213,21 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
 
     get panelTitle() {
       if (this.activePanel === "info") return "Info";
-      if (this.activePanel === "arabic") return "Arabic Text";
+      if (this.activePanel === "extracted") return "Extracted Text";
       if (this.activePanel === "translation") return "English Translation";
       return "";
     },
 
-    get currentArabicText() {
+    get currentExtractedText() {
       const mediaOriginal = (this.currentMedia?.original_text || "").trim();
       const mediaOcr = (this.currentMedia?.ocr_text || "").trim();
       const docOcr = (this.documentOcrText || "").trim();
       return mediaOriginal || mediaOcr || docOcr;
     },
 
-    get arabicTextDir() {
-      const text = this.currentArabicText;
-      if (!text) return "rtl";
-      return /[\u0600-\u06FF]/.test(text) ? "rtl" : "auto";
-    },
-
     get currentTranslationText() {
-      const mediaOcr = (this.currentMedia?.ocr_text || "").trim();
       const docTranslation = (this.documentTranslation || "").trim();
-      const docOcr = (this.documentOcrText || "").trim();
-      return mediaOcr || docTranslation || docOcr;
+      return docTranslation;
     },
 
     get canvasCursorClass() {
@@ -261,6 +252,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     },
 
     get currentMaxZoom() {
+      if (this.isCatalogMedia()) return this.maxZoom;
       if (this.isImageMedia()) return this.maxZoom;
       if (this.isPdfMedia() || this.isDocxMedia()) return this.maxZoom;
       return 1;
@@ -278,7 +270,12 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       return item?.media_kind === "docx";
     },
 
+    isCatalogMedia(item = this.currentMedia) {
+      return item?.media_kind === "catalog";
+    },
+
     isZoomableMedia(item = this.currentMedia) {
+      if (this.isCatalogMedia(item)) return true;
       return this.isImageMedia(item) || this.isPdfMedia(item) || this.isDocxMedia(item);
     },
 
@@ -360,6 +357,9 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
         this.syncLayoutMetrics();
         if (this.isImageMedia() && !this.hasKindError("image")) {
           this.applyImageZoom();
+        }
+        if (this.isCatalogMedia()) {
+          this.applyCatalogZoom();
         }
       }, 120);
     },
@@ -565,6 +565,10 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       return zoomModule.getDocxContainer(this);
     },
 
+    applyCatalogZoom() {
+      zoomModule.applyCatalog(this);
+    },
+
     applyImageZoom() {
       zoomModule.applyImage(this);
     },
@@ -611,16 +615,13 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
     togglePanel(panelName) {
       if (this.activePanel === panelName) {
         this.activePanel = null;
-        this.showDocumentDetails = false;
         return;
       }
       this.activePanel = panelName;
-      this.showDocumentDetails = false;
     },
 
     closePanel() {
       this.activePanel = null;
-      this.showDocumentDetails = false;
     },
 
     handleDownload() {

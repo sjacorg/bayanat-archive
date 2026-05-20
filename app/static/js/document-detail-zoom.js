@@ -24,6 +24,10 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
       return viewer.$refs.docxList;
     },
 
+    getCatalogContainer(viewer) {
+      return viewer.$refs.catalogTextList;
+    },
+
     getScrollPane(viewer) {
       return viewer.$refs.mediaScrollPane;
     },
@@ -221,10 +225,67 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
       this.applyToContainer(viewer, zoomTarget, true);
     },
 
+    applyCatalog(viewer) {
+      const container = this.getCatalogContainer(viewer);
+      const frame = viewer.$refs.catalogTextZoomFrame;
+      const page = viewer.$refs.catalogTextPage;
+      if (!container || !frame || !page) return;
+
+      if (!viewer.isCatalogMedia()) {
+        frame.classList.remove("is-zoomed");
+        frame.style.width = "";
+        frame.style.minHeight = "";
+        frame.style.transform = "";
+        frame.style.transformOrigin = "";
+        frame.style.zoom = "";
+        delete page.dataset.baseRenderWidth;
+        delete page.dataset.baseRenderHeight;
+        return;
+      }
+
+      let baseWidth = Number(page.dataset.baseRenderWidth || 0);
+      const layoutWidth = page.offsetWidth || 0;
+      if (
+        Number.isFinite(layoutWidth) &&
+        layoutWidth > 0 &&
+        (!Number.isFinite(baseWidth) || baseWidth <= 0 || Math.abs(layoutWidth - baseWidth) >= 24)
+      ) {
+        baseWidth = layoutWidth;
+        page.dataset.baseRenderWidth = String(baseWidth);
+      }
+      if (!Number.isFinite(baseWidth) || baseWidth <= 0) {
+        const measuredWidth = page.getBoundingClientRect().width / Math.max(viewer.zoom, 1);
+        if (Number.isFinite(measuredWidth) && measuredWidth > 0) {
+          baseWidth = measuredWidth;
+          page.dataset.baseRenderWidth = String(baseWidth);
+        }
+      }
+
+      let baseHeight = Number(page.dataset.baseRenderHeight || 0);
+      const measuredHeight = page.offsetHeight || (page.getBoundingClientRect().height / Math.max(viewer.zoom, 1));
+      if (Number.isFinite(measuredHeight) && measuredHeight > 0) {
+        baseHeight = measuredHeight;
+        page.dataset.baseRenderHeight = String(baseHeight);
+      }
+
+      frame.classList.toggle("is-zoomed", viewer.zoom > 1.001);
+      frame.style.zoom = "";
+      frame.style.transformOrigin = "top left";
+      frame.style.transform = `scale(${viewer.zoom})`;
+
+      if (Number.isFinite(baseWidth) && baseWidth > 0) {
+        frame.style.width = `${baseWidth * viewer.zoom}px`;
+      }
+      if (Number.isFinite(baseHeight) && baseHeight > 0) {
+        frame.style.minHeight = `${baseHeight * viewer.zoom}px`;
+      }
+    },
+
     applyAll(viewer) {
       this.applyImage(viewer);
       this.applyPdf(viewer);
       this.applyDocx(viewer);
+      this.applyCatalog(viewer);
     },
 
     captureScroll(viewer, currentZoom, nextZoom, anchor = null) {
@@ -280,7 +341,7 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
       if (Math.abs(clamped - current) < 0.001) return;
 
       const anchor = options.anchor || null;
-      if (viewer.isImageMedia() || viewer.isPdfMedia() || viewer.isDocxMedia()) {
+      if (viewer.isImageMedia() || viewer.isPdfMedia() || viewer.isDocxMedia() || viewer.isCatalogMedia()) {
         this.captureScroll(viewer, current, clamped, anchor);
       } else {
         viewer.pendingScrollRestore = null;
@@ -296,6 +357,9 @@ window.createDocumentZoomModule = function createDocumentZoomModule() {
         this.restoreScroll(viewer);
       } else if (viewer.isDocxMedia()) {
         this.applyDocx(viewer);
+        this.restoreScroll(viewer);
+      } else if (viewer.isCatalogMedia()) {
+        this.applyCatalog(viewer);
         this.restoreScroll(viewer);
       }
     },
