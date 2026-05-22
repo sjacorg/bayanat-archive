@@ -93,6 +93,7 @@
         x-show="currentTranslationText"
         x-cloak
         {% endif %}
+
         {% if not panel %}
         x-show="currentMedia && currentMedia.media_kind !== 'catalog'"
         x-cloak
@@ -131,8 +132,7 @@
 {% macro media_nav_arrow(direction, classes) -%}
     <button
         type="button"
-        x-show="{{ 'hasPrevMedia' if direction == 'prev' else 'hasNextMedia' }}"
-        x-cloak
+        :disabled="{{ '!hasPrevMedia' if direction == 'prev' else '!hasNextMedia' }}"
         class="{{ classes }}"
         @touchstart.stop
         @click.stop.prevent="{{ 'prevMedia()' if direction == 'prev' else 'nextMedia()' }}"
@@ -205,7 +205,7 @@
         @touchend="onTouchEnd($event)"
         @touchcancel="onTouchEnd($event)"
     >
-        <aside class="fixed left-0 top-[calc(var(--doc-stage-top)+var(--doc-mobile-actions-height))] z-[70] hidden w-[var(--doc-desktop-actions-width)] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
+        <aside x-show="currentMedia && currentMedia.media_kind !== 'catalog'" x-cloak class="fixed left-0 top-[calc(var(--doc-stage-top)+var(--doc-mobile-actions-height))] z-[70] hidden w-[var(--doc-desktop-actions-width)] overflow-hidden border border-[#5AB5A9] shadow-[0_3px_10px_rgba(0,0,0,0.14)] md:block" aria-label="Document actions">
             {{ action_button('info', 'Info', 'info', 'desktop') }}
             {{ action_button('extract', 'Extracted Text', 'extracted', 'desktop') }}
             {{ action_button('translation', 'Translate', 'translation', 'desktop') }}
@@ -238,6 +238,8 @@
     {% include 'partials/document_detail/details_panel.html' %}
 
     <nav
+        x-show="currentMedia && currentMedia.media_kind !== 'catalog'"
+        x-cloak
         class="fixed left-0 right-0 bottom-[var(--doc-related-toggle-height)] z-[60] hidden h-[var(--doc-mobile-actions-height)] grid-flow-col auto-cols-fr max-md:grid"
         aria-label="Document actions"
     >

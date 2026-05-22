@@ -515,6 +515,7 @@ window.documentDetailViewer = function documentDetailViewer(payload) {
       this.isAnimating = true;
       try {
         this.mediaIndex = nextIndex;
+        if (this.media[nextIndex]?.media_kind === "catalog") this.activePanel = null;
         this.resetZoomState();
         this.persistPageInUrl();
         await this.$nextTick();
