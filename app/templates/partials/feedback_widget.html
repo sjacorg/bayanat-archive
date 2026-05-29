@@ -67,6 +67,7 @@
             panelContent.scrollTop = 0;
         },
     }"
+    x-effect="document.body.classList.toggle('overflow-hidden', open && window.innerWidth < 640)"
     @keydown.escape.window="if (open) closePanel()"
     @feedback-success="scheduleAutoClose()"
     class="pointer-events-none sticky inset-x-0 bottom-0 z-[55]"
