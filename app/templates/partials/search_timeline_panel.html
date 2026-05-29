@@ -4,9 +4,9 @@
 {% set tick_step = ((timeline_bins | length) // 6) + 1 if (timeline_bins | length) > 7 else 1 %}
 {% set timeline_count = timeline_bins | length %}
 <div
-    x-show="timePanelOpen"
-    x-cloak
-    class="relative left-1/2 right-1/2 mb-6 w-screen -translate-x-1/2 bg-gray-200/60"
+    x-show="{% if timeline_panel_always_open | default(false) %}true{% else %}timePanelOpen{% endif %}"
+    {% if not (timeline_panel_always_open | default(false)) %}x-cloak{% endif %}
+    class="relative left-1/2 right-1/2 mb-6 w-screen -translate-x-1/2 {% if not (timeline_panel_transparent | default(false)) %}bg-gray-200/60{% endif %}"
 >
     <div class="mx-auto w-full max-w-[1200px] pb-5 pt-4">
         <div class="pt-4">
