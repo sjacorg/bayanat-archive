@@ -22,57 +22,102 @@
 
     <!-- Search row -->
     <div :class="timePanelOpen ? '' : 'mb-8'" class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60">
-        <div class="mx-auto flex w-full max-w-[1500px] items-center gap-4 px-4 py-6 sm:gap-8 sm:px-6 lg:px-10">
-            <h1 class="hidden text-2xl font-semibold tracking-tight text-primary shrink-0 sm:block">Search</h1>
-            <label for="q-input" class="input w-full border-base-300 bg-base-100 h-[40px] md:h-[54px]">
-                <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-                    <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="m21 21-4.3-4.3"></path>
-                    </g>
-                </svg>
-                <input
-                    x-ref="searchInput"
-                    type="search"
-                    name="q"
-                    id="q-input"
-                    aria-label="Search for a document"
-                    placeholder="Search for a document"
-                    autocomplete="off"
-                    class="search-param text-base"
-                    hx-get="/search"
-                    hx-trigger="input changed delay:500ms, search"
-                    hx-target="#results"
-                    hx-push-url="true"
-                    hx-include=".search-param"
-                    hx-vals='{"page": "1"}'
-                    hx-indicator="#loading"
-                >
-            </label>
-            <button
-                type="button"
-                class="inline-flex h-10 w-10 items-center justify-center text-5xl leading-none text-primary/80"
-                :aria-expanded="timePanelOpen ? 'true' : 'false'"
-                aria-label="Toggle time range filter"
-                aria-controls="timeline-panel"
-                @click="toggleTimePanel()"
+        <div class="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
+            <section
+                class="relative isolate overflow-hidden border border-primary/15 bg-primary text-primary-content"
+                :class="activeSearch ? 'mb-4 sm:mb-5' : 'mb-6 sm:mb-7'"
+                aria-labelledby="search-about-title"
             >
-                <svg
+                <img
+                    src="{{ url_for('static', filename='assets/search-about-banner.jpg') }}"
+                    alt=""
+                    class="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-70"
                     aria-hidden="true"
-                    class="size-9 origin-center transform-gpu"
-                    :class="timePanelOpen ? 'rotate-45' : 'rotate-0'"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
                 >
-                    <path d="M12 5v14"></path>
-                    <path d="M5 12h14"></path>
-                </svg>
-                <span class="sr-only">Toggle time range</span>
-            </button>
+                <div class="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(7,72,57,0.94)_0%,rgba(7,72,57,0.78)_46%,rgba(7,72,57,0.28)_100%)]"></div>
+
+                <div
+                    class="flex max-w-[760px] flex-col justify-center px-5 sm:px-8 lg:px-10"
+                    :class="activeSearch ? 'min-h-[128px] py-5 sm:min-h-[144px] sm:py-6' : 'min-h-[220px] py-7 sm:min-h-[250px]'"
+                >
+                    <h1
+                        id="search-about-title"
+                        class="m-0 font-light leading-[1.12] tracking-tight"
+                        :class="activeSearch ? 'text-[22px] sm:text-[30px] sm:leading-[1.08]' : 'text-[28px] sm:text-[40px] sm:leading-[1.08]'"
+                    >
+                        What is the Bayanat Document Archive?
+                    </h1>
+                    <p
+                        class="font-light text-primary-content/88"
+                        :class="activeSearch ? 'mt-2 line-clamp-2 text-base leading-[1.46] sm:mt-3 sm:text-[18px] sm:leading-[1.48]' : 'mt-5 text-[17px] leading-[1.5] sm:mt-6 sm:text-[20px] sm:leading-[1.52]'"
+                    >
+                        Explore documented human rights events through clear, structured records. Built on Bayanat, an open source human rights documentation platform, the archive brings together incident reports, official documents, multimedia evidence, and research materials.
+                    </p>
+                    <a
+                        href="{{ url_for('pages.about') }}"
+                        class="inline-flex w-fit items-center border border-primary-content/80 font-medium text-primary-content transition hover:bg-primary-content hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary-content/75 focus:ring-offset-2 focus:ring-offset-primary"
+                        :class="activeSearch ? 'mt-4 h-10 px-5 text-sm' : 'mt-6 h-11 px-6 text-base'"
+                    >
+                        Read More
+                        <svg class="ml-3 h-4 w-4" viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M3.5 8.5h10"></path>
+                            <path d="m9.5 4.5 4 4-4 4"></path>
+                        </svg>
+                    </a>
+                </div>
+            </section>
+
+            <div class="flex items-center gap-4 sm:gap-8">
+                <label for="q-input" class="input w-full border-base-300 bg-base-100 h-[40px] md:h-[54px]">
+                    <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
+                        <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.3-4.3"></path>
+                        </g>
+                    </svg>
+                    <input
+                        x-ref="searchInput"
+                        type="search"
+                        name="q"
+                        id="q-input"
+                        aria-label="Search for a document"
+                        placeholder="Search for a document"
+                        autocomplete="off"
+                        class="search-param text-base"
+                        hx-get="/search"
+                        hx-trigger="input changed delay:500ms, search"
+                        hx-target="#results"
+                        hx-push-url="true"
+                        hx-include=".search-param"
+                        hx-vals='{"page": "1"}'
+                        hx-indicator="#loading"
+                    >
+                </label>
+                <button
+                    type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center text-5xl leading-none text-primary/80"
+                    :aria-expanded="timePanelOpen ? 'true' : 'false'"
+                    aria-label="Toggle time range filter"
+                    aria-controls="timeline-panel"
+                    @click="toggleTimePanel()"
+                >
+                    <svg
+                        aria-hidden="true"
+                        class="size-9 origin-center transform-gpu"
+                        :class="timePanelOpen ? 'rotate-45' : 'rotate-0'"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="M12 5v14"></path>
+                        <path d="M5 12h14"></path>
+                    </svg>
+                    <span class="sr-only">Toggle time range</span>
+                </button>
+            </div>
         </div>
     </div>
 

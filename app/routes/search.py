@@ -362,9 +362,21 @@ def _get_document_media(db, doc_ids):
         doc_ids,
     ).fetchall()
     thumbnails = {}
+    media_types_seen = {}
     for row in rows:
-        if row["document_id"] not in thumbnails:
-            thumbnails[row["document_id"]] = row
+        doc_id = row["document_id"]
+        if doc_id not in thumbnails:
+            thumbnails[doc_id] = {
+                "filename": row["filename"],
+                "media_type": row["media_type"],
+                "media_count": 0,
+            }
+            media_types_seen[doc_id] = set()
+        media_types_seen[doc_id].add(row["media_type"])
+        thumbnails[doc_id]["media_count"] += 1
+    for doc_id, types in media_types_seen.items():
+        if len(types) > 1:
+            thumbnails[doc_id]["media_type"] = "mixed"
     return thumbnails
 
 

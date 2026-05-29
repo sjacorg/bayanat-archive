@@ -19,7 +19,18 @@
             view: params.get('view') || 'grid',
             date_from: params.get('date_from') || '',
             date_to: params.get('date_to') || '',
+            activeSearch: hasActiveSearchParams(params),
         };
+    }
+
+    function hasActiveSearchParams(params) {
+        return Boolean(
+            (params.get('q') || '').trim()
+            || readLabelParams(params).length
+            || params.getAll('location').length
+            || params.get('date_from')
+            || params.get('date_to')
+        );
     }
 
     function getTimelineConfig(overrideConfig = null) {
@@ -57,6 +68,7 @@
         return {
             open: null,
             view: new URLSearchParams(window.location.search).get('view') || 'grid',
+            activeSearch: hasActiveSearchParams(new URLSearchParams(window.location.search)),
             timePanelOpen: false,
             minYear: cfg.minYear,
             maxYear: cfg.maxYear,
@@ -341,6 +353,13 @@
                     view: this.view,
                     date_from: this.yearStart > this.minYear ? `${this.yearStart}-01-01` : '',
                     date_to: this.yearEnd < this.maxYear ? `${this.yearEnd}-12-31` : '',
+                    activeSearch: Boolean(
+                        this.mobileSelected.label.length
+                        || this.mobileSelected.location.length
+                        || this.yearStart > this.minYear
+                        || this.yearEnd < this.maxYear
+                        || (this.$refs.searchInput?.value || '').trim()
+                    ),
                 });
                 this.closeMobileFilters();
                 this.$nextTick(() => this.$refs.mobileApplyTrigger?.click());
@@ -348,6 +367,7 @@
 
             syncMobileFromDetail(detail) {
                 this.view = detail?.view || 'grid';
+                this.activeSearch = Boolean(detail?.activeSearch);
                 this.mobileSelected = {
                     label: detail?.label || [],
                     location: detail?.location || [],
