@@ -40,6 +40,7 @@
             this.clearAutoClose();
             this.clearResetAfterClose();
             this.open = true;
+            history.pushState({ feedbackOpen: true }, '');
         },
         closePanel() {
             this.clearAutoClose();
@@ -68,6 +69,7 @@
         },
     }"
     x-effect="document.body.classList.toggle('overflow-hidden', open && window.innerWidth < 640)"
+    @popstate.window="if (open) closePanel()"
     @keydown.escape.window="if (open) closePanel()"
     @feedback-success="scheduleAutoClose()"
     class="pointer-events-none sticky inset-x-0 bottom-0 z-[55]"
