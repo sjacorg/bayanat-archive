@@ -71,7 +71,7 @@
     </span>
     {% if labels|length > 1 %}
     {% set overflow_titles = labels[1:] | map(attribute='title') | join(', ') %}
-    <div class="tooltip tooltip-top inline-flex" data-tip="{{ overflow_titles }}">
+    <div class="tooltip tooltip-top inline-flex [&::before]:max-w-[200px] [&::before]:whitespace-normal [&::before]:break-words" data-tip="{{ overflow_titles }}">
         <span
             class="inline-flex h-5 items-center bg-base-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] leading-none text-base-content/60"
             tabindex="0"
