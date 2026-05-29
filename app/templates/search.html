@@ -173,10 +173,10 @@
             @click="mobileFacetOpen = mobileFacetOpen === '{{ key }}' ? null : '{{ key }}'"
         >
             <div class="flex items-center gap-2">
-                <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-base-content/70">{{ label }}</span>
+                <span class="text-sm font-semibold uppercase tracking-[0.08em] text-base-content/70">{{ label }}</span>
                 <span
                     :class="mobileSelected['{{ key }}'].length ? 'inline' : 'hidden'"
-                    class="text-[11px] text-secondary"
+                    class="text-sm text-secondary"
                     x-text="`(${mobileSelected['{{ key }}'].length} Selected)`"
                 ></span>
             </div>
@@ -213,7 +213,7 @@
                 {% for item in items %}
                 <label
                     :class='mobileMatches("{{ key }}", {{ item | tojson }}) ? "flex" : "hidden"'
-                    class="w-full cursor-pointer items-center justify-between py-2 text-left text-sm text-base-content/85"
+                    class="w-full cursor-pointer items-center justify-between py-2 text-left text-base text-base-content/85"
                 >
                     <input
                         type="checkbox"
@@ -290,7 +290,7 @@
         >
             <div class="flex h-full flex-col">
                 <div class="flex items-center px-5 pt-[38px]">
-                    <button type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-base-content py-3.5" @click="closeMobileFilters()">
+                    <button type="button" class="inline-flex items-center gap-2 text-base font-semibold text-base-content py-3.5" @click="closeMobileFilters()">
                         <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
                         </svg>
