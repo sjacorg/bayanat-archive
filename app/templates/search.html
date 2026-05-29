@@ -22,7 +22,7 @@
 
     <!-- Search row -->
     <div :class="timePanelOpen ? '' : 'mb-8'" class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60">
-        <div class="mx-auto flex w-full max-w-[1200px] items-center gap-4 px-4 py-6 sm:gap-8 sm:px-6 lg:px-10">
+        <div class="mx-auto flex w-full max-w-[1500px] items-center gap-4 px-4 py-6 sm:gap-8 sm:px-6 lg:px-10">
             <h1 class="hidden text-2xl font-semibold tracking-tight text-primary shrink-0 sm:block">Search</h1>
             <label for="q-input" class="input w-full border-base-300 bg-base-100 h-[40px] md:h-[54px]">
                 <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
@@ -102,7 +102,7 @@
             aria-label="{{ label }} filter"
         >
             <span class="flex min-w-0 items-baseline gap-2 truncate">
-                <span class="truncate text-xs uppercase text-base-content/70">{{ label }}</span>
+                <span class="truncate text-sm uppercase text-base-content/70">{{ label }}</span>
                 <span x-show="sel.length > 0" x-cloak x-text="sel.length" class="shrink-0 flex h-3.5 w-3.5 items-center justify-center bg-primary text-[10px] font-semibold text-white"></span>
             </span>
             <svg class="h-3 w-3 shrink-0 text-base-content/30" :class="{ 'rotate-180': open === 'facet:{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -158,7 +158,7 @@
                     </label>
                     {% endfor %}
                 {% else %}
-                    <p class="px-4 py-3 text-xs text-base-content/40">No options available.</p>
+                    <p class="px-4 py-3 text-sm text-base-content/40">No options available.</p>
                 {% endif %}
             </div>
         </div>

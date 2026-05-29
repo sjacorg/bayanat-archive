@@ -90,7 +90,7 @@
     <div class="flex min-h-[42vh] w-full items-start justify-center px-3 py-3 md:px-0">
         <div class="{{ wrapper_classes }} mx-auto w-full max-w-2xl border border-slate-300 border-l-4 border-l-primary bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
             <h2 class="m-0 text-lg font-semibold text-slate-900">No media available</h2>
-            <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
+            <p class="my-2.5 mb-4 text-base leading-normal text-slate-600">This record does not include scan pages yet. You can still review metadata and text panels.</p>
             <a href="{{ url_for('search.index') }}" class="inline-block border border-primary bg-primary px-3 py-1.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-white hover:text-primary">Back to Search</a>
         </div>
     </div>
@@ -100,7 +100,7 @@
     <div class="flex min-h-[42vh] w-full items-start justify-center px-3 py-3 md:px-0">
         <div class="{{ wrapper_classes }} mx-auto w-full max-w-2xl border border-slate-300 border-l-4 border-l-primary bg-gradient-to-b from-white to-slate-50 p-5 text-left shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
             <h2 class="m-0 text-lg font-semibold text-slate-900">{{ title }}</h2>
-            <p class="my-2.5 mb-4 text-sm leading-normal text-slate-600">{{ message }}</p>
+            <p class="my-2.5 mb-4 text-base leading-normal text-slate-600">{{ message }}</p>
             <a :href="currentMedia.src" :download="currentMedia.filename" class="inline-block border border-primary bg-primary px-3 py-1.5 text-sm font-semibold text-white no-underline transition-colors hover:bg-white hover:text-primary">{{ cta_label }}</a>
         </div>
     </div>
@@ -153,7 +153,7 @@
             <span>Back to Search</span>
         </a>
 
-        <p class="m-0 max-w-prose overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-5 text-primary max-md:line-clamp-2 max-md:max-w-full max-md:whitespace-normal max-md:text-xs max-md:leading-5" title="{{ document.title }}">
+        <p class="m-0 max-w-prose overflow-hidden text-ellipsis whitespace-nowrap text-base leading-5 text-primary max-md:line-clamp-2 max-md:max-w-full max-md:whitespace-normal max-md:text-sm max-md:leading-5" title="{{ document.title }}">
             <span>Search Document Library</span>
             <span>/</span>
             <span class="font-semibold">{{ document.title }}</span>
@@ -282,7 +282,7 @@
                         </div>
                         <div class="space-y-2 px-4 py-3">
                             <h3 class="m-0 line-clamp-3 text-base font-semibold leading-snug text-white/95 group-hover:text-white">{{ related.display_title or 'Related record' }}</h3>
-                            <p class="line-clamp-3 text-xs leading-relaxed text-slate-200">
+                            <p class="line-clamp-3 text-sm leading-relaxed text-slate-200">
                                 {% if related.description %}
                                     {{ related.description | strip_html | truncate(140) }}
                                 {% else %}
@@ -300,7 +300,7 @@
             {% else %}
             <div class="m-3 border border-white/15 bg-slate-900/25 p-4 text-white">
                 <h3 class="m-0 text-base font-semibold">No related content yet</h3>
-                <p class="mt-2 text-sm text-slate-200">This drawer is ready. Related documents will appear here once linked.</p>
+                <p class="mt-2 text-base text-slate-200">This drawer is ready. Related documents will appear here once linked.</p>
             </div>
             {% endif %}
         </div>

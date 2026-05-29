@@ -10,7 +10,7 @@
 >
     <div class="h-full overflow-auto px-4 py-5 md:pl-[calc(var(--doc-desktop-actions-width)+2rem)] md:pr-6 md:pt-6" @click.stop>
         <div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
-            <p class="mb-1 max-w-5xl text-xs font-semibold uppercase tracking-wider text-slate-700">
+            <p class="mb-1 max-w-5xl text-sm font-semibold uppercase tracking-wider text-slate-700">
                 Reference Number: {{ document.id }}
             </p>
             <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-xl font-semibold leading-none text-slate-900">
@@ -30,7 +30,7 @@
                     <button
                         type="button"
                         role="tab"
-                        class="tab text-sm font-semibold"
+                        class="tab text-base font-semibold"
                         :class="!showDocumentDetails ? 'tab-active text-primary [--tab-border-color:var(--color-primary)]' : 'text-slate-600'"
                         :aria-selected="!showDocumentDetails"
                         @click="showDocumentDetails = false"
@@ -40,7 +40,7 @@
                     <button
                         type="button"
                         role="tab"
-                        class="tab text-sm font-semibold"
+                        class="tab text-base font-semibold"
                         :class="showDocumentDetails ? 'tab-active text-primary [--tab-border-color:var(--color-primary)]' : 'text-slate-600'"
                         :aria-selected="showDocumentDetails"
                         @click="showDocumentDetails = true"
@@ -95,7 +95,7 @@
                 </table>
 
                 <div x-show="showDocumentDetails">
-                    <table class="w-full border-collapse text-sm">
+                    <table class="w-full border-collapse text-base">
                         <tbody>
                             <tr>
                                 <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">ID</th>
@@ -129,7 +129,7 @@
                     </table>
                 </div>
 
-                <table x-show="showDocumentDetails" class="mt-2 w-full border-collapse text-sm">
+                <table x-show="showDocumentDetails" class="mt-2 w-full border-collapse text-base">
                     <tbody>
                         <tr>
                             <th class="w-36 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Published Date</th>

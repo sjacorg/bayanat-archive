@@ -57,7 +57,7 @@
     {% block head %}{% endblock %}
 </head>
 <body class="text-base-content overflow-x-hidden [font-family:'Inter',sans-serif]">
-    <div class="drawer min-h-screen">
+    <div class="drawer min-h-screen overflow-x-hidden">
         <input id="main-nav-drawer" type="checkbox" class="drawer-toggle">
 
         <div class="drawer-content flex min-h-screen flex-col">
@@ -74,7 +74,7 @@
                 hx-select=".drawer"
                 hx-swap="outerHTML transition:true"
             >
-                <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
+                <div class="mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-10">
                     <div class="flex min-h-16 items-center justify-between gap-4 py-2">
                         <div class="flex items-center gap-2">
                             <label for="main-nav-drawer" class="btn btn-ghost btn-square md:hidden" aria-label="Open navigation menu">
@@ -102,14 +102,10 @@
             {% block banners %}{% endblock %}
 
             <main id="page-main" class="flex-1 {% block main_class %}{% endblock %}">
-                <div class="{% block main_container_class %}mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10{% endblock %}">
+                <div class="{% block main_container_class %}mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-10{% endblock %}">
                     {% block content %}{% endblock %}
                 </div>
             </main>
-
-            {% block page_feedback %}
-            {% include "partials/feedback_widget.html" %}
-            {% endblock %}
 
             {% block page_footer %}
             {% include "partials/footer.html" %}
@@ -138,6 +134,10 @@
             </aside>
         </div>
     </div>
+
+    {% block page_feedback %}
+    {% include "partials/feedback_widget.html" %}
+    {% endblock %}
 
     {% block scripts %}{% endblock %}
 </body>
