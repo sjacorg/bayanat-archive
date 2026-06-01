@@ -22,7 +22,7 @@
 
     <!-- Search row -->
     <div :class="timePanelOpen ? '' : 'mb-8'" class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60">
-        <div class="mx-auto w-full max-w-[1200px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
+        <div class="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
             <section
                 class="relative isolate overflow-hidden border border-primary/15 bg-primary text-primary-content"
                 :class="activeSearch ? 'mb-4 sm:mb-5' : 'mb-6 sm:mb-7'"
@@ -147,7 +147,7 @@
             aria-label="{{ label }} filter"
         >
             <span class="flex min-w-0 items-baseline gap-2 truncate">
-                <span class="truncate text-xs uppercase text-base-content/70">{{ label }}</span>
+                <span class="truncate text-sm uppercase text-base-content/70">{{ label }}</span>
                 <span x-show="sel.length > 0" x-cloak x-text="sel.length" class="shrink-0 flex h-3.5 w-3.5 items-center justify-center bg-primary text-[10px] font-semibold text-white"></span>
             </span>
             <svg class="h-3 w-3 shrink-0 text-base-content/30" :class="{ 'rotate-180': open === 'facet:{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -203,7 +203,7 @@
                     </label>
                     {% endfor %}
                 {% else %}
-                    <p class="px-4 py-3 text-xs text-base-content/40">No options available.</p>
+                    <p class="px-4 py-3 text-sm text-base-content/40">No options available.</p>
                 {% endif %}
             </div>
         </div>
@@ -218,10 +218,10 @@
             @click="mobileFacetOpen = mobileFacetOpen === '{{ key }}' ? null : '{{ key }}'"
         >
             <div class="flex items-center gap-2">
-                <span class="text-[11px] font-semibold uppercase tracking-[0.08em] text-base-content/70">{{ label }}</span>
+                <span class="text-sm font-semibold uppercase tracking-[0.08em] text-base-content/70">{{ label }}</span>
                 <span
                     :class="mobileSelected['{{ key }}'].length ? 'inline' : 'hidden'"
-                    class="text-[11px] text-secondary"
+                    class="text-sm text-secondary"
                     x-text="`(${mobileSelected['{{ key }}'].length} Selected)`"
                 ></span>
             </div>
@@ -258,7 +258,7 @@
                 {% for item in items %}
                 <label
                     :class='mobileMatches("{{ key }}", {{ item | tojson }}) ? "flex" : "hidden"'
-                    class="w-full cursor-pointer items-center justify-between py-2 text-left text-sm text-base-content/85"
+                    class="w-full cursor-pointer items-center justify-between py-2 text-left text-base text-base-content/85"
                 >
                     <input
                         type="checkbox"
@@ -335,7 +335,7 @@
         >
             <div class="flex h-full flex-col">
                 <div class="flex items-center px-5 pt-[38px]">
-                    <button type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-base-content py-3.5" @click="closeMobileFilters()">
+                    <button type="button" class="inline-flex items-center gap-2 text-base font-semibold text-base-content py-3.5" @click="closeMobileFilters()">
                         <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
                         </svg>

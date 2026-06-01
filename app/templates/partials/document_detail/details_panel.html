@@ -10,7 +10,7 @@
 >
     <div class="h-full overflow-auto px-4 py-5 md:pl-[calc(var(--doc-desktop-actions-width)+2rem)] md:pr-6 md:pt-6" @click.stop>
         <div class="mx-auto flex max-w-5xl items-center justify-between gap-3">
-            <p class="mb-1 max-w-5xl text-xs font-semibold uppercase tracking-wider text-slate-700">
+            <p class="mb-1 max-w-5xl text-sm font-semibold uppercase tracking-wider text-slate-700">
                 Reference Number: {{ document.id }}
             </p>
             <button type="button" @click="closePanel" aria-label="Close panel" class="inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-xl font-semibold leading-none text-slate-900">
@@ -27,17 +27,17 @@
             <div class="break-words" x-show="activePanel === 'info'">
                 <section aria-labelledby="essential-details-title">
                     <h2 id="essential-details-title" class="sr-only">Essential document details</h2>
-                    <dl class="grid gap-4 text-sm md:grid-cols-2">
+                    <dl class="grid gap-4 text-base md:grid-cols-2">
                         <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Date</dt>
+                            <dt class="text-sm font-semibold uppercase tracking-wider text-slate-500">Date</dt>
                             <dd class="mt-1 text-slate-900">{{ metadata.date[:10] if metadata.date else 'N/A' }}</dd>
                         </div>
                         <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Type</dt>
+                            <dt class="text-sm font-semibold uppercase tracking-wider text-slate-500">Type</dt>
                             <dd class="mt-1 text-slate-900" x-text="currentMedia?.media_type || 'Catalog record'"></dd>
                         </div>
                         <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Source</dt>
+                            <dt class="text-sm font-semibold uppercase tracking-wider text-slate-500">Source</dt>
                             <dd class="mt-1 text-slate-900">
                                 {% if document_sources %}
                                     {{ document_sources[0] }}
@@ -49,19 +49,19 @@
                             </dd>
                         </div>
                         <div>
-                            <dt class="text-xs font-semibold uppercase tracking-wider text-slate-500">Primary Location</dt>
+                            <dt class="text-sm font-semibold uppercase tracking-wider text-slate-500">Primary Location</dt>
                             <dd class="mt-1 text-slate-900">{{ document_locations[0] if document_locations else 'N/A' }}</dd>
                         </div>
                     </dl>
                 </section>
 
                 <details class="mt-6 border-t border-slate-300 pt-4">
-                    <summary class="cursor-pointer text-sm font-semibold text-primary">Full document details</summary>
+                    <summary class="cursor-pointer text-base font-semibold text-primary">Full document details</summary>
 
                     <div class="mt-4 space-y-5">
                         <section>
-                            <h3 class="text-sm font-semibold text-slate-950">Page Details</h3>
-                            <table class="mt-2 w-full border-collapse text-sm">
+                            <h3 class="text-base font-semibold text-slate-950">Page Details</h3>
+                            <table class="mt-2 w-full border-collapse text-base">
                                 <tbody>
                                     <tr>
                                         <th class="w-40 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Page</th>
@@ -92,8 +92,8 @@
                         </section>
 
                         <section>
-                            <h3 class="text-sm font-semibold text-slate-950">Document Metadata</h3>
-                            <table class="mt-2 w-full border-collapse text-sm">
+                            <h3 class="text-base font-semibold text-slate-950">Document Metadata</h3>
+                            <table class="mt-2 w-full border-collapse text-base">
                                 <tbody>
                                     <tr>
                                         <th class="w-40 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">ID</th>

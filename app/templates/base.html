@@ -68,13 +68,13 @@
 
             {% block page_header %}
             <header
-                class="{% block page_header_class %}sticky top-0 z-50 border-b border-base-300/70 bg-base-200/85 backdrop-blur-md{% endblock %}"
+                class="{% block page_header_class %}sticky top-0 z-50 border-b border-base-300/70 bg-white/85 backdrop-blur-md{% endblock %}"
                 hx-boost="true"
                 hx-target=".drawer"
                 hx-select=".drawer"
                 hx-swap="outerHTML transition:true"
             >
-                <div class="mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10">
+                <div class="mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-10">
                     <div class="flex min-h-16 items-center justify-between gap-3 py-2 sm:gap-4">
                         <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
                             <label for="main-nav-drawer" class="btn btn-ghost btn-square md:hidden" aria-label="Open navigation menu">
@@ -124,7 +124,7 @@
             {% block banners %}{% endblock %}
 
             <main id="page-main" class="flex-1 {% block main_class %}{% endblock %}">
-                <div class="{% block main_container_class %}mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10{% endblock %}">
+                <div class="{% block main_container_class %}mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-10{% endblock %}">
                     {% block content %}{% endblock %}
                 </div>
             </main>

@@ -3,6 +3,10 @@
  * Based on: Digital Archivist spec + Stasi Mediathek patterns + Bayanat brand colors
  */
 
+html {
+    font-size: 18px;
+}
+
 /* Brand overrides on top of DaisyUI light theme — only what differs */
 [data-theme="light"] {
     /* Primary: Bayanat dark teal #1A4540 */
