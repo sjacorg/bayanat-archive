@@ -25,11 +25,13 @@ Export from Bayanat, then import:
 
 ```bash
 # In your Bayanat installation:
-flask export-public --label "public-archive" --output ./export/
+flask export public --label "public-archive" --output ./export/
 
 # In this repo:
-flask import-archive /path/to/export/
+uv run flask import-archive /path/to/export/
 ```
+
+The import is destructive: it rebuilds `data/archive.db` and copies media into `app/static/media/`. See `EXPORT_SCHEMA.md` for the JSON contract.
 
 ## Docker
 
@@ -41,22 +43,28 @@ docker compose up --build
 
 ```
 app/
-  __init__.py              # Flask app factory + SQLite connection
+  __init__.py              # Flask factory, SQLite (WAL), blueprint wiring
+  database.py              # Schema DDL + init/build_fts helpers
+  commands.py              # `flask import-archive` CLI
   routes/
-    pages.py               # Page routes (search, about, health)
+    pages.py               # /about, /feedback, /components, /health, /robots.txt, /sitemap.xml
+    search.py              # / (home) + /search (FTS5, facets, pagination)
+    documents.py           # /documents/<id>/<slug>
   templates/
     base.html              # Layout: header, footer, CDN includes
-    search.html            # Search page with HTMX
-    about.html             # About page
-    partials/              # HTMX fragments (search results, facets)
+    search.html, about.html, document_detail.html, components.html, 404.html
+    partials/              # HTMX fragments (search results, feedback, timeline, media renderers)
   static/
-    css/archive.css        # DaisyUI theme overrides
-    media/                 # Document images (populated by import)
+    css/                   # archive.css (DaisyUI overrides), print.css
+    js/                    # search-page.js, document-detail.js
+    assets/                # logos, favicons, OG image
+    media/                 # document files (populated by import)
 data/
   archive.db               # SQLite database (populated by import)
 Caddyfile                  # Reverse proxy + static files
 Dockerfile
 docker-compose.yml
+EXPORT_SCHEMA.md           # JSON contract between Bayanat and this portal
 ```
 
 ## License
