@@ -38,6 +38,7 @@ Each element in the `documents.json` array:
   "title": "Security Report - Damascus Branch 251",
   "title_ar": "تقرير أمني - فرع 251 دمشق",
   "description": "Monthly security summary...",
+  "public_description": "SJAC public-facing context for this record...",
   "source_link": "https://...",
   "publish_date": "2013-04-15T00:00:00",
   "documentation_date": "2024-01-20T00:00:00",
@@ -64,6 +65,7 @@ Each element in the `documents.json` array:
 | `title` | string | no | English title |
 | `title_ar` | string | yes | Arabic title |
 | `description` | string | yes | Free-text description (may contain HTML) |
+| `public_description` | string | yes | SJAC-authored public-facing context (may contain HTML) |
 | `source_link` | string | yes | External URL reference |
 | `publish_date` | string | yes | ISO 8601 datetime |
 | `documentation_date` | string | yes | ISO 8601 datetime |

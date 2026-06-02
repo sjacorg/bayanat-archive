@@ -62,15 +62,16 @@ def import_archive(export_dir):
 
         conn.execute(
             """INSERT INTO documents
-               (id, title, title_ar, slug, description, source_link,
+               (id, title, title_ar, slug, description, public_description, source_link,
                 publish_date, documentation_date, ocr_text, translation)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 doc_id,
                 title,
                 doc.get("title_ar"),
                 slug,
                 doc.get("description"),
+                doc.get("public_description"),
                 doc.get("source_link"),
                 doc.get("publish_date"),
                 doc.get("documentation_date"),
