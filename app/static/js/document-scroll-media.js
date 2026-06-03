@@ -24,15 +24,18 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
       var pdf = await loadPdf(src);
       var page = await pdf.getPage(1);
       var dpr = Math.min(window.devicePixelRatio || 1, 2);
-      var containerW = host.clientWidth || 860;
+      var style = window.getComputedStyle(host);
+      var containerW = host.clientWidth
+        - parseFloat(style.paddingLeft || "0")
+        - parseFloat(style.paddingRight || "0")
+        || 860;
       var base = page.getViewport({ scale: 1 });
       var scale = containerW / base.width;
       var renderViewport = page.getViewport({ scale: scale * dpr });
-      var displayViewport = page.getViewport({ scale: scale });
       var canvas = document.createElement("canvas");
       canvas.width = Math.floor(renderViewport.width);
       canvas.height = Math.floor(renderViewport.height);
-      canvas.style.width = Math.floor(displayViewport.width) + "px";
+      canvas.style.width = "100%";
       canvas.style.height = "auto";
       canvas.className = "scroll-pdf-preview-canvas mx-auto block w-full cursor-zoom-in";
       canvas.dataset.openFullPdf = src;

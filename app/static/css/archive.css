@@ -397,8 +397,9 @@ body.timeline-overscroll-locked {
     width: 100%;
     min-height: 0;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     flex-direction: column;
+    padding: 1.5rem 1.5rem 0 1.5rem;
     background: #f8fafc;
 }
 
@@ -408,15 +409,12 @@ body.timeline-overscroll-locked {
 }
 
 .scroll-page-card .scroll-pdf-preview-canvas {
-    width: auto !important;
-    max-width: calc(100% - 3rem);
-    max-height: calc(100% - 5.75rem);
-    object-fit: contain;
+    width: calc(100% - 3rem);
+    height: auto !important;
 }
 
 .scroll-page-card .scroll-docx-frame {
-    width: calc(100% - 3rem);
-    max-height: calc(100% - 5.75rem);
+    width: 100%;
 }
 
 .scroll-page-card .scroll-preview-actions {
