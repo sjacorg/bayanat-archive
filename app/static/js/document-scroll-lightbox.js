@@ -1,0 +1,328 @@
+window.createDocumentScrollLightbox = function createDocumentScrollLightbox(options) {
+  "use strict";
+
+  var loadPdf = options.loadPdf;
+  var renderDocxInto = options.renderDocxInto;
+
+  function init() {
+    var overlay = document.createElement("div");
+    overlay.className = "scroll-lightbox";
+    overlay.innerHTML =
+      '<div data-lb="toolbar" class="scroll-lightbox__toolbar">' +
+      '<button type="button" data-lb="out" class="scroll-lightbox__button" aria-label="Zoom out">-</button>' +
+      '<span data-lb="label" class="scroll-lightbox__label">100%</span>' +
+      '<button type="button" data-lb="in" class="scroll-lightbox__button" aria-label="Zoom in">+</button>' +
+      '<button type="button" data-lb="fit" class="scroll-lightbox__fit" aria-label="Fit to screen">Fit</button>' +
+      '<button type="button" data-lb="close" class="scroll-lightbox__close" aria-label="Close">' +
+      '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>' +
+      "</svg></button>" +
+      "</div>" +
+      '<div data-lb="stage" class="scroll-lightbox__stage">' +
+      '<div data-lb="content" class="scroll-lightbox__content"></div>' +
+      "</div>";
+    document.body.appendChild(overlay);
+
+    var stage = overlay.querySelector('[data-lb="stage"]');
+    var content = overlay.querySelector('[data-lb="content"]');
+    var label = overlay.querySelector('[data-lb="label"]');
+    var zoomIn = overlay.querySelector('[data-lb="in"]');
+    var zoomOut = overlay.querySelector('[data-lb="out"]');
+    var media = null;
+    var activeZoomTarget = null;
+    var activeZoomMode = "width";
+    var zoom = 1;
+    var baseWidth = 1;
+    var minZoom = 1;
+    var maxZoom = 6;
+    var isOpen = false;
+    var loadToken = 0;
+    var dragging = false;
+    var px = 0;
+    var py = 0;
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function updateControls() {
+      if (label) label.textContent = Math.round(zoom * 100) + "%";
+      if (zoomOut) zoomOut.disabled = zoom <= minZoom + 0.001;
+      if (zoomIn) zoomIn.disabled = zoom >= maxZoom - 0.001;
+    }
+
+    function applyZoom(nextZoom, anchor) {
+      if (!media) return;
+      var previous = zoom;
+      var target = activeZoomTarget || media;
+      var rect = stage.getBoundingClientRect();
+      var localX = anchor ? anchor.clientX - rect.left : stage.clientWidth / 2;
+      var localY = anchor ? anchor.clientY - rect.top : stage.clientHeight / 2;
+      var worldX = stage.scrollLeft + localX;
+      var worldY = stage.scrollTop + localY;
+
+      zoom = clamp(nextZoom, minZoom, maxZoom);
+      if (activeZoomMode === "docx") {
+        media.style.width = Math.round(baseWidth * zoom) + "px";
+        media.style.maxWidth = "none";
+        target.style.width = Math.round(baseWidth) + "px";
+        target.style.maxWidth = "none";
+        target.style.transform = "";
+        target.style.transformOrigin = "top left";
+        target.style.zoom = String(zoom);
+      } else {
+        target.style.width = Math.round(baseWidth * zoom) + "px";
+        target.style.maxWidth = "none";
+        target.style.height = "auto";
+      }
+
+      if (previous > 0) {
+        var ratio = zoom / previous;
+        window.requestAnimationFrame(function () {
+          stage.scrollLeft = Math.max(0, worldX * ratio - localX);
+          stage.scrollTop = Math.max(0, worldY * ratio - localY);
+        });
+      }
+      updateControls();
+    }
+
+    function mount(el, naturalWidth, naturalHeight, mountOptions) {
+      mountOptions = mountOptions || {};
+      content.innerHTML = "";
+      media = el;
+      activeZoomTarget = null;
+      activeZoomMode = "width";
+
+      var viewportW = Math.max(stage.clientWidth - 32, 280);
+      var viewportH = Math.max(stage.clientHeight - 32, 240);
+      var width = Math.max(naturalWidth || el.naturalWidth || el.width || viewportW, 1);
+      var height = Math.max(naturalHeight || el.naturalHeight || el.height || viewportH, 1);
+      baseWidth = Math.min(viewportW, width, Math.max(1, width * (viewportH / height)));
+      minZoom = 1;
+      zoom = 1;
+      media.className = mountOptions.className || "scroll-lightbox__media";
+      media.style.display = "block";
+      media.style.width = Math.round(baseWidth) + "px";
+      media.style.maxWidth = "none";
+      media.style.height = "auto";
+      media.style.cursor = "grab";
+      content.appendChild(media);
+      stage.scrollLeft = 0;
+      stage.scrollTop = 0;
+      updateControls();
+    }
+
+    function useDocxZoomTarget(root) {
+      if (!root) return;
+      var target = root.querySelector(".docx-wrapper") ||
+        root.querySelector(".docx-preview") ||
+        root;
+      var measuredWidth = target.getBoundingClientRect
+        ? target.getBoundingClientRect().width
+        : 0;
+      var width = Math.round(Math.max(measuredWidth, target.offsetWidth || 0));
+      if (!Number.isFinite(width) || width < 220) return;
+
+      activeZoomTarget = target;
+      activeZoomMode = "docx";
+      baseWidth = width / Math.max(zoom, 1);
+      target.dataset.baseRenderWidth = String(baseWidth);
+      target.style.width = Math.round(baseWidth) + "px";
+      target.style.maxWidth = "none";
+      target.style.transformOrigin = "top left";
+      target.style.zoom = String(zoom);
+      media.style.width = Math.round(baseWidth * zoom) + "px";
+      media.style.maxWidth = "none";
+      updateControls();
+    }
+
+    function open() {
+      isOpen = true;
+      loadToken += 1;
+      overlay.classList.add("is-open");
+      document.body.style.overflow = "hidden";
+      return loadToken;
+    }
+
+    function close() {
+      isOpen = false;
+      loadToken += 1;
+      overlay.classList.remove("is-open");
+      document.body.style.overflow = "";
+      content.innerHTML = "";
+      media = null;
+      activeZoomTarget = null;
+      activeZoomMode = "width";
+      dragging = false;
+    }
+
+    function openImage(src) {
+      var img = new Image();
+      var token = open();
+      content.innerHTML = '<p class="scroll-lightbox__loading">Loading image...</p>';
+      img.onload = function () {
+        if (!isOpen || token !== loadToken) return;
+        mount(img, img.naturalWidth, img.naturalHeight);
+      };
+      img.onerror = function () {
+        if (token === loadToken) close();
+      };
+      img.src = src;
+    }
+
+    async function openFullPdf(src) {
+      var token = open();
+      content.innerHTML = '<p class="scroll-lightbox__loading">Loading PDF...</p>';
+      try {
+        var pdf = await loadPdf(src);
+        if (!isOpen || token !== loadToken) return;
+
+        var firstPage = await pdf.getPage(1);
+        if (!isOpen || token !== loadToken) return;
+
+        var firstBase = firstPage.getViewport({ scale: 1 });
+        var target = Math.min(window.innerWidth * 1.55, 1600);
+        var cssScale = target / firstBase.width;
+        var firstDisplayViewport = firstPage.getViewport({ scale: cssScale });
+        var wrapper = document.createElement("div");
+        wrapper.setAttribute("role", "document");
+        wrapper.setAttribute("aria-label", "Full PDF preview");
+        mount(wrapper, firstDisplayViewport.width, firstDisplayViewport.height, {
+          className: "scroll-lightbox__pdf-stack",
+        });
+
+        for (var pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+          if (!isOpen || token !== loadToken) return;
+          var page = pageNumber === 1 ? firstPage : await pdf.getPage(pageNumber);
+          if (!isOpen || token !== loadToken) return;
+
+          var dpr = Math.min(window.devicePixelRatio || 1, 2);
+          var base = page.getViewport({ scale: 1 });
+          var pageCssScale = target / base.width;
+          var renderViewport = page.getViewport({ scale: pageCssScale * dpr });
+          var canvas = document.createElement("canvas");
+          canvas.width = Math.floor(renderViewport.width);
+          canvas.height = Math.floor(renderViewport.height);
+          canvas.style.width = "100%";
+          canvas.style.height = "auto";
+          canvas.className = "scroll-lightbox__pdf-page";
+          canvas.setAttribute("aria-label", "PDF page " + pageNumber);
+          wrapper.appendChild(canvas);
+
+          await page.render({
+            canvasContext: canvas.getContext("2d", { alpha: false }),
+            viewport: renderViewport,
+          }).promise;
+        }
+      } catch (error) {
+        if (token === loadToken) close();
+      }
+    }
+
+    async function openFullDocx(src) {
+      var token = open();
+      content.innerHTML = '<p class="scroll-lightbox__loading">Loading DOCX...</p>';
+      try {
+        var wrapper = document.createElement("div");
+        wrapper.setAttribute("role", "document");
+        wrapper.setAttribute("aria-label", "Full DOCX preview");
+        mount(wrapper, 880, 1245, {
+          className: "doc-docx-scope scroll-docx-lightbox-doc",
+        });
+        await renderDocxInto(src, wrapper);
+        if (!isOpen || token !== loadToken) return;
+        useDocxZoomTarget(wrapper);
+      } catch (error) {
+        if (token === loadToken) close();
+      }
+    }
+
+    stage.addEventListener(
+      "wheel",
+      function (event) {
+        if (!media) return;
+        if (event.ctrlKey || event.metaKey) {
+          event.preventDefault();
+          applyZoom(zoom * Math.exp((-event.deltaY || 0) * 0.0015), event);
+        }
+      },
+      { passive: false }
+    );
+
+    stage.addEventListener("pointerdown", function (event) {
+      if (!media || event.target.closest("button, a")) return;
+      dragging = true;
+      px = event.clientX;
+      py = event.clientY;
+      stage.setPointerCapture(event.pointerId);
+      media.style.cursor = "grabbing";
+    });
+
+    stage.addEventListener("pointermove", function (event) {
+      if (!dragging) return;
+      stage.scrollLeft -= event.clientX - px;
+      stage.scrollTop -= event.clientY - py;
+      px = event.clientX;
+      py = event.clientY;
+    });
+
+    stage.addEventListener("pointerup", function () {
+      dragging = false;
+      if (media) media.style.cursor = "grab";
+    });
+    stage.addEventListener("pointercancel", function () {
+      dragging = false;
+      if (media) media.style.cursor = "grab";
+    });
+
+    zoomIn.addEventListener("click", function (event) {
+      event.stopPropagation();
+      applyZoom(zoom * 1.25);
+    });
+    zoomOut.addEventListener("click", function (event) {
+      event.stopPropagation();
+      applyZoom(zoom / 1.25);
+    });
+    overlay.querySelector('[data-lb="fit"]').addEventListener("click", function (event) {
+      event.stopPropagation();
+      applyZoom(1);
+    });
+    overlay.querySelector('[data-lb="close"]').addEventListener("click", function (event) {
+      event.stopPropagation();
+      close();
+    });
+    overlay.querySelector('[data-lb="toolbar"]').addEventListener("click", function (event) {
+      event.stopPropagation();
+    });
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) close();
+    });
+    document.addEventListener("keydown", function (event) {
+      if (!isOpen) return;
+      if (event.key === "Escape") close();
+      else if (media && (event.key === "+" || event.key === "=")) applyZoom(zoom * 1.25);
+      else if (media && event.key === "-") applyZoom(zoom / 1.25);
+    });
+
+    document.addEventListener("click", function (event) {
+      var img = event.target.closest("img[data-zoom-src]");
+      if (img) {
+        openImage(img.dataset.zoomSrc);
+        return;
+      }
+      var fullPdf = event.target.closest("[data-open-full-pdf]");
+      if (fullPdf) {
+        openFullPdf(fullPdf.dataset.openFullPdf);
+        return;
+      }
+      var fullDocx = event.target.closest("[data-open-full-docx]");
+      if (fullDocx) {
+        openFullDocx(fullDocx.dataset.openFullDocx);
+      }
+    });
+  }
+
+  return {
+    init: init,
+  };
+};
