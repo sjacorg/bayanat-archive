@@ -37,6 +37,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     var maxZoom = 6;
     var isOpen = false;
     var loadToken = 0;
+    var pageObserver = null;
     var dragging = false;
     var px = 0;
     var py = 0;
@@ -147,6 +148,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     function close() {
       isOpen = false;
       loadToken += 1;
+      if (pageObserver) { pageObserver.disconnect(); pageObserver = null; }
       overlay.classList.remove("is-open");
       document.body.style.overflow = "";
       content.innerHTML = "";
@@ -180,10 +182,12 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         var firstPage = await pdf.getPage(1);
         if (!isOpen || token !== loadToken) return;
 
-        var firstBase = firstPage.getViewport({ scale: 1 });
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
         var target = Math.min(window.innerWidth * 1.55, 1600);
+        var firstBase = firstPage.getViewport({ scale: 1 });
         var cssScale = target / firstBase.width;
         var firstDisplayViewport = firstPage.getViewport({ scale: cssScale });
+
         var wrapper = document.createElement("div");
         wrapper.setAttribute("role", "document");
         wrapper.setAttribute("aria-label", "Full PDF preview");
@@ -191,29 +195,73 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
           className: "scroll-lightbox__pdf-stack",
         });
 
-        for (var pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-          if (!isOpen || token !== loadToken) return;
-          var page = pageNumber === 1 ? firstPage : await pdf.getPage(pageNumber);
-          if (!isOpen || token !== loadToken) return;
+        // tracks in-progress renders so we don't double-render a page
+        var rendering = new Set();
+        // live DOM node for each page number (placeholder or canvas)
+        var pageEls = {};
 
-          var dpr = Math.min(window.devicePixelRatio || 1, 2);
-          var base = page.getViewport({ scale: 1 });
-          var pageCssScale = target / base.width;
-          var renderViewport = page.getViewport({ scale: pageCssScale * dpr });
-          var canvas = document.createElement("canvas");
-          canvas.width = Math.floor(renderViewport.width);
-          canvas.height = Math.floor(renderViewport.height);
-          canvas.style.width = "100%";
-          canvas.style.height = "auto";
-          canvas.className = "scroll-lightbox__pdf-page";
-          canvas.setAttribute("aria-label", "PDF page " + pageNumber);
-          wrapper.appendChild(canvas);
-
-          await page.render({
-            canvasContext: canvas.getContext("2d", { alpha: false }),
-            viewport: renderViewport,
-          }).promise;
+        async function renderPage(pageNumber) {
+          if (rendering.has(pageNumber)) return;
+          rendering.add(pageNumber);
+          try {
+            var page = await pdf.getPage(pageNumber);
+            if (!isOpen || token !== loadToken) return;
+            var base = page.getViewport({ scale: 1 });
+            var renderViewport = page.getViewport({ scale: (target / base.width) * dpr });
+            var canvas = document.createElement("canvas");
+            canvas.width = Math.floor(renderViewport.width);
+            canvas.height = Math.floor(renderViewport.height);
+            canvas.style.width = "100%";
+            canvas.style.height = "auto";
+            canvas.className = "scroll-lightbox__pdf-page";
+            canvas.setAttribute("aria-label", "PDF page " + pageNumber);
+            pageEls[pageNumber].replaceWith(canvas);
+            pageEls[pageNumber] = canvas;
+            await page.render({
+              canvasContext: canvas.getContext("2d", { alpha: false }),
+              viewport: renderViewport,
+            }).promise;
+          } finally {
+            rendering.delete(pageNumber);
+          }
         }
+
+        // build placeholders for all pages upfront so the scroll height is correct
+        var placeholders = [];
+        for (var i = 1; i <= pdf.numPages; i += 1) {
+          var ph = document.createElement("div");
+          ph.className = "scroll-lightbox__pdf-page scroll-lightbox__pdf-placeholder";
+          ph.dataset.pdfPageNumber = String(i);
+          ph.style.width = "100%";
+          ph.style.aspectRatio = String(firstBase.width / firstBase.height);
+          wrapper.appendChild(ph);
+          pageEls[i] = ph;
+          placeholders.push(ph);
+        }
+
+        // render page 1 immediately
+        await renderPage(1);
+        if (!isOpen || token !== loadToken) return;
+
+        // observe remaining placeholders and render when they enter the viewport
+        var observer = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (!entry.isIntersecting) return;
+              var n = parseInt(entry.target.dataset.pdfPageNumber, 10);
+              if (!n) return;
+              observer.unobserve(entry.target);
+              renderPage(n);
+            });
+          },
+          { root: stage, rootMargin: "400px 0px", threshold: 0.01 }
+        );
+
+        pageObserver = observer;
+        for (var j = 1; j < placeholders.length; j += 1) {
+          observer.observe(placeholders[j]);
+        }
+
       } catch (error) {
         if (token === loadToken) close();
       }

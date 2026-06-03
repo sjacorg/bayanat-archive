@@ -666,10 +666,10 @@ body.timeline-overscroll-locked {
 }
 
 .scroll-lightbox__stage {
-    height: 100%;
-    width: 100%;
+    position: absolute;
+    inset: 3.5rem 0 0;
     overflow: auto;
-    padding: 5rem 1rem 2rem;
+    padding: 1.5rem 1rem 2rem;
     scrollbar-gutter: stable;
 }
 
@@ -705,6 +705,16 @@ body.timeline-overscroll-locked {
 
 .scroll-lightbox__pdf-page:last-child {
     margin-bottom: 0;
+}
+
+.scroll-lightbox__pdf-placeholder {
+    background: #1e293b;
+    animation: pdf-placeholder-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pdf-placeholder-pulse {
+    0%, 100% { opacity: 0.25; }
+    50% { opacity: 0.45; }
 }
 
 .scroll-lightbox__loading {
