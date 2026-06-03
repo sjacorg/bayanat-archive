@@ -219,3 +219,38 @@ def detail(document_id, slug):
         canonical_url=request.url_root.rstrip("/")
         + f"/documents/{document['id']}/{document['slug']}",
     )
+
+
+@bp.route("/documents/<int:document_id>/<slug>/scroll")
+def detail_scroll(document_id, slug):
+    """Prototype: continuous-scroll document viewer (BDA-12 exploration)."""
+    db = get_db()
+    document = db.execute(
+        "SELECT d.* FROM documents d WHERE d.id = ?", [document_id]
+    ).fetchone()
+    if not document:
+        abort(404)
+    if slug != document["slug"]:
+        return redirect(
+            f"/documents/{document['id']}/{document['slug']}/scroll", code=301
+        )
+
+    media_rows = db.execute(
+        """
+        SELECT id, media_id, filename, media_type, title, title_ar, language, ocr_text, original_text, confidence
+        FROM media
+        WHERE document_id = ?
+        ORDER BY id
+        """,
+        [document_id],
+    ).fetchall()
+
+    return render_template(
+        "document_scroll_proto.html",
+        document=document,
+        media_rows=media_rows,
+        document_labels=_get_document_labels(db, document_id),
+        document_locations=_get_document_locations(db, document_id),
+        relations=_get_related_documents(db, document_id),
+        back_url=_get_search_back_url(),
+    )
