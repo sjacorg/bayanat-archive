@@ -9,10 +9,12 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     overlay.className = "scroll-lightbox";
     overlay.innerHTML =
       '<div data-lb="toolbar" class="scroll-lightbox__toolbar">' +
+      '<div class="scroll-lightbox__zoom-controls">' +
       '<button type="button" data-lb="out" class="scroll-lightbox__button" aria-label="Zoom out">-</button>' +
       '<span data-lb="label" class="scroll-lightbox__label">100%</span>' +
       '<button type="button" data-lb="in" class="scroll-lightbox__button" aria-label="Zoom in">+</button>' +
       '<button type="button" data-lb="fit" class="scroll-lightbox__fit" aria-label="Fit to screen">Fit</button>' +
+      '</div>' +
       '<button type="button" data-lb="close" class="scroll-lightbox__close" aria-label="Close">' +
       '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>' +
@@ -52,17 +54,47 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       if (zoomIn) zoomIn.disabled = zoom >= maxZoom - 0.001;
     }
 
-    function applyZoom(nextZoom, anchor) {
-      if (!media) return;
-      var previous = zoom;
-      var target = activeZoomTarget || media;
+    var pendingScroll = null;
+    var scrollRafId = null;
+
+    function captureScroll(currentZoom, nextZoom, anchor) {
+      if (nextZoom <= 0 || currentZoom <= 0) { pendingScroll = null; return; }
       var rect = stage.getBoundingClientRect();
       var localX = anchor ? anchor.clientX - rect.left : stage.clientWidth / 2;
       var localY = anchor ? anchor.clientY - rect.top : stage.clientHeight / 2;
       var worldX = stage.scrollLeft + localX;
       var worldY = stage.scrollTop + localY;
+      var ratio = nextZoom / currentZoom;
+      pendingScroll = {
+        left: worldX * ratio - localX,
+        top: worldY * ratio - localY,
+      };
+    }
+
+    function restoreScroll() {
+      if (!pendingScroll) return;
+      if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId);
+      var restore = pendingScroll;
+      pendingScroll = null;
+      scrollRafId = window.requestAnimationFrame(function () {
+        scrollRafId = null;
+        var maxLeft = Math.max(stage.scrollWidth - stage.clientWidth, 0);
+        var maxTop = Math.max(stage.scrollHeight - stage.clientHeight, 0);
+        stage.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
+        stage.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
+      });
+    }
+
+    function applyZoom(nextZoom, anchor) {
+      if (!media) return;
+      var previous = zoom;
+      var target = activeZoomTarget || media;
 
       zoom = clamp(nextZoom, minZoom, maxZoom);
+      if (Math.abs(zoom - previous) < 0.001) return;
+
+      captureScroll(previous, zoom, anchor);
+
       if (activeZoomMode === "docx") {
         media.style.width = Math.round(baseWidth * zoom) + "px";
         media.style.maxWidth = "none";
@@ -77,13 +109,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         target.style.height = "auto";
       }
 
-      if (previous > 0) {
-        var ratio = zoom / previous;
-        window.requestAnimationFrame(function () {
-          stage.scrollLeft = Math.max(0, worldX * ratio - localX);
-          stage.scrollTop = Math.max(0, worldY * ratio - localY);
-        });
-      }
+      restoreScroll();
       updateControls();
     }
 
@@ -321,6 +347,43 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     stage.addEventListener("pointercancel", function () {
       dragging = false;
       if (media) media.style.cursor = "grab";
+    });
+
+    // pinch-to-zoom via touch events
+    var pinchStartDist = null;
+    var pinchStartZoom = 1;
+    var pinchAnchor = null;
+
+    function touchDist(a, b) {
+      var dx = a.clientX - b.clientX;
+      var dy = a.clientY - b.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    stage.addEventListener("touchstart", function (event) {
+      if (!media || event.touches.length !== 2) return;
+      event.preventDefault();
+      dragging = false;
+      pinchStartDist = touchDist(event.touches[0], event.touches[1]);
+      pinchStartZoom = zoom;
+    }, { passive: false });
+
+    stage.addEventListener("touchmove", function (event) {
+      if (!media || !pinchStartDist || event.touches.length !== 2) return;
+      event.preventDefault();
+      var dist = touchDist(event.touches[0], event.touches[1]);
+      var scale = dist / pinchStartDist;
+      var nextZoom = pinchStartZoom * Math.pow(scale, 0.85);
+      var anchor = {
+        clientX: (event.touches[0].clientX + event.touches[1].clientX) / 2,
+        clientY: (event.touches[0].clientY + event.touches[1].clientY) / 2,
+      };
+      applyZoom(nextZoom, anchor);
+    }, { passive: false });
+
+    stage.addEventListener("touchend", function () {
+      pinchStartDist = null;
+      pendingScroll = null;
     });
 
     zoomIn.addEventListener("click", function (event) {

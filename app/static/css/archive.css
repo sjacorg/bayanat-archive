@@ -622,18 +622,37 @@ body.timeline-overscroll-locked {
     backdrop-filter: blur(8px);
 }
 
+.scroll-lightbox__zoom-controls {
+    display: flex;
+    align-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.scroll-lightbox__zoom-controls .scroll-lightbox__button,
+.scroll-lightbox__zoom-controls .scroll-lightbox__fit {
+    border: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.scroll-lightbox__zoom-controls .scroll-lightbox__fit {
+    border-right: none;
+}
+
 .scroll-lightbox__button,
 .scroll-lightbox__fit,
 .scroll-lightbox__close {
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    background: rgba(255, 255, 255, 0.10);
+    background: transparent;
     color: #fff;
+}
+
+.scroll-lightbox__close {
+    border: 1px solid rgba(255, 255, 255, 0.35);
 }
 
 .scroll-lightbox__button:hover,
 .scroll-lightbox__fit:hover,
 .scroll-lightbox__close:hover {
-    background: rgba(255, 255, 255, 0.20);
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .scroll-lightbox__button:disabled {
@@ -688,6 +707,7 @@ body.timeline-overscroll-locked {
     overflow: auto;
     padding: 1.5rem 1rem 2rem;
     scrollbar-gutter: stable;
+    touch-action: pan-x pan-y;
 }
 
 .scroll-lightbox__content {
