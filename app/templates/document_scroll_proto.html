@@ -145,12 +145,15 @@
 
             <div class="card-archive scroll-page-card scroll-page-card--{{ p.kind }} overflow-hidden">
                 {% if p.kind == 'image' %}
-                <img src="{{ url_for('static', filename='media/' ~ item.filename) }}" data-zoom-src="{{ url_for('static', filename='media/' ~ item.filename) }}" alt="{{ item.title or 'Page ' ~ p.n }}" loading="lazy" class="block w-full cursor-zoom-in">
+                <div class="cursor-zoom-in" data-zoom-src="{{ url_for('static', filename='media/' ~ item.filename) }}">
+                    <img src="{{ url_for('static', filename='media/' ~ item.filename) }}" alt="{{ item.title or 'Page ' ~ p.n }}" loading="lazy" class="h-auto w-full object-contain pointer-events-none">
+                </div>
                 {% elif p.kind == 'pdf' %}
                 <div
-                    class="pdf-host w-full"
+                    class="pdf-host w-full cursor-zoom-in"
                     data-pdf-src="{{ url_for('static', filename='media/' ~ item.filename) }}"
                     data-pdf-filename="{{ item.filename }}"
+                    data-open-full-pdf="{{ url_for('static', filename='media/' ~ item.filename) }}"
                 >
                     <div class="flex min-h-[56vh] items-center justify-center text-sm text-base-content/40">Loading PDF preview…</div>
                 </div>

@@ -37,8 +37,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
       canvas.height = Math.floor(renderViewport.height);
       canvas.style.width = "100%";
       canvas.style.height = "auto";
-      canvas.className = "scroll-pdf-preview-canvas mx-auto block w-full cursor-zoom-in";
-      canvas.dataset.openFullPdf = src;
+      canvas.className = "scroll-pdf-preview-canvas mx-auto block w-full";
 
       var context = canvas.getContext("2d", { alpha: false });
       context.fillStyle = "#fff";

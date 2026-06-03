@@ -92,10 +92,17 @@
         b.classList.toggle("is-active", on);
         b.classList.toggle("border-secondary", on);
         b.classList.toggle("bg-base-200", on);
-        if (on) {
-          keepRailButtonVisible(b);
-        }
+        if (on) keepRailButtonVisible(b);
       });
+
+      var params = new URLSearchParams(window.location.search);
+      if (current === 0) {
+        params.delete("page");
+      } else {
+        params.set("page", current);
+      }
+      var qs = params.toString();
+      history.replaceState(null, "", window.location.pathname + (qs ? "?" + qs : ""));
     }
 
     function updateActivePage() {
@@ -130,6 +137,11 @@
     window.addEventListener("scroll", requestActivePageUpdate, { passive: true });
     window.addEventListener("resize", requestActivePageUpdate);
     updateActivePage();
+
+    var initialPage = parseInt(new URLSearchParams(window.location.search).get("page"), 10);
+    if (initialPage && initialPage > 0) {
+      setTimeout(function () { jump(initialPage); }, 120);
+    }
 
     function jump(n) {
       var el = document.getElementById("page-" + n);

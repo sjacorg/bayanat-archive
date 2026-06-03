@@ -353,7 +353,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     });
 
     document.addEventListener("click", function (event) {
-      var img = event.target.closest("img[data-zoom-src]");
+      var img = event.target.closest("[data-zoom-src]");
       if (img) {
         openImage(img.dataset.zoomSrc);
         return;
