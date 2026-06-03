@@ -148,8 +148,9 @@
                     data-pdf-src="{{ url_for('static', filename='media/' ~ item.filename) }}"
                     data-pdf-filename="{{ item.filename }}"
                     data-open-full-pdf="{{ url_for('static', filename='media/' ~ item.filename) }}"
+                    style="min-height: 56vh"
                 >
-                    <div class="flex min-h-[56vh] items-center justify-center text-sm text-base-content/40">Loading PDF preview…</div>
+                    <div class="flex h-full min-h-[56vh] items-center justify-center text-sm text-base-content/40">Loading PDF preview…</div>
                 </div>
                 {% elif p.kind == 'docx' %}
                 <div
@@ -157,8 +158,9 @@
                     data-docx-src="{{ url_for('static', filename='media/' ~ item.filename) }}"
                     data-docx-filename="{{ item.filename }}"
                     data-open-full-docx="{{ url_for('static', filename='media/' ~ item.filename) }}"
+                    style="min-height: 46vh"
                 >
-                    <div class="flex min-h-[46vh] items-center justify-center text-sm text-base-content/40">Loading DOCX preview…</div>
+                    <div class="flex h-full min-h-[46vh] items-center justify-center text-sm text-base-content/40">Loading DOCX preview…</div>
                 </div>
                 {% elif p.kind == 'video' %}
                 <video controls preload="metadata" class="block max-h-[80vh] w-full bg-black">

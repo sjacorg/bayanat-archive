@@ -168,25 +168,9 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
       }
     }
 
-    if (!("IntersectionObserver" in window)) {
-      hosts.forEach(renderHost);
-      return;
-    }
-
-    var observer = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (!entry.isIntersecting) return;
-          observer.unobserve(entry.target);
-          renderHost(entry.target);
-        });
-      },
-      { rootMargin: "700px 0px", threshold: 0.01 }
-    );
-
-    hosts.forEach(function (host) {
-      observer.observe(host);
-    });
+    // render all hosts immediately so rail navigation always lands on
+    // a fully-sized card rather than a collapsed placeholder
+    hosts.forEach(renderHost);
   }
 
   return {
