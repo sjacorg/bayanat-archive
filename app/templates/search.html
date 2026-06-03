@@ -397,7 +397,7 @@
         hx-get="{{ url_for('search.search') }}{% if request.query_string %}?{{ request.query_string.decode('utf-8') }}{% endif %}"
         hx-trigger="load"
         hx-target="this"
-        hx-swap="innerHTML"
+        hx-swap="innerHTML show:window:top"
         hx-include=".search-param"
         hx-indicator="#loading"
     ></div>
