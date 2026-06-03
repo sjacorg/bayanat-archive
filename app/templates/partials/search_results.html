@@ -344,21 +344,22 @@
                         {{ doc.title }}
                     {% endif %}
                 </h2>
-                <p
-                    dir="auto"
+                {% if doc.snippet_desc or doc.description %}
+                <div
                     class="line-clamp-6 text-base leading-relaxed text-base-content/55"
                 >
                     {% if doc.snippet_desc %}
                         {{ doc.snippet_desc | strip_html }}
-                    {% elif doc.description %}
-                        {{ doc.description | strip_html | truncate(220) }}
                     {% else %}
-                        No description available.
+                        {{ doc.description | bidirectional_text }}
                     {% endif %}
-                </p>
+                </div>
+                {% endif %}
+                {% if doc.publish_date %}
                 <p class="mt-5 line-clamp-1 text-sm text-base-content/45">
-                    {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
+                    {{ doc.publish_date[:10] }}
                 </p>
+                {% endif %}
                 <div class="mt-1">
                 {{ document_label_chips(doc.id) }}
                 </div>
@@ -390,21 +391,22 @@
                             {{ doc.title }}
                         {% endif %}
                     </h2>
-                    <p
-                        dir="auto"
+                    {% if doc.snippet_desc or doc.description %}
+                    <div
                         class="mt-1.5 line-clamp-2 text-base leading-relaxed text-base-content/60 md:line-clamp-3"
                     >
                         {% if doc.snippet_desc %}
                             {{ doc.snippet_desc | strip_html }}
-                        {% elif doc.description %}
-                            {{ doc.description | strip_html | truncate(300) }}
                         {% else %}
-                            No description available.
+                            {{ doc.description | bidirectional_text }}
                         {% endif %}
-                    </p>
+                    </div>
+                    {% endif %}
+                    {% if doc.publish_date %}
                     <p class="mt-2 line-clamp-1 text-sm text-base-content/45">
-                        {% if doc.publish_date %}{{ doc.publish_date[:10] }}{% else %}Date unavailable{% endif %}
+                        {{ doc.publish_date[:10] }}
                     </p>
+                    {% endif %}
                     <div class="mt-2">
                         {{ document_label_chips(doc.id) }}
                     </div>
