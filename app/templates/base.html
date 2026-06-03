@@ -6,10 +6,10 @@
     <title>{% block title %}Bayanat Document Archive{% endblock %}</title>
     <meta name="description" content="{% block description %}Public searchable archive of Syrian government documents{% endblock %}">
 
-    <!-- Fonts -->
+    <!-- Fonts: IBM Plex superfamily (Latin serif/sans + Arabic), harmonized for EN/AR -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
 
     <!-- Tailwind 4 + DaisyUI 5 -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css">
@@ -56,7 +56,7 @@
 
     {% block head %}{% endblock %}
 </head>
-<body class="text-base-content overflow-x-hidden [font-family:'Inter',sans-serif]">
+<body class="text-base-content overflow-x-hidden">
     <div class="drawer min-h-screen">
         <input id="main-nav-drawer" type="checkbox" class="drawer-toggle">
 

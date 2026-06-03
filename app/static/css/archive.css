@@ -35,6 +35,46 @@ html {
     --color-ink-muted: oklch(0.37 0.005 255);     /* #4B4B4B body text */
 }
 
+/* ── Facelift: typography, paper canvas, card craft ─────────────── */
+:root {
+    --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+    --font-serif: 'IBM Plex Serif', 'IBM Plex Sans Arabic', Georgia, 'Times New Roman', serif;
+    --color-paper: oklch(0.985 0.006 85);        /* warm ivory canvas */
+    --color-paper-border: oklch(0.90 0.010 80);  /* warm hairline */
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-paper);
+}
+
+/* Editorial serif for titles + the result count.
+   Bilingual: Latin renders in Plex Serif, Arabic falls through to Plex Sans Arabic. */
+h1, h2, h3, .title-serif {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
+}
+
+/* Archive result card — paper-lifted white surface, warm hairline, calm hover */
+.card-archive {
+    background-color: #fff;
+    border: 1px solid var(--color-paper-border);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-archive:hover,
+.card-archive:focus-within {
+    border-color: var(--color-secondary);
+    box-shadow: 0 8px 30px rgba(26, 69, 64, 0.10);
+}
+
+/* Catalog (no-media) thumbnail — subtle paper texture, replaces clip-art filler */
+.catalog-placeholder {
+    background:
+        radial-gradient(circle at 1px 1px, rgba(26, 69, 64, 0.05) 1px, transparent 0) 0 0 / 14px 14px,
+        var(--color-paper);
+}
+
 /* Ambient shadow (not drop shadow) */
 .shadow-ambient {
     box-shadow: 0 0 32px rgba(26, 69, 64, 0.06);
