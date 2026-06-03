@@ -18,7 +18,8 @@
     {% elif media_type == 'application/pdf' %}{% set kind = 'pdf' %}
     {% elif media_type.startswith('video/') %}{% set kind = 'video' %}
     {% elif media_type.startswith('audio/') %}{% set kind = 'audio' %}
-    {% elif media_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'] %}{% set kind = 'docx' %}
+    {% elif media_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'] %}
+        {% set kind = 'docx' %}
     {% endif %}
     {% set _ = pages.append({'item': item, 'kind': kind, 'n': loop.index}) %}
 {% endfor %}
@@ -41,7 +42,6 @@
                 <button type="button" data-zoom="fit" class="h-7 px-2 text-[11px] font-medium uppercase tracking-[0.08em] text-base-content/60 hover:bg-base-200" aria-label="Fit width">Fit</button>
             </div>
             <span id="page-counter" role="status" aria-live="polite" class="rounded-none bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary-content">Overview</span>
-            <a href="/documents/{{ document.id }}/{{ document.slug }}" class="hidden text-xs text-base-content/45 underline-offset-2 hover:text-primary hover:underline sm:inline">Classic view</a>
         </div>
     </div>
 </header>
@@ -51,13 +51,21 @@
     {# ── Page rail (desktop) ──────────────────────────────────── #}
     {% if pages %}
     <nav aria-label="Document pages" class="hidden md:block">
-        <div class="sticky top-20 flex flex-col gap-2">
+        <div class="scroll-page-rail sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
             <p class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-base-content/40">Pages</p>
+            <button
+                type="button"
+                data-rail="0"
+                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-left"
+            >
+                <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">ENTRY</span>
+                <span class="text-xs font-medium text-base-content/60 group-hover:text-primary">Entry</span>
+            </button>
             {% for p in pages %}
             <button
                 type="button"
                 data-rail="{{ p.n }}"
-                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-left transition-colors hover:border-secondary"
+                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-left"
             >
                 <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">
                     {% if p.kind == 'image' %}
@@ -76,7 +84,7 @@
     {# ── Main reading column ──────────────────────────────────── #}
     <div id="reading" class="min-w-0" style="--page-width:880px">
         {# Record overview sheet #}
-        <article data-page="0" class="card-archive mx-auto mb-8 w-full p-7 md:p-10" style="max-width:var(--page-width,880px)">
+        <article data-page="0" id="page-0" class="card-archive mx-auto mb-8 w-full scroll-mt-20 p-7 md:p-10" style="max-width:var(--page-width,880px)">
             <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-secondary">Record</p>
             <h1 dir="auto" class="title-serif mt-2 text-2xl font-semibold leading-tight text-base-content md:text-4xl">{{ document.title }}</h1>
             {% if document.title_ar and document.title_ar != document.title %}
@@ -134,12 +142,24 @@
                 {% if item.title %}<span dir="auto" class="truncate text-xs text-base-content/45">{{ item.title }}</span>{% endif %}
             </div>
 
-            <div class="card-archive overflow-hidden">
+            <div class="card-archive scroll-page-card scroll-page-card--{{ p.kind }} overflow-hidden">
                 {% if p.kind == 'image' %}
                 <img src="{{ url_for('static', filename='media/' ~ item.filename) }}" data-zoom-src="{{ url_for('static', filename='media/' ~ item.filename) }}" alt="{{ item.title or 'Page ' ~ p.n }}" loading="lazy" class="block w-full cursor-zoom-in">
                 {% elif p.kind == 'pdf' %}
-                <div class="pdf-host w-full" data-pdf-src="{{ url_for('static', filename='media/' ~ item.filename) }}">
-                    <div class="flex min-h-[60vh] items-center justify-center text-sm text-base-content/40">Loading PDF…</div>
+                <div
+                    class="pdf-host w-full"
+                    data-pdf-src="{{ url_for('static', filename='media/' ~ item.filename) }}"
+                    data-pdf-filename="{{ item.filename }}"
+                >
+                    <div class="flex min-h-[56vh] items-center justify-center text-sm text-base-content/40">Loading PDF preview…</div>
+                </div>
+                {% elif p.kind == 'docx' %}
+                <div
+                    class="docx-host w-full"
+                    data-docx-src="{{ url_for('static', filename='media/' ~ item.filename) }}"
+                    data-docx-filename="{{ item.filename }}"
+                >
+                    <div class="flex min-h-[46vh] items-center justify-center text-sm text-base-content/40">Loading DOCX preview…</div>
                 </div>
                 {% elif p.kind == 'video' %}
                 <video controls preload="metadata" class="block max-h-[80vh] w-full bg-black">
@@ -173,8 +193,23 @@
 
 {% block before_alpine_scripts %}
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+{% set script_media = namespace(has_docx=false) %}
+{% for item in media_rows %}
+    {% set media_type = (item.media_type or '') | lower %}
+    {% if media_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'] %}
+        {% set script_media.has_docx = true %}
+    {% endif %}
+{% endfor %}
+{% if script_media.has_docx %}
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script defer src="https://unpkg.com/docx-preview@0.3.6/dist/docx-preview.js"></script>
+<script defer src="{{ url_for('static', filename='js/document-detail-docx.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/document-scroll-docx.js') }}"></script>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
+<script defer src="{{ url_for('static', filename='js/document-scroll-media.js') }}"></script>
+<script defer src="{{ url_for('static', filename='js/document-scroll-lightbox.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/document-scroll-proto.js') }}"></script>
 {% endblock %}
