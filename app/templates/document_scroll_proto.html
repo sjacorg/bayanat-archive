@@ -35,12 +35,6 @@
         </a>
         <p dir="auto" class="min-w-0 flex-1 truncate text-center text-sm text-base-content/70" title="{{ document.title }}">{{ document.title }}</p>
         <div class="flex flex-none items-center gap-3">
-            <div class="hidden items-center border border-[color:var(--color-paper-border)] sm:flex" role="group" aria-label="Zoom">
-                <button type="button" data-zoom="out" class="flex h-7 w-7 items-center justify-center text-lg leading-none text-base-content/70 hover:bg-base-200" aria-label="Zoom out">−</button>
-                <span id="zoom-label" class="w-12 select-none border-x border-[color:var(--color-paper-border)] text-center text-xs text-base-content/70">100%</span>
-                <button type="button" data-zoom="in" class="flex h-7 w-7 items-center justify-center text-lg leading-none text-base-content/70 hover:bg-base-200" aria-label="Zoom in">+</button>
-                <button type="button" data-zoom="fit" class="h-7 px-2 text-[11px] font-medium uppercase tracking-[0.08em] text-base-content/60 hover:bg-base-200" aria-label="Fit width">Fit</button>
-            </div>
             <span id="page-counter" role="status" aria-live="polite" class="rounded-none bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary-content">Overview</span>
             <a href="/documents/{{ document.id }}/{{ document.slug }}" class="hidden text-xs text-base-content/45 underline-offset-2 hover:text-primary hover:underline sm:inline">Classic view</a>
         </div>

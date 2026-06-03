@@ -32,34 +32,7 @@
     else document.addEventListener("DOMContentLoaded", fn);
   }
 
-  // ── 1. Global fit-width zoom ──────────────────────────────────────
-  function initZoom() {
-    var reading = document.getElementById("reading");
-    var label = document.getElementById("zoom-label");
-    if (!reading) return;
-    var BASE = 880,
-      MIN = 0.6,
-      MAX = 2.0,
-      STEP = 0.15;
-    var factor = 1;
-
-    function apply() {
-      reading.style.setProperty("--page-width", Math.round(BASE * factor) + "px");
-      if (label) label.textContent = Math.round(factor * 100) + "%";
-    }
-    document.querySelectorAll("[data-zoom]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var mode = btn.dataset.zoom;
-        if (mode === "in") factor = Math.min(MAX, factor + STEP);
-        else if (mode === "out") factor = Math.max(MIN, factor - STEP);
-        else factor = 1;
-        apply();
-      });
-    });
-    apply();
-  }
-
-  // ── 2. Navigation: live counter, rail highlight, keyboard ─────────
+  // ── 1. Navigation: live counter, rail highlight, keyboard ─────────
   function initNav() {
     var pages = Array.from(document.querySelectorAll("[data-page]"));
     var rail = Array.from(document.querySelectorAll("[data-rail]"));
@@ -177,7 +150,6 @@
       });
       media.initLazyPreviews();
     }
-    initZoom();
     if (media && typeof window.createDocumentScrollLightbox === "function") {
       window.createDocumentScrollLightbox({
         loadPdf: media.loadPdf,
