@@ -183,7 +183,7 @@
         <p class="m-0 max-w-prose overflow-hidden text-ellipsis whitespace-nowrap text-base leading-5 text-primary max-md:line-clamp-2 max-md:max-w-full max-md:whitespace-normal max-md:text-sm max-md:leading-5" title="{{ document.title }}">
             <span>Search Document Library</span>
             <span>/</span>
-            <span class="font-semibold">{{ document.title }}</span>
+            <span dir="auto" class="font-semibold">{{ document.title }}</span>
         </p>
     </header>
 
@@ -310,17 +310,17 @@
                             </div>
                         </div>
                         <div class="space-y-2 px-4 py-3">
-                            <h3 class="m-0 line-clamp-3 text-base font-semibold leading-snug text-white/95 group-hover:text-white">{{ related.display_title or 'Related record' }}</h3>
-                            <p class="line-clamp-3 text-sm leading-relaxed text-slate-200">
-                                {% if related.description %}
-                                    {{ related.description | strip_html | truncate(140) }}
-                                {% else %}
-                                    No description available.
-                                {% endif %}
-                            </p>
+                            <h3 dir="auto" class="m-0 line-clamp-3 text-base font-semibold leading-snug text-white/95 group-hover:text-white">{{ related.display_title or 'Related record' }}</h3>
+                            {% if related.description %}
+                            <div class="line-clamp-3 text-sm leading-relaxed text-slate-200">
+                                {{ related.description | bidirectional_text }}
+                            </div>
+                            {% endif %}
+                            {% if related.publish_date %}
                             <p class="text-[11px] text-slate-300">
-                                {% if related.publish_date %}{{ related.publish_date[:10] }}{% else %}Date unavailable{% endif %}
+                                {{ related.publish_date[:10] }}
                             </p>
+                            {% endif %}
                         </div>
                     </article>
                 </a>
