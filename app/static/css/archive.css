@@ -625,28 +625,15 @@ body.timeline-overscroll-locked {
 .scroll-lightbox__zoom-controls {
     display: flex;
     align-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.scroll-lightbox__zoom-controls .scroll-lightbox__button,
-.scroll-lightbox__zoom-controls .scroll-lightbox__fit {
-    border: none;
-    border-right: 1px solid rgba(255, 255, 255, 0.25);
-}
-
-.scroll-lightbox__zoom-controls .scroll-lightbox__fit {
-    border-right: none;
+    gap: 0.5rem;
 }
 
 .scroll-lightbox__button,
 .scroll-lightbox__fit,
 .scroll-lightbox__close {
-    background: transparent;
-    color: #fff;
-}
-
-.scroll-lightbox__close {
     border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.10);
+    color: #fff;
 }
 
 .scroll-lightbox__button:hover,
