@@ -155,9 +155,10 @@
                 </div>
                 {% elif p.kind == 'docx' %}
                 <div
-                    class="docx-host w-full"
+                    class="docx-host w-full cursor-zoom-in"
                     data-docx-src="{{ url_for('static', filename='media/' ~ item.filename) }}"
                     data-docx-filename="{{ item.filename }}"
+                    data-open-full-docx="{{ url_for('static', filename='media/' ~ item.filename) }}"
                 >
                     <div class="flex min-h-[46vh] items-center justify-center text-sm text-base-content/40">Loading DOCX preview…</div>
                 </div>

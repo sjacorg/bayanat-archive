@@ -539,16 +539,10 @@ body.timeline-overscroll-locked {
     user-select: none;
 }
 
-.scroll-docx-lightbox-doc .docx-preview {
-    border-radius: 0 !important;
-    background: #f8fafc !important;
-    padding: 1.5rem;
-}
-
-.scroll-docx-preview .docx-preview {
+.scroll-docx-lightbox-doc .docx-preview, .scroll-docx-preview .docx-preview {
     border-radius: 0 !important;
     background: #fff !important;
-    padding: 0 !important;
+    padding: 1.5rem;
 }
 
 .scroll-docx-preview .docx-preview p,
