@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ document.title }} — scroll prototype | Bayanat Document Archive{% endblock %}
+{% block title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
 
 {% block page_header %}{% endblock %}
 {% block page_footer %}{% endblock %}
@@ -36,12 +36,11 @@
         <p dir="auto" class="min-w-0 flex-1 truncate text-center text-sm text-base-content/70" title="{{ document.title }}">{{ document.title }}</p>
         <div class="flex flex-none items-center gap-3">
             <span id="page-counter" role="status" aria-live="polite" class="rounded-none bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary-content">Overview</span>
-            <a href="/documents/{{ document.id }}/{{ document.slug }}" class="hidden text-xs text-base-content/45 underline-offset-2 hover:text-primary hover:underline sm:inline">Classic view</a>
         </div>
     </div>
 </header>
 
-<div id="scroll-doc" class="mx-auto grid w-full max-w-[1400px] grid-cols-1 gap-8 px-4 py-8 sm:px-6 md:grid-cols-[120px_minmax(0,1fr)]">
+<div id="scroll-doc" class="mx-auto grid w-full max-w-[1400px] grid-cols-1 gap-8 px-4 py-8 sm:px-6 {% if pages %}md:grid-cols-[120px_minmax(0,1fr)]{% endif %}">
 
     {# ── Page rail (desktop) ──────────────────────────────────── #}
     {% if pages %}
