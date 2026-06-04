@@ -2,9 +2,9 @@ import os
 import re
 import sqlite3
 from datetime import datetime
-from markupsafe import Markup, escape
 
 from flask import Flask, g, render_template
+from markupsafe import Markup, escape
 
 
 def get_db():
@@ -84,7 +84,8 @@ def create_app():
 
     from app.routes.documents import bp as documents_bp
     from app.routes.pages import bp as pages_bp
-    from app.routes.search import bp as search_bp, search_shell_context
+    from app.routes.search import bp as search_bp
+    from app.routes.search import search_shell_context
 
     app.register_blueprint(documents_bp)
     app.register_blueprint(pages_bp)
