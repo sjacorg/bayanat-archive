@@ -48,6 +48,13 @@ body {
     background-color: var(--color-paper);
 }
 
+html,
+body,
+.drawer-content {
+    max-width: 100%;
+    overflow-x: clip;
+}
+
 /* Editorial serif for titles + the result count.
    Bilingual: Latin renders in Plex Serif, Arabic falls through to Plex Sans Arabic. */
 h1, h2, h3, .title-serif {
@@ -60,6 +67,10 @@ h1, h2, h3, .title-serif {
     background-color: #fff;
     border: 1px solid var(--color-paper-border);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-result-card {
+    min-width: 0;
 }
 
 .card-archive:hover,
