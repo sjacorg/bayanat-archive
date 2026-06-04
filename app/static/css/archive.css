@@ -814,6 +814,7 @@ button.scroll-preview-button-secondary {
     position: absolute;
     inset: 3.5rem 0 0;
     overflow: auto;
+    overscroll-behavior: contain;
     padding: 1.5rem 1rem 8rem;
     scrollbar-gutter: stable;
     touch-action: pan-x pan-y;

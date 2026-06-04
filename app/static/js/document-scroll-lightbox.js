@@ -49,6 +49,8 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     var dragging = false;
     var px = 0;
     var py = 0;
+    var lockedScrollY = 0;
+    var previousBodyStyles = null;
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
@@ -83,6 +85,37 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       if (label) label.textContent = Math.round(zoom * 100) + "%";
       if (zoomOut) zoomOut.disabled = zoom <= minZoom + 0.001;
       if (zoomIn) zoomIn.disabled = zoom >= maxZoom - 0.001;
+    }
+
+    function lockDocumentScroll() {
+      if (previousBodyStyles) return;
+      lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      previousBodyStyles = {
+        position: document.body.style.position,
+        top: document.body.style.top,
+        left: document.body.style.left,
+        right: document.body.style.right,
+        width: document.body.style.width,
+        overflow: document.body.style.overflow,
+      };
+      document.body.style.position = "fixed";
+      document.body.style.top = "-" + lockedScrollY + "px";
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+    }
+
+    function unlockDocumentScroll() {
+      if (!previousBodyStyles) return;
+      document.body.style.position = previousBodyStyles.position;
+      document.body.style.top = previousBodyStyles.top;
+      document.body.style.left = previousBodyStyles.left;
+      document.body.style.right = previousBodyStyles.right;
+      document.body.style.width = previousBodyStyles.width;
+      document.body.style.overflow = previousBodyStyles.overflow;
+      previousBodyStyles = null;
+      window.scrollTo(0, lockedScrollY);
     }
 
     var pendingScroll = null;
@@ -199,7 +232,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       loadToken += 1;
       updateToolbar(meta);
       overlay.classList.add("is-open");
-      document.body.style.overflow = "hidden";
+      lockDocumentScroll();
       return loadToken;
     }
 
@@ -208,7 +241,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       loadToken += 1;
       if (pageObserver) { pageObserver.disconnect(); pageObserver = null; }
       overlay.classList.remove("is-open");
-      document.body.style.overflow = "";
+      unlockDocumentScroll();
       content.innerHTML = "";
       media = null;
       activeZoomTarget = null;
