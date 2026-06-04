@@ -130,6 +130,7 @@
 
         {% for p in pages %}
         {% set item = p.item %}
+        {% set media_src = url_for('static', filename='media/' ~ item.filename) %}
         <section data-page="{{ p.n }}" id="page-{{ p.n }}" class="mx-auto mb-8 w-full scroll-mt-20" style="max-width:var(--page-width,880px)">
             <div class="mb-2 flex items-baseline justify-between">
                 <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/45">Page {{ p.n }} / {{ pages | length }}</span>
@@ -138,15 +139,22 @@
 
             <div class="card-archive scroll-page-card scroll-page-card--{{ p.kind }} overflow-hidden">
                 {% if p.kind == 'image' %}
-                <div class="cursor-zoom-in" data-zoom-src="{{ url_for('static', filename='media/' ~ item.filename) }}">
-                    <img src="{{ url_for('static', filename='media/' ~ item.filename) }}" alt="{{ item.title or 'Page ' ~ p.n }}" loading="lazy" class="h-auto w-full object-contain pointer-events-none">
+                <div class="cursor-zoom-in" data-zoom-src="{{ media_src }}">
+                    <img src="{{ media_src }}" alt="{{ item.title or 'Page ' ~ p.n }}" loading="lazy" class="h-auto w-full object-contain pointer-events-none">
+                </div>
+                <div class="scroll-preview-actions">
+                    <p class="scroll-preview-actions__summary">Previewing this image.</p>
+                    <div class="scroll-preview-actions__links">
+                        <button type="button" class="scroll-preview-button-primary" data-zoom-src="{{ media_src }}">View image</button>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                    </div>
                 </div>
                 {% elif p.kind == 'pdf' %}
                 <div
                     class="pdf-host w-full cursor-zoom-in"
-                    data-pdf-src="{{ url_for('static', filename='media/' ~ item.filename) }}"
+                    data-pdf-src="{{ media_src }}"
                     data-pdf-filename="{{ item.filename }}"
-                    data-open-full-pdf="{{ url_for('static', filename='media/' ~ item.filename) }}"
+                    data-open-full-pdf="{{ media_src }}"
                     style="min-height: 56vh"
                 >
                     <div class="flex h-full min-h-[56vh] items-center justify-center text-sm text-base-content/40">Loading PDF preview…</div>
@@ -154,27 +162,59 @@
                 {% elif p.kind == 'docx' %}
                 <div
                     class="docx-host w-full cursor-zoom-in"
-                    data-docx-src="{{ url_for('static', filename='media/' ~ item.filename) }}"
+                    data-docx-src="{{ media_src }}"
                     data-docx-filename="{{ item.filename }}"
-                    data-open-full-docx="{{ url_for('static', filename='media/' ~ item.filename) }}"
+                    data-open-full-docx="{{ media_src }}"
                     style="min-height: 46vh"
                 >
                     <div class="flex h-full min-h-[46vh] items-center justify-center text-sm text-base-content/40">Loading DOCX preview…</div>
                 </div>
                 {% elif p.kind == 'video' %}
                 <video controls preload="metadata" class="block max-h-[80vh] w-full bg-black">
-                    <source src="{{ url_for('static', filename='media/' ~ item.filename) }}" type="{{ item.media_type }}">
+                    <source src="{{ media_src }}" type="{{ item.media_type }}">
                 </video>
+                <div class="scroll-preview-actions">
+                    <p class="scroll-preview-actions__summary">Previewing this video.</p>
+                    <div class="scroll-preview-actions__links">
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                    </div>
+                </div>
                 {% elif p.kind == 'audio' %}
-                <div class="p-6">
+                <div class="scroll-audio-frame p-6">
                     <audio controls preload="metadata" class="w-full">
-                        <source src="{{ url_for('static', filename='media/' ~ item.filename) }}" type="{{ item.media_type }}">
+                        <source src="{{ media_src }}" type="{{ item.media_type }}">
                     </audio>
                 </div>
+                <div class="scroll-preview-actions">
+                    <p class="scroll-preview-actions__summary">Previewing this audio.</p>
+                    <div class="scroll-preview-actions__links">
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                    </div>
+                </div>
                 {% else %}
-                <div class="flex flex-col items-center justify-center gap-3 p-10 text-center">
-                    <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/45">{{ item.media_type or 'File' }}</span>
-                    <a href="{{ url_for('static', filename='media/' ~ item.filename) }}" download class="border border-primary bg-primary px-4 py-1.5 text-sm font-semibold text-primary-content no-underline transition-colors hover:bg-secondary">Download file</a>
+                <div class="scroll-other-file">
+                    <span class="scroll-other-file__icon" aria-hidden="true">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <path d="M14 2v6h6"></path>
+                            <path d="M9 13h6"></path>
+                            <path d="M9 17h4"></path>
+                        </svg>
+                    </span>
+                    <div class="min-w-0">
+                        <p dir="auto" class="scroll-other-file__name">{{ item.title or item.filename or 'Attached file' }}</p>
+                        <p class="scroll-other-file__message">Preview unavailable</p>
+                        {% if item.media_type %}
+                        <p class="scroll-other-file__type">{{ item.media_type }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="scroll-preview-actions">
+                    <p class="scroll-preview-actions__summary">Open or download the original file.</p>
+                    <div class="scroll-preview-actions__links">
+                        <a class="scroll-preview-button-primary" href="{{ media_src }}" target="_blank" rel="noopener noreferrer" hx-boost="false">View file</a>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                    </div>
                 </div>
                 {% endif %}
             </div>

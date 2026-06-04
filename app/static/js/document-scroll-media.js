@@ -16,6 +16,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
 
   async function renderPdfHost(host) {
     var src = host.dataset.pdfSrc;
+    var filename = host.dataset.pdfFilename || "";
     if (!window.pdfjsLib) {
       host.innerHTML = pdfFallback(src);
       return;
@@ -56,6 +57,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
         openLabel: "View full PDF",
         downloadLabel: "Download",
         openDataset: "openFullPdf",
+        filename: filename,
       }));
     } catch (error) {
       host.innerHTML = pdfFallback(src);
