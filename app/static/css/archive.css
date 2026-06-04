@@ -685,11 +685,44 @@ button.scroll-preview-button-secondary {
 .scroll-lightbox__zoom-controls {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
+}
+
+.scroll-lightbox__filebar {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 11;
+    display: flex;
+    width: min(46rem, calc(100% - 2rem));
+    min-height: 3.25rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-inline: auto;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(2, 6, 23, 0.82);
+    padding: 0.625rem 0.75rem 0.625rem 1rem;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+}
+
+.scroll-lightbox__title {
+    overflow: hidden;
+    margin: 0;
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .scroll-lightbox__button,
 .scroll-lightbox__fit,
+.scroll-lightbox__download,
 .scroll-lightbox__close {
     border: 1px solid rgba(255, 255, 255, 0.35);
     background: rgba(255, 255, 255, 0.10);
@@ -698,6 +731,7 @@ button.scroll-preview-button-secondary {
 
 .scroll-lightbox__button:hover,
 .scroll-lightbox__fit:hover,
+.scroll-lightbox__download:hover,
 .scroll-lightbox__close:hover {
     background: rgba(255, 255, 255, 0.15);
 }
@@ -726,6 +760,23 @@ button.scroll-preview-button-secondary {
     text-transform: uppercase;
 }
 
+.scroll-lightbox__download {
+    display: inline-flex;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.scroll-lightbox__download.is-hidden {
+    display: none;
+}
+
 .scroll-lightbox__label {
     min-width: 4rem;
     user-select: none;
@@ -752,7 +803,7 @@ button.scroll-preview-button-secondary {
     position: absolute;
     inset: 3.5rem 0 0;
     overflow: auto;
-    padding: 1.5rem 1rem 2rem;
+    padding: 1.5rem 1rem 8rem;
     scrollbar-gutter: stable;
     touch-action: pan-x pan-y;
 }
@@ -805,6 +856,18 @@ button.scroll-preview-button-secondary {
     padding-top: 6rem;
     font-size: 0.875rem;
     color: rgba(255, 255, 255, 0.70);
+}
+
+@media (max-width: 640px) {
+    .scroll-lightbox__filebar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .scroll-lightbox__download {
+        width: 100%;
+    }
 }
 
 @media (max-width: 900px) {

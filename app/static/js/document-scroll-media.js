@@ -17,6 +17,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
   async function renderPdfHost(host) {
     var src = host.dataset.pdfSrc;
     var filename = host.dataset.pdfFilename || "";
+    var title = host.dataset.lightboxTitle || filename || "PDF";
     if (!window.pdfjsLib) {
       host.innerHTML = pdfFallback(src);
       return;
@@ -58,6 +59,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
         downloadLabel: "Download",
         openDataset: "openFullPdf",
         filename: filename,
+        title: title,
       }));
     } catch (error) {
       host.innerHTML = pdfFallback(src);
@@ -67,6 +69,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
   async function renderDocxHost(host) {
     var src = host.dataset.docxSrc;
     var filename = host.dataset.docxFilename || "";
+    var title = host.dataset.lightboxTitle || filename || "DOCX";
     try {
       var scrollDocx = getDocx ? getDocx() : null;
       if (!scrollDocx) {
@@ -91,6 +94,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
         downloadLabel: "Download",
         openDataset: "openFullDocx",
         filename: filename,
+        title: title,
       }));
     } catch (error) {
       if (window.console && typeof window.console.warn === "function") {
@@ -114,6 +118,8 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
     var open = document.createElement("button");
     open.type = "button";
     open.dataset[options.openDataset] = options.src;
+    open.dataset.lightboxTitle = options.title || "";
+    open.dataset.lightboxFilename = options.filename || "";
     open.className = "scroll-preview-button-primary";
     open.textContent = options.openLabel;
 

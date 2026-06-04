@@ -139,13 +139,24 @@
 
             <div class="card-archive scroll-page-card scroll-page-card--{{ p.kind }} overflow-hidden">
                 {% if p.kind == 'image' %}
-                <div class="cursor-zoom-in" data-zoom-src="{{ media_src }}">
+                <div
+                    class="cursor-zoom-in"
+                    data-zoom-src="{{ media_src }}"
+                    data-lightbox-title="{{ item.title or item.filename or 'Image' }}"
+                    data-lightbox-filename="{{ item.filename }}"
+                >
                     <img src="{{ media_src }}" alt="{{ item.title or 'Page ' ~ p.n }}" loading="lazy" class="h-auto w-full object-contain pointer-events-none">
                 </div>
                 <div class="scroll-preview-actions">
                     <p class="scroll-preview-actions__summary">Previewing this image.</p>
                     <div class="scroll-preview-actions__links">
-                        <button type="button" class="scroll-preview-button-primary" data-zoom-src="{{ media_src }}">View image</button>
+                        <button
+                            type="button"
+                            class="scroll-preview-button-primary"
+                            data-zoom-src="{{ media_src }}"
+                            data-lightbox-title="{{ item.title or item.filename or 'Image' }}"
+                            data-lightbox-filename="{{ item.filename }}"
+                        >View image</button>
                         <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
                     </div>
                 </div>
@@ -154,6 +165,7 @@
                     class="pdf-host w-full cursor-zoom-in"
                     data-pdf-src="{{ media_src }}"
                     data-pdf-filename="{{ item.filename }}"
+                    data-lightbox-title="{{ item.title or item.filename or 'PDF' }}"
                     data-open-full-pdf="{{ media_src }}"
                     style="min-height: 56vh"
                 >
@@ -164,6 +176,7 @@
                     class="docx-host w-full cursor-zoom-in"
                     data-docx-src="{{ media_src }}"
                     data-docx-filename="{{ item.filename }}"
+                    data-lightbox-title="{{ item.title or item.filename or 'DOCX' }}"
                     data-open-full-docx="{{ media_src }}"
                     style="min-height: 46vh"
                 >

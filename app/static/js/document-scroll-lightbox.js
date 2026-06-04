@@ -22,12 +22,18 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       "</div>" +
       '<div data-lb="stage" class="scroll-lightbox__stage">' +
       '<div data-lb="content" class="scroll-lightbox__content"></div>' +
+      "</div>" +
+      '<div data-lb="filebar" class="scroll-lightbox__filebar">' +
+      '<p data-lb="title" class="scroll-lightbox__title">Preview</p>' +
+      '<a data-lb="download" class="scroll-lightbox__download" href="#" download>Download</a>' +
       "</div>";
     document.body.appendChild(overlay);
 
     var stage = overlay.querySelector('[data-lb="stage"]');
     var content = overlay.querySelector('[data-lb="content"]');
     var label = overlay.querySelector('[data-lb="label"]');
+    var title = overlay.querySelector('[data-lb="title"]');
+    var download = overlay.querySelector('[data-lb="download"]');
     var zoomIn = overlay.querySelector('[data-lb="in"]');
     var zoomOut = overlay.querySelector('[data-lb="out"]');
     var media = null;
@@ -46,6 +52,31 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
+    }
+
+    function filenameFromSrc(src) {
+      if (!src) return "";
+      try {
+        var url = new URL(src, window.location.href);
+        var pathname = url.pathname || "";
+        return decodeURIComponent(pathname.split("/").filter(Boolean).pop() || "");
+      } catch (error) {
+        return String(src).split("/").filter(Boolean).pop() || "";
+      }
+    }
+
+    function updateToolbar(meta) {
+      meta = meta || {};
+      var src = meta.src || "";
+      var filename = meta.filename || filenameFromSrc(src);
+      var labelText = meta.title || filename || "Preview";
+      if (title) title.textContent = labelText;
+      if (download) {
+        download.href = src || "#";
+        download.download = filename || "";
+        download.setAttribute("aria-label", "Download " + labelText);
+        download.classList.toggle("is-hidden", !src);
+      }
     }
 
     function updateControls() {
@@ -163,9 +194,10 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       updateControls();
     }
 
-    function open() {
+    function open(meta) {
       isOpen = true;
       loadToken += 1;
+      updateToolbar(meta);
       overlay.classList.add("is-open");
       document.body.style.overflow = "hidden";
       return loadToken;
@@ -182,11 +214,14 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       activeZoomTarget = null;
       activeZoomMode = "width";
       dragging = false;
+      updateToolbar({});
     }
 
-    function openImage(src) {
+    function openImage(src, meta) {
       var img = new Image();
-      var token = open();
+      meta = meta || {};
+      meta.src = src;
+      var token = open(meta);
       content.innerHTML = '<p class="scroll-lightbox__loading">Loading image...</p>';
       img.onload = function () {
         if (!isOpen || token !== loadToken) return;
@@ -198,8 +233,10 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       img.src = src;
     }
 
-    async function openFullPdf(src) {
-      var token = open();
+    async function openFullPdf(src, meta) {
+      meta = meta || {};
+      meta.src = src;
+      var token = open(meta);
       content.innerHTML = '<p class="scroll-lightbox__loading">Loading PDF...</p>';
       try {
         var pdf = await loadPdf(src);
@@ -293,8 +330,10 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       }
     }
 
-    async function openFullDocx(src) {
-      var token = open();
+    async function openFullDocx(src, meta) {
+      meta = meta || {};
+      meta.src = src;
+      var token = open(meta);
       content.innerHTML = '<p class="scroll-lightbox__loading">Loading DOCX...</p>';
       try {
         var wrapper = document.createElement("div");
@@ -418,17 +457,26 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     document.addEventListener("click", function (event) {
       var img = event.target.closest("[data-zoom-src]");
       if (img) {
-        openImage(img.dataset.zoomSrc);
+        openImage(img.dataset.zoomSrc, {
+          title: img.dataset.lightboxTitle || "",
+          filename: img.dataset.lightboxFilename || "",
+        });
         return;
       }
       var fullPdf = event.target.closest("[data-open-full-pdf]");
       if (fullPdf) {
-        openFullPdf(fullPdf.dataset.openFullPdf);
+        openFullPdf(fullPdf.dataset.openFullPdf, {
+          title: fullPdf.dataset.lightboxTitle || "",
+          filename: fullPdf.dataset.lightboxFilename || "",
+        });
         return;
       }
       var fullDocx = event.target.closest("[data-open-full-docx]");
       if (fullDocx) {
-        openFullDocx(fullDocx.dataset.openFullDocx);
+        openFullDocx(fullDocx.dataset.openFullDocx, {
+          title: fullDocx.dataset.lightboxTitle || "",
+          filename: fullDocx.dataset.lightboxFilename || "",
+        });
       }
     });
   }
