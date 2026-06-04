@@ -9,12 +9,40 @@ from slugify import slugify
 
 from app.database import build_fts, init_db
 
+# Child tables keyed by document_id, cleared before re-inserting a document in append mode.
+CHILD_TABLES = (
+    "document_labels",
+    "document_locations",
+    "document_sources",
+    "document_events",
+    "document_geo_locations",
+    "media",
+    "document_relations",
+)
+
+
+def _purge_document(conn, doc_id):
+    """Remove a document and its child rows so it can be re-inserted cleanly."""
+    for table in CHILD_TABLES:
+        conn.execute(f"DELETE FROM {table} WHERE document_id = ?", (doc_id,))
+    conn.execute("DELETE FROM documents WHERE id = ?", (doc_id,))
+
 
 @click.command("import-archive")
 @click.argument("export_dir", type=click.Path(exists=True))
+@click.option(
+    "--append",
+    is_flag=True,
+    help="Add or update documents in place instead of rebuilding. "
+    "Does not remove documents that are absent from this export.",
+)
 @with_appcontext
-def import_archive(export_dir):
-    """Import documents from a Bayanat export directory."""
+def import_archive(export_dir, append):
+    """Import documents from a Bayanat export directory.
+
+    Default mode rebuilds the archive from scratch, so removals in the source are
+    reflected. Use --append to add/update without wiping existing documents.
+    """
     json_path = os.path.join(export_dir, "documents.json")
     media_src = os.path.join(export_dir, "media")
 
@@ -30,8 +58,8 @@ def import_archive(export_dir):
     db_path = os.environ.get("DATABASE_PATH", "data/archive.db")
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
 
-    # Drop and rebuild for idempotent import
-    if os.path.exists(db_path):
+    # Rebuild mode drops the DB first; append keeps it and upserts per document.
+    if not append and os.path.exists(db_path):
         os.remove(db_path)
 
     conn = init_db(db_path)
@@ -43,6 +71,11 @@ def import_archive(export_dir):
 
     for doc in documents:
         doc_id = doc["id"]
+
+        # In append mode, replace any existing copy of this document before inserting.
+        if append:
+            _purge_document(conn, doc_id)
+
         title = doc.get("title", "")
         slug = slugify(title) or f"document-{doc_id}"
 
@@ -194,10 +227,13 @@ def import_archive(export_dir):
                 ),
             )
 
-            # Copy media file
+            # Copy media file, skipping files already present (avoids S3 re-downloads).
             src_file = os.path.join(media_src, m["filename"])
-            if os.path.exists(src_file):
-                shutil.copy2(src_file, os.path.join(media_dest, m["filename"]))
+            dest_file = os.path.join(media_dest, m["filename"])
+            if os.path.exists(dest_file):
+                pass
+            elif os.path.exists(src_file):
+                shutil.copy2(src_file, dest_file)
                 media_count += 1
             else:
                 click.echo(f"  Warning: media file not found: {m['filename']}")
@@ -269,7 +305,9 @@ def import_archive(export_dir):
     fts_count = conn.execute("SELECT COUNT(*) FROM documents_fts").fetchone()[0]
     conn.close()
 
-    click.echo(f"Imported {len(documents)} documents")
+    click.echo(
+        f"Imported {len(documents)} documents ({'append' if append else 'rebuild'} mode)"
+    )
     click.echo(f"  Media files copied: {media_count}")
     click.echo(f"  Relations: {relation_count}")
     click.echo(f"  FTS index rows: {fts_count}")
