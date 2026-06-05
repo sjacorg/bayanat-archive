@@ -1,45 +1,45 @@
 <form
     x-ref="feedbackForm"
-    x-data="{
+    x-data='{
         rating: 0,
-        comment: '',
-        email: '',
-        emailError: '',
+        comment: "",
+        email: "",
+        emailError: "",
         submitting: false,
         isEmailFormatValid(value) {
             return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
         },
         get emailIsValid() {
-            return this.email.trim() === '' || this.isEmailFormatValid(this.email);
+            return this.email.trim() === "" || this.isEmailFormatValid(this.email);
         },
         get canSubmit() {
             return this.rating > 0 && this.comment.trim().length > 0;
         },
         clearEmailError() {
-            this.emailError = '';
+            this.emailError = "";
         },
         validateEmail() {
-            if (this.email.trim() !== '' && !this.emailIsValid) {
+            if (this.email.trim() !== "" && !this.emailIsValid) {
                 this.emailError = {{ t("feedback.email_invalid") | tojson }};
                 return false;
             }
-            this.emailError = '';
+            this.emailError = "";
             return true;
         },
         async submitForm() {
             if (!this.validateEmail() || !this.canSubmit) return;
             this.submitting = true;
             try {
-                await htmx.ajax('POST', '{{ url_for('pages.feedback') }}', {
+                await htmx.ajax("POST", {{ url_for("pages.feedback") | tojson }}, {
                     source: this.$refs.feedbackForm,
-                    target: '#feedback-panel-content',
-                    swap: 'innerHTML'
+                    target: "#feedback-panel-content",
+                    swap: "innerHTML"
                 });
             } finally {
                 this.submitting = false;
             }
         }
-    }"
+    }'
     @submit.prevent="submitForm()"
     novalidate
     class="space-y-4 sm:space-y-5 text-base-content"
@@ -147,7 +147,7 @@
             class="inline-flex items-center gap-2 px-5 py-2.5 text-base font-semibold transition-colors"
         >
             <span x-show="submitting" class="loading loading-spinner loading-sm"></span>
-            <span x-text="submitting ? {{ t('feedback.submitting') | tojson }} : {{ t('feedback.submit') | tojson }}"></span>
+            <span x-text='submitting ? {{ t("feedback.submitting") | tojson }} : {{ t("feedback.submit") | tojson }}'></span>
         </button>
     </div>
 </form>
