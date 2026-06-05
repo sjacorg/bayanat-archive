@@ -121,12 +121,12 @@
                                     </tr>
                                     <tr>
                                         <th class="w-40 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">Description</th>
-                                        <td class="border-t border-slate-300 px-2 py-1 align-top" dir="auto">{{ document.description | strip_html if document.description else 'N/A' }}</td>
+                                        <td class="border-t border-slate-300 px-2 py-1 align-top">{{ document.description | bidirectional_text if document.description else 'N/A' }}</td>
                                     </tr>
                                     {% if document.public_description %}
                                     <tr>
                                         <th class="w-40 border-t border-slate-300 px-2 py-1 text-left align-top font-semibold">SJAC Context</th>
-                                        <td class="border-t border-slate-300 px-2 py-1 align-top" dir="auto">{{ document.public_description | strip_html }}</td>
+                                        <td class="border-t border-slate-300 px-2 py-1 align-top">{{ document.public_description | bidirectional_text }}</td>
                                     </tr>
                                     {% endif %}
                                     <tr>

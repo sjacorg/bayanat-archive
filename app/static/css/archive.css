@@ -35,6 +35,119 @@ html {
     --color-ink-muted: oklch(0.37 0.005 255);     /* #4B4B4B body text */
 }
 
+/* ── Facelift: typography, paper canvas, card craft ─────────────── */
+:root {
+    --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+    --font-serif: 'IBM Plex Serif', 'IBM Plex Sans Arabic', Georgia, 'Times New Roman', serif;
+    --color-paper: oklch(0.985 0.006 85);        /* warm ivory canvas */
+    --color-paper-border: oklch(0.90 0.010 80);  /* warm hairline */
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--color-paper);
+}
+
+html,
+body,
+.drawer-content {
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+/* Editorial serif for titles + the result count.
+   Bilingual: Latin renders in Plex Serif, Arabic falls through to Plex Sans Arabic. */
+h1, h2, h3, .title-serif {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
+}
+
+/* Archive result card — paper-lifted white surface, warm hairline, calm hover */
+.card-archive {
+    background-color: #fff;
+    border: 1px solid var(--color-paper-border);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-result-card {
+    min-width: 0;
+}
+
+.search-list-card {
+    display: grid;
+    grid-template-columns: clamp(7rem, 34vw, 9.25rem) minmax(0, 1fr);
+    min-width: 0;
+    overflow: hidden;
+    height: 8.25rem;
+}
+
+.search-list-thumb {
+    position: relative;
+    min-width: 0;
+    height: 8.25rem;
+    overflow: hidden;
+}
+
+.search-list-body {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    overflow: hidden;
+    padding: 0.875rem;
+}
+
+.media-badge {
+    max-width: 100%;
+    text-overflow: ellipsis;
+}
+
+.media-badge svg {
+    flex: 0 0 auto;
+}
+
+@media (min-width: 640px) {
+    .search-list-card {
+        grid-template-columns: clamp(12rem, 34vw, 18rem) minmax(0, 1fr);
+        height: 12rem;
+    }
+
+    .search-list-thumb {
+        height: 12rem;
+    }
+
+    .search-list-body {
+        padding: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .search-list-card {
+        grid-template-columns: clamp(18rem, 35vw, 23.625rem) minmax(0, 1fr);
+        height: 14rem;
+    }
+
+    .search-list-thumb {
+        height: 14rem;
+    }
+
+    .search-list-body {
+        padding: 2.25rem 2.5rem;
+    }
+}
+
+.card-archive:hover,
+.card-archive:focus-within {
+    border-color: var(--color-secondary);
+    box-shadow: 0 8px 30px rgba(26, 69, 64, 0.10);
+}
+
+/* Catalog (no-media) thumbnail — subtle paper texture, replaces clip-art filler */
+.catalog-placeholder {
+    background:
+        radial-gradient(circle at 1px 1px, rgba(26, 69, 64, 0.05) 1px, transparent 0) 0 0 / 14px 14px,
+        var(--color-paper);
+}
+
 /* Ambient shadow (not drop shadow) */
 .shadow-ambient {
     box-shadow: 0 0 32px rgba(26, 69, 64, 0.06);
@@ -278,6 +391,557 @@ body.timeline-overscroll-locked {
 .doc-docx-scope .docx-preview p[class*="docx-preview_heading"][class*="docx-preview-num-"] {
     text-indent: 0 !important;
     margin-inline-start: 0 !important;
+}
+
+/* Scroll prototype media preview + focus viewer */
+.scroll-page-rail {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--color-base-content) 24%, transparent) transparent;
+}
+
+.scroll-page-rail::-webkit-scrollbar {
+    width: 0.45rem;
+}
+
+.scroll-page-rail::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scroll-page-rail::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--color-base-content) 22%, transparent);
+}
+
+.scroll-page-rail::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--color-base-content) 34%, transparent);
+}
+
+.scroll-page-rail .rail-btn {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.scroll-page-rail .rail-btn:hover,
+.scroll-page-rail .rail-btn:focus-visible,
+.scroll-page-rail .rail-btn.is-active {
+    border-color: var(--color-secondary);
+    box-shadow: 0 8px 24px rgba(26, 69, 64, 0.10);
+}
+
+.scroll-page-rail .rail-btn.is-active {
+    background: color-mix(in oklch, var(--color-secondary) 10%, #fff);
+}
+
+.scroll-page-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: clamp(24rem, 64vh, 38rem);
+    min-height: 0;
+    background:
+        linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent) -40% 0 / 40% 100% no-repeat,
+        #f8fafc;
+}
+
+.scroll-page-card > video,
+.scroll-page-card .scroll-pdf-preview-canvas,
+.scroll-page-card .scroll-docx-frame,
+.scroll-page-card--audio > div,
+.scroll-page-card--other > div {
+    background: #fff;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+}
+
+.scroll-page-card > video {
+    width: auto !important;
+    max-width: calc(100% - 3rem);
+    max-height: calc(100% - 7rem);
+    object-fit: contain;
+}
+
+.scroll-page-card--image > [data-zoom-src] {
+    width: 100%;
+    height: 100%;
+    padding: 1.5rem 1.5rem 5.5rem;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scroll-page-card--image > [data-zoom-src] img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+}
+
+.scroll-page-card .pdf-host,
+.scroll-page-card .docx-host {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+    padding: 1.5rem 1.5rem 0 1.5rem;
+    background: #f8fafc;
+}
+
+.scroll-page-card .pdf-host > .flex,
+.scroll-page-card .docx-host > .flex {
+    min-height: 100%;
+}
+
+.scroll-page-card .scroll-pdf-preview-canvas {
+    width: calc(100% - 3rem);
+    height: auto !important;
+}
+
+.scroll-page-card .scroll-docx-frame {
+    width: 100%;
+}
+
+.scroll-page-card .scroll-preview-actions {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 2;
+}
+
+.scroll-page-card .scroll-preview-fallback {
+    height: 100%;
+    justify-content: center;
+}
+
+.scroll-page-card--audio,
+.scroll-page-card--other {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scroll-page-card--audio > .scroll-audio-frame,
+.scroll-page-card--other > .scroll-other-file {
+    width: min(34rem, calc(100% - 3rem));
+}
+
+.scroll-other-file {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: min(34rem, calc(100% - 3rem));
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: #fff;
+    padding: 1.25rem;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
+    text-align: left;
+}
+
+.scroll-other-file__icon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 3.75rem;
+    height: 3.75rem;
+    border: 1px solid var(--color-paper-border);
+    background: color-mix(in oklch, var(--color-base-200) 60%, #fff);
+    color: color-mix(in oklch, var(--color-primary) 82%, #111827);
+}
+
+.scroll-other-file__name {
+    margin: 0;
+    color: var(--color-base-content);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.scroll-other-file__message {
+    margin: 0.25rem 0 0;
+    color: color-mix(in oklch, var(--color-base-content) 62%, transparent);
+    font-size: 0.875rem;
+}
+
+.scroll-other-file__type {
+    margin: 0.35rem 0 0;
+    color: color-mix(in oklch, var(--color-base-content) 42%, transparent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.scroll-preview-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    border-top: 1px solid var(--color-paper-border);
+    background: color-mix(in oklch, var(--color-base-100) 95%, transparent);
+    padding: 1rem;
+}
+
+@media (min-width: 640px) {
+    .scroll-preview-actions {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.scroll-preview-actions__summary {
+    margin: 0;
+    font-size: 0.875rem;
+    color: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+}
+
+.scroll-preview-actions__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.scroll-preview-button-primary,
+.scroll-preview-button-secondary {
+    border: 1px solid var(--color-primary);
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.25rem;
+    text-decoration: none;
+    transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+button.scroll-preview-button-primary,
+button.scroll-preview-button-secondary {
+    cursor: pointer;
+    font: inherit;
+}
+
+.scroll-preview-button-primary {
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+}
+
+.scroll-preview-button-primary:hover {
+    background: var(--color-secondary);
+}
+
+.scroll-preview-button-secondary {
+    border-color: var(--color-paper-border);
+    background: #fff;
+    color: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+}
+
+.scroll-preview-button-secondary:hover {
+    border-color: var(--color-secondary);
+    color: var(--color-primary);
+}
+
+.scroll-file-actions {
+    border-right: 1px solid var(--color-paper-border);
+    border-bottom: 1px solid var(--color-paper-border);
+    border-left: 1px solid var(--color-paper-border);
+}
+
+.scroll-preview-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+}
+
+.scroll-docx-frame {
+    position: relative;
+    max-height: 70vh;
+    overflow: hidden;
+    background: #fff;
+}
+
+.scroll-docx-preview,
+.scroll-docx-lightbox-doc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    background: transparent;
+}
+
+.scroll-docx-preview {
+    width: 100%;
+    padding: 0;
+}
+
+.scroll-docx-lightbox-doc {
+    user-select: none;
+}
+
+.scroll-docx-lightbox-doc .docx-preview, .scroll-docx-preview .docx-preview {
+    border-radius: 0 !important;
+    background: #fff !important;
+    padding: 1.5rem;
+}
+
+.scroll-docx-preview .docx-preview p,
+.scroll-docx-lightbox-doc .docx-preview p {
+    margin-block: 1rem;
+}
+
+.scroll-docx-preview .docx,
+.scroll-docx-lightbox-doc .docx {
+    border-radius: 0 !important;
+    background: #fff !important;
+}
+
+.scroll-docx-preview .docx {
+    box-shadow: none;
+}
+
+.scroll-docx-lightbox-doc .docx {
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+}
+
+.scroll-docx-fade {
+    pointer-events: none;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 7rem;
+    background: linear-gradient(to top, #f8fafc, transparent);
+}
+
+.scroll-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: none;
+    background: rgba(2, 6, 23, 0.92);
+    color: #fff;
+    backdrop-filter: blur(8px);
+}
+
+.scroll-lightbox.is-open {
+    display: block;
+}
+
+.scroll-lightbox__toolbar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 10;
+    display: flex;
+    min-height: 3.5rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(2, 6, 23, 0.80);
+    padding-inline: 1rem;
+    backdrop-filter: blur(8px);
+}
+
+.scroll-lightbox__zoom-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.scroll-lightbox__filebar {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 11;
+    display: flex;
+    width: min(46rem, calc(100% - 2rem));
+    min-height: 3.25rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-inline: auto;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(2, 6, 23, 0.82);
+    padding: 0.625rem 0.75rem 0.625rem 1rem;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+}
+
+.scroll-lightbox__title {
+    overflow: hidden;
+    margin: 0;
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.scroll-lightbox__button,
+.scroll-lightbox__fit,
+.scroll-lightbox__download,
+.scroll-lightbox__close {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.10);
+    color: #fff;
+}
+
+.scroll-lightbox__button:hover,
+.scroll-lightbox__fit:hover,
+.scroll-lightbox__download:hover,
+.scroll-lightbox__close:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.scroll-lightbox__button:disabled {
+    cursor: default;
+    opacity: 0.35;
+}
+
+.scroll-lightbox__button {
+    display: flex;
+    width: 2.25rem;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.scroll-lightbox__fit {
+    height: 2.25rem;
+    padding-inline: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.scroll-lightbox__download {
+    display: inline-flex;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.scroll-lightbox__download.is-hidden {
+    display: none;
+}
+
+.scroll-lightbox__label {
+    min-width: 4rem;
+    user-select: none;
+    background: #fff;
+    padding: 0.25rem 0.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.scroll-lightbox__close {
+    position: absolute;
+    top: 0.5rem;
+    right: 1rem;
+    display: flex;
+    width: 2.5rem;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+}
+
+.scroll-lightbox__stage {
+    position: absolute;
+    inset: 3.5rem 0 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 1.5rem 1rem 8rem;
+    scrollbar-gutter: stable;
+    touch-action: pan-x pan-y;
+}
+
+.scroll-lightbox__content {
+    margin-inline: auto;
+    display: flex;
+    min-height: calc(100vh - 7rem);
+    min-width: 100%;
+    width: max-content;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.scroll-lightbox__media {
+    display: block;
+    user-select: none;
+    background: #fff;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+}
+
+.scroll-lightbox__pdf-stack {
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+}
+
+.scroll-lightbox__pdf-page {
+    display: block;
+    margin-bottom: 1.5rem;
+    background: #fff;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+}
+
+.scroll-lightbox__pdf-page:last-child {
+    margin-bottom: 0;
+}
+
+.scroll-lightbox__pdf-placeholder {
+    background: #1e293b;
+    animation: pdf-placeholder-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pdf-placeholder-pulse {
+    0%, 100% { opacity: 0.25; }
+    50% { opacity: 0.45; }
+}
+
+.scroll-lightbox__loading {
+    padding-top: 6rem;
+    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.70);
+}
+
+@media (max-width: 640px) {
+    .scroll-lightbox__filebar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .scroll-lightbox__download {
+        width: 100%;
+    }
 }
 
 @media (max-width: 900px) {

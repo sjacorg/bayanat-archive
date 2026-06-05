@@ -24,12 +24,14 @@
     }
 
     function hasActiveSearchParams(params) {
+        const page = Number.parseInt(params.get('page') || '1', 10);
         return Boolean(
             (params.get('q') || '').trim()
             || readLabelParams(params).length
             || params.getAll('location').length
             || params.get('date_from')
             || params.get('date_to')
+            || page > 1
         );
     }
 

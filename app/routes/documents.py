@@ -204,7 +204,7 @@ def detail(document_id, slug):
     }
 
     return render_template(
-        "document_detail.html",
+        "document_scroll_proto.html",
         document=document,
         media_rows=media_rows,
         document_labels=document_labels,
@@ -219,3 +219,10 @@ def detail(document_id, slug):
         canonical_url=request.url_root.rstrip("/")
         + f"/documents/{document['id']}/{document['slug']}",
     )
+
+
+@bp.route("/documents/<int:document_id>/<slug>/scroll")
+def detail_scroll(document_id, slug):
+    """Legacy route: the scroll viewer is now the default detail view."""
+    query = f"?{request.query_string.decode()}" if request.query_string else ""
+    return redirect(f"/documents/{document_id}/{slug}{query}", code=301)
