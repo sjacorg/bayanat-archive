@@ -882,6 +882,7 @@ button.scroll-preview-button-secondary {
 .scroll-lightbox__stage {
     position: absolute;
     inset: 3.5rem 0 0;
+    direction: ltr;
     overflow: auto;
     overscroll-behavior: contain;
     padding: 1.5rem 1rem 8rem;
@@ -891,6 +892,7 @@ button.scroll-preview-button-secondary {
 
 .scroll-lightbox__content {
     margin-inline: auto;
+    direction: ltr;
     display: flex;
     min-height: calc(100vh - 7rem);
     min-width: 100%;
