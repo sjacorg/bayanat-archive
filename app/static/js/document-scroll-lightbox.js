@@ -43,6 +43,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     var baseWidth = 1;
     var minZoom = 1;
     var maxZoom = 6;
+    var lastZoomAt = 0;
     var isOpen = false;
     var loadToken = 0;
     var pageObserver = null;
@@ -121,11 +122,48 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     var pendingScroll = null;
     var scrollRafId = null;
 
+    function findPdfAnchor(anchor, localX, localY) {
+      if (!media || activeZoomMode !== "pdf") return null;
+      var pages = Array.from(media.querySelectorAll(".scroll-lightbox__pdf-page"));
+      var pointerY = anchor ? anchor.clientY : stage.getBoundingClientRect().top + localY;
+      var pointerX = anchor ? anchor.clientX : stage.getBoundingClientRect().left + localX;
+      var best = null;
+      var bestDistance = Infinity;
+
+      pages.forEach(function (page) {
+        var rect = page.getBoundingClientRect();
+        var insideY = pointerY >= rect.top && pointerY <= rect.bottom;
+        var insideX = pointerX >= rect.left && pointerX <= rect.right;
+        var centerY = rect.top + rect.height / 2;
+        var distance = insideY ? 0 : Math.abs(pointerY - centerY);
+        if (insideY && insideX) distance = -1;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = { page: page, rect: rect };
+        }
+      });
+
+      if (!best || !best.page || !best.page.dataset.pdfPageNumber) return null;
+      return {
+        type: "pdf-page",
+        pageNumber: best.page.dataset.pdfPageNumber,
+        localX: localX,
+        localY: localY,
+        xRatio: clamp((pointerX - best.rect.left) / Math.max(best.rect.width, 1), 0, 1),
+        yRatio: clamp((pointerY - best.rect.top) / Math.max(best.rect.height, 1), 0, 1),
+      };
+    }
+
     function captureScroll(currentZoom, nextZoom, anchor) {
       if (nextZoom <= 0 || currentZoom <= 0) { pendingScroll = null; return; }
       var rect = stage.getBoundingClientRect();
       var localX = anchor ? anchor.clientX - rect.left : stage.clientWidth / 2;
       var localY = anchor ? anchor.clientY - rect.top : stage.clientHeight / 2;
+      var pdfAnchor = findPdfAnchor(anchor, localX, localY);
+      if (pdfAnchor) {
+        pendingScroll = pdfAnchor;
+        return;
+      }
       var worldX = stage.scrollLeft + localX;
       var worldY = stage.scrollTop + localY;
       var ratio = nextZoom / currentZoom;
@@ -144,6 +182,18 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         scrollRafId = null;
         var maxLeft = Math.max(stage.scrollWidth - stage.clientWidth, 0);
         var maxTop = Math.max(stage.scrollHeight - stage.clientHeight, 0);
+        if (restore.type === "pdf-page") {
+          var page = media && media.querySelector('[data-pdf-page-number="' + restore.pageNumber + '"]');
+          if (page) {
+            var stageRect = stage.getBoundingClientRect();
+            var pageRect = page.getBoundingClientRect();
+            var pageLeft = stage.scrollLeft + pageRect.left - stageRect.left;
+            var pageTop = stage.scrollTop + pageRect.top - stageRect.top;
+            stage.scrollLeft = Math.max(0, Math.min(maxLeft, pageLeft + pageRect.width * restore.xRatio - restore.localX));
+            stage.scrollTop = Math.max(0, Math.min(maxTop, pageTop + pageRect.height * restore.yRatio - restore.localY));
+            return;
+          }
+        }
         stage.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
         stage.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
       });
@@ -156,6 +206,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
 
       zoom = clamp(nextZoom, minZoom, maxZoom);
       if (Math.abs(zoom - previous) < 0.001) return;
+      lastZoomAt = Date.now();
 
       captureScroll(previous, zoom, anchor);
 
@@ -200,6 +251,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       content.appendChild(media);
       stage.scrollLeft = 0;
       stage.scrollTop = 0;
+      activeZoomMode = mountOptions.zoomMode || activeZoomMode;
       updateControls();
     }
 
@@ -291,25 +343,46 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         wrapper.setAttribute("aria-label", "Full PDF preview");
         mount(wrapper, firstDisplayViewport.width, firstDisplayViewport.height, {
           className: "scroll-lightbox__pdf-stack",
+          zoomMode: "pdf",
         });
 
         // tracks in-progress renders so we don't double-render a page
         var rendering = new Set();
         // live DOM node for each page number (placeholder or canvas)
         var pageEls = {};
-        // aspect ratio of page 1, used when re-creating placeholders
-        var pageAspectRatio = String(firstBase.width / firstBase.height);
+        // aspect ratios keep offloaded placeholders the same height as rendered pages
+        var pageAspectRatios = {};
+        pageAspectRatios[1] = firstBase.width / firstBase.height;
 
         var scrollDebounceTimer = null;
         // keep at most this many rendered canvases in memory
         var MAX_RENDERED = 6;
+
+        function mutatePagePreservingScroll(el, mutate) {
+          if (!el) {
+            mutate();
+            return;
+          }
+          var stageRect = stage.getBoundingClientRect();
+          var before = el.getBoundingClientRect();
+          var shouldPreserve = before.bottom <= stageRect.top + 1;
+          var beforeHeight = before.height;
+          mutate();
+          if (!shouldPreserve) return;
+          var replacement = pageEls[el.dataset.pdfPageNumber] || el;
+          var after = replacement.getBoundingClientRect();
+          var delta = after.height - beforeHeight;
+          if (Math.abs(delta) > 0.5) {
+            stage.scrollTop += delta;
+          }
+        }
 
         function makePlaceholder(n) {
           var ph = document.createElement("div");
           ph.className = "scroll-lightbox__pdf-page scroll-lightbox__pdf-placeholder";
           ph.dataset.pdfPageNumber = String(n);
           ph.style.width = "100%";
-          ph.style.aspectRatio = pageAspectRatio;
+          ph.style.aspectRatio = String(pageAspectRatios[n] || pageAspectRatios[1]);
           return ph;
         }
 
@@ -317,8 +390,10 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
           var el = pageEls[pageNumber];
           if (!el || el.tagName !== "CANVAS") return;
           var ph = makePlaceholder(pageNumber);
-          el.replaceWith(ph);
-          pageEls[pageNumber] = ph;
+          mutatePagePreservingScroll(el, function () {
+            el.replaceWith(ph);
+            pageEls[pageNumber] = ph;
+          });
           el.width = 0;
           el.height = 0;
         }
@@ -332,6 +407,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
             var page = await pdf.getPage(pageNumber);
             if (!isOpen || token !== loadToken) return;
             var base = page.getViewport({ scale: 1 });
+            pageAspectRatios[pageNumber] = base.width / base.height;
             var renderViewport = page.getViewport({ scale: (target / base.width) * dpr });
             var canvas = document.createElement("canvas");
             canvas.width = Math.floor(renderViewport.width);
@@ -341,8 +417,10 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
             canvas.className = "scroll-lightbox__pdf-page";
             canvas.setAttribute("aria-label", "PDF page " + pageNumber);
             canvas.dataset.pdfPageNumber = String(pageNumber);
-            pageEls[pageNumber].replaceWith(canvas);
-            pageEls[pageNumber] = canvas;
+            mutatePagePreservingScroll(pageEls[pageNumber], function () {
+              pageEls[pageNumber].replaceWith(canvas);
+              pageEls[pageNumber] = canvas;
+            });
             await page.render({
               canvasContext: canvas.getContext("2d", { alpha: false }),
               viewport: renderViewport,
@@ -358,6 +436,10 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         // renders them, and unloads everything outside the keep window
         function onScrollSettle() {
           if (!isOpen || token !== loadToken) return;
+          if (Date.now() - lastZoomAt < 350) {
+            onScroll();
+            return;
+          }
           var stageRect = stage.getBoundingClientRect();
           var stageH = stageRect.height;
           var margin = stageH; // one screen above and below
@@ -398,6 +480,29 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
           scrollDebounceTimer = setTimeout(onScrollSettle, 200);
         }
 
+        async function loadPageMetrics() {
+          for (var n = 2; n <= pdf.numPages; n += 1) {
+            if (!isOpen || token !== loadToken) return;
+            if (pageAspectRatios[n]) continue;
+            try {
+              var page = await pdf.getPage(n);
+              if (!isOpen || token !== loadToken) return;
+              var base = page.getViewport({ scale: 1 });
+              pageAspectRatios[n] = base.width / base.height;
+              var el = pageEls[n];
+              if (el && el.classList.contains("scroll-lightbox__pdf-placeholder")) {
+                mutatePagePreservingScroll(el, function () {
+                  el.style.aspectRatio = String(pageAspectRatios[n]);
+                });
+              }
+            } catch (metricErr) {
+              if (window.console && typeof window.console.warn === "function") {
+                window.console.warn("[pdf-lightbox] page metric failed:", n, metricErr);
+              }
+            }
+          }
+        }
+
         stage.addEventListener("scroll", onScroll, { passive: true });
 
         // build placeholders for all pages upfront so the scroll height is correct
@@ -420,6 +525,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
 
         // trigger a settle to render pages visible on open
         onScrollSettle();
+        loadPageMetrics();
 
       } catch (error) {
         console.error("[pdf-lightbox] openFullPdf crashed:", error);
