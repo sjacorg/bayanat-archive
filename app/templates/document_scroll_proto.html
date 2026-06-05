@@ -149,22 +149,22 @@
                 <div
                     class="cursor-zoom-in"
                     data-zoom-src="{{ media_src }}"
-                    data-lightbox-title="{{ item.title or item.filename or 'Image' }}"
+                    data-lightbox-title="{{ item.title or item.filename or t('document.image') }}"
                     data-lightbox-filename="{{ item.filename }}"
                 >
                     <img src="{{ media_src }}" alt="{{ item.title or t('document.page') ~ ' ' ~ p.n }}" loading="lazy" class="h-auto w-full object-contain pointer-events-none">
                 </div>
                 <div class="scroll-preview-actions">
-                    <p class="scroll-preview-actions__summary">Previewing this image.</p>
+                    <p class="scroll-preview-actions__summary">{{ t("document.previewing_image") }}</p>
                     <div class="scroll-preview-actions__links">
                         <button
                             type="button"
                             class="scroll-preview-button-primary"
                             data-zoom-src="{{ media_src }}"
-                            data-lightbox-title="{{ item.title or item.filename or 'Image' }}"
+                            data-lightbox-title="{{ item.title or item.filename or t('document.image') }}"
                             data-lightbox-filename="{{ item.filename }}"
-                        >View image</button>
-                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                        >{{ t("document.view_image") }}</button>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">{{ t("document.download") }}</a>
                     </div>
                 </div>
                 {% elif p.kind == 'pdf' %}
@@ -172,7 +172,7 @@
                     class="pdf-host w-full cursor-zoom-in"
                     data-pdf-src="{{ media_src }}"
                     data-pdf-filename="{{ item.filename }}"
-                    data-lightbox-title="{{ item.title or item.filename or 'PDF' }}"
+                    data-lightbox-title="{{ item.title or item.filename or t('document.pdf') }}"
                     data-open-full-pdf="{{ media_src }}"
                     style="min-height: 56vh"
                 >
@@ -183,7 +183,7 @@
                     class="docx-host w-full cursor-zoom-in"
                     data-docx-src="{{ media_src }}"
                     data-docx-filename="{{ item.filename }}"
-                    data-lightbox-title="{{ item.title or item.filename or 'DOCX' }}"
+                    data-lightbox-title="{{ item.title or item.filename or t('document.docx') }}"
                     data-open-full-docx="{{ media_src }}"
                     style="min-height: 46vh"
                 >
@@ -194,9 +194,9 @@
                     <source src="{{ media_src }}" type="{{ item.media_type }}">
                 </video>
                 <div class="scroll-preview-actions">
-                    <p class="scroll-preview-actions__summary">Previewing this video.</p>
+                    <p class="scroll-preview-actions__summary">{{ t("document.previewing_video") }}</p>
                     <div class="scroll-preview-actions__links">
-                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">{{ t("document.download") }}</a>
                     </div>
                 </div>
                 {% elif p.kind == 'audio' %}
@@ -206,9 +206,9 @@
                     </audio>
                 </div>
                 <div class="scroll-preview-actions">
-                    <p class="scroll-preview-actions__summary">Previewing this audio.</p>
+                    <p class="scroll-preview-actions__summary">{{ t("document.previewing_audio") }}</p>
                     <div class="scroll-preview-actions__links">
-                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">{{ t("document.download") }}</a>
                     </div>
                 </div>
                 {% else %}
@@ -222,18 +222,18 @@
                         </svg>
                     </span>
                     <div class="min-w-0">
-                        <p dir="auto" class="scroll-other-file__name">{{ item.title or item.filename or 'Attached file' }}</p>
-                        <p class="scroll-other-file__message">Preview unavailable</p>
+                        <p dir="auto" class="scroll-other-file__name">{{ item.title or item.filename or t("document.attached_file") }}</p>
+                        <p class="scroll-other-file__message">{{ t("document.preview_unavailable") }}</p>
                         {% if item.media_type %}
                         <p class="scroll-other-file__type">{{ item.media_type }}</p>
                         {% endif %}
                     </div>
                 </div>
                 <div class="scroll-preview-actions">
-                    <p class="scroll-preview-actions__summary">Open or download the original file.</p>
+                    <p class="scroll-preview-actions__summary">{{ t("document.open_download_original") }}</p>
                     <div class="scroll-preview-actions__links">
-                        <a class="scroll-preview-button-primary" href="{{ media_src }}" target="_blank" rel="noopener noreferrer" hx-boost="false">View file</a>
-                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                        <a class="scroll-preview-button-primary" href="{{ media_src }}" target="_blank" rel="noopener noreferrer" hx-boost="false">{{ t("document.view_file") }}</a>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">{{ t("document.download") }}</a>
                     </div>
                 </div>
                 {% endif %}
@@ -269,6 +269,35 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+window.BDA_SCROLL_LABELS = {{ {
+    "close": t("nav.close"),
+    "docx": t("document.docx"),
+    "docxRenderFailed": t("document.docx_render_failed"),
+    "download": t("document.download"),
+    "downloadDocx": t("document.download_docx"),
+    "downloadLabel": t("document.download_label"),
+    "downloadPdf": t("document.download_pdf"),
+    "fit": t("document.fit"),
+    "fitToScreen": t("document.fit_to_screen"),
+    "fullDocxPreview": t("document.full_docx_preview"),
+    "fullPdfPreview": t("document.full_pdf_preview"),
+    "loadingDocx": t("document.loading_docx"),
+    "loadingImage": t("document.loading_image"),
+    "loadingPdf": t("document.loading_pdf"),
+    "pdf": t("document.pdf"),
+    "pdfPage": t("document.pdf_page"),
+    "pdfRenderFailed": t("document.pdf_render_failed"),
+    "preview": t("document.preview"),
+    "previewingDocx": t("document.previewing_docx"),
+    "previewingPdf": t("document.previewing_pdf"),
+    "previewingPdfPage": t("document.previewing_pdf_page"),
+    "viewFullDocx": t("document.view_full_docx"),
+    "viewFullPdf": t("document.view_full_pdf"),
+    "zoomIn": t("document.zoom_in"),
+    "zoomOut": t("document.zoom_out")
+} | tojson }};
+</script>
 <script defer src="{{ url_for('static', filename='js/document-scroll-media.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/document-scroll-lightbox.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/document-scroll-proto.js') }}"></script>

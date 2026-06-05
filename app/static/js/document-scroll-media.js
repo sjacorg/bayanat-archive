@@ -5,6 +5,17 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
   var pdfCache = new Map();
   var getDocx = options.getDocx;
+  var labels = window.BDA_SCROLL_LABELS || {};
+
+  function t(key, values) {
+    var text = labels[key] || "";
+    if (values) {
+      Object.keys(values).forEach(function (name) {
+        text = text.replace("{" + name + "}", values[name]);
+      });
+    }
+    return text;
+  }
 
   function loadPdf(src) {
     if (!pdfCache.has(src)) {
@@ -17,7 +28,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
   async function renderPdfHost(host) {
     var src = host.dataset.pdfSrc;
     var filename = host.dataset.pdfFilename || "";
-    var title = host.dataset.lightboxTitle || filename || "PDF";
+    var title = host.dataset.lightboxTitle || filename || t("pdf");
     if (!window.pdfjsLib) {
       host.innerHTML = pdfFallback(src);
       return;
@@ -53,10 +64,10 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
       host.appendChild(previewActions({
         src: src,
         summary: (pdf.numPages || 1) > 1
-          ? "Previewing page 1 of " + pdf.numPages + "."
-          : "Previewing this PDF.",
-        openLabel: "View full PDF",
-        downloadLabel: "Download",
+          ? t("previewingPdfPage", { total: pdf.numPages })
+          : t("previewingPdf"),
+        openLabel: t("viewFullPdf"),
+        downloadLabel: t("download"),
         openDataset: "openFullPdf",
         filename: filename,
         title: title,
@@ -69,7 +80,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
   async function renderDocxHost(host) {
     var src = host.dataset.docxSrc;
     var filename = host.dataset.docxFilename || "";
-    var title = host.dataset.lightboxTitle || filename || "DOCX";
+    var title = host.dataset.lightboxTitle || filename || t("docx");
     try {
       var scrollDocx = getDocx ? getDocx() : null;
       if (!scrollDocx) {
@@ -89,9 +100,9 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
       await scrollDocx.renderInto(src, preview);
       host.appendChild(previewActions({
         src: src,
-        summary: "Previewing this DOCX.",
-        openLabel: "View full DOCX",
-        downloadLabel: "Download",
+        summary: t("previewingDocx"),
+        openLabel: t("viewFullDocx"),
+        downloadLabel: t("download"),
         openDataset: "openFullDocx",
         filename: filename,
         title: title,
@@ -100,7 +111,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
       if (window.console && typeof window.console.warn === "function") {
         window.console.warn("Scroll DOCX preview failed.", error, { src: src });
       }
-      host.innerHTML = fileFallback(src, "Could not render this DOCX preview.", "Download DOCX");
+      host.innerHTML = fileFallback(src, t("docxRenderFailed"), t("downloadDocx"));
     }
   }
 
@@ -139,13 +150,17 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
   function pdfFallback(src) {
     return (
       '<div class="scroll-preview-fallback">' +
-      "<span>Could not render this PDF inline.</span>" +
+      "<span>" + t("pdfRenderFailed") + "</span>" +
       '<a class="scroll-preview-button-primary" href="' +
       src +
-      '" target="_blank" rel="noopener noreferrer" hx-boost="false">View full PDF</a>' +
+      '" target="_blank" rel="noopener noreferrer" hx-boost="false">' +
+      t("viewFullPdf") +
+      "</a>" +
       '<a class="scroll-preview-button-primary" href="' +
       src +
-      '" download>Download PDF</a></div>'
+      '" download>' +
+      t("downloadPdf") +
+      "</a></div>"
     );
   }
 
