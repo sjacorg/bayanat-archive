@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
+{% block title %}{{ document.title }} | {{ t("site.name") }}{% endblock %}
 
 {% block page_header %}{% endblock %}
 {% block page_footer %}{% endblock %}
@@ -31,11 +31,18 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-5 w-5">
                 <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
-            <span>Back to Search</span>
+            <span>{{ t("document.back_to_search") }}</span>
         </a>
         <p dir="auto" class="min-w-0 flex-1 truncate text-center text-sm text-base-content/70" title="{{ document.title }}">{{ document.title }}</p>
         <div class="flex flex-none items-center gap-3">
-            <span id="page-counter" role="status" aria-live="polite" class="rounded-none bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary-content">Overview</span>
+            <span
+                id="page-counter"
+                role="status"
+                aria-live="polite"
+                data-overview-label="{{ t('document.overview') }}"
+                data-page-label="{{ t('document.page') }}"
+                class="rounded-none bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary-content"
+            >{{ t("document.overview") }}</span>
         </div>
     </div>
 </header>
@@ -44,22 +51,22 @@
 
     {# ── Page rail (desktop) ──────────────────────────────────── #}
     {% if pages %}
-    <nav aria-label="Document pages" class="hidden md:block">
-        <div class="scroll-page-rail sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
-            <p class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-base-content/40">Pages</p>
+    <nav aria-label="{{ t('document.pages') }}" class="hidden md:block">
+        <div class="scroll-page-rail sticky top-20 flex max-h-[calc(100dvh-6rem)] flex-col gap-2 overflow-y-auto overscroll-contain pe-1">
+            <p class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-base-content/40">{{ t("document.pages") }}</p>
             <button
                 type="button"
                 data-rail="0"
-                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-left"
+                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-start"
             >
-                <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">ENTRY</span>
-                <span class="text-xs font-medium text-base-content/60 group-hover:text-primary">Entry</span>
+                <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">{{ t("media.entry") | upper }}</span>
+                <span class="text-xs font-medium text-base-content/60 group-hover:text-primary">{{ t("media.entry") }}</span>
             </button>
             {% for p in pages %}
             <button
                 type="button"
                 data-rail="{{ p.n }}"
-                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-left"
+                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-start"
             >
                 <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">
                     {% if p.kind == 'image' %}
@@ -79,44 +86,44 @@
     <div id="reading" class="min-w-0" style="--page-width:880px">
         {# Record overview sheet #}
         <article data-page="0" id="page-0" class="card-archive mx-auto mb-8 w-full scroll-mt-20 p-7 md:p-10" style="max-width:var(--page-width,880px)">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-secondary">Record</p>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-secondary">{{ t("document.record") }}</p>
             <h1 dir="auto" class="title-serif mt-2 text-2xl font-semibold leading-tight text-base-content md:text-4xl">{{ document.title }}</h1>
             {% if document.title_ar and document.title_ar != document.title %}
             <p dir="auto" class="mt-1 text-lg text-base-content/55">{{ document.title_ar }}</p>
             {% endif %}
 
             {% if document.public_description %}
-            <section class="mt-6 border-l-4 border-secondary bg-base-200/40 px-4 py-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-secondary">SJAC Context</p>
+            <section class="mt-6 border-s-4 border-secondary bg-base-200/40 px-4 py-4">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-secondary">{{ t("catalog.sjac_context") }}</p>
                 <div class="mt-2 leading-7 text-base-content/80">{{ document.public_description | bidirectional_text }}</div>
             </section>
             {% endif %}
 
             {% if document.description %}
             <section class="mt-6">
-                <h2 class="title-serif text-lg font-semibold text-base-content">Description</h2>
+                <h2 class="title-serif text-lg font-semibold text-base-content">{{ t("catalog.description") }}</h2>
                 <div class="mt-2 leading-7 text-base-content/75">{{ document.description | bidirectional_text }}</div>
             </section>
             {% endif %}
 
             <dl class="mt-7 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[color:var(--color-paper-border)] pt-6 text-sm">
                 <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">Reference</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("document.reference") }}</dt>
                     <dd class="mt-1 text-base-content/80">{{ document.id }}</dd>
                 </div>
                 <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">Published</dt>
-                    <dd class="mt-1 text-base-content/80">{{ document.publish_date[:10] if document.publish_date else 'N/A' }}</dd>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("document.published") }}</dt>
+                    <dd class="mt-1 text-base-content/80">{{ document.publish_date[:10] if document.publish_date else t("catalog.na") }}</dd>
                 </div>
                 {% if document_labels %}
                 <div class="col-span-2">
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">Labels</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("catalog.labels") }}</dt>
                     <dd class="mt-1 text-base-content/80">{{ document_labels | join(', ') }}</dd>
                 </div>
                 {% endif %}
                 {% if document_locations %}
                 <div class="col-span-2">
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">Locations</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("catalog.locations") }}</dt>
                     <dd class="mt-1 text-base-content/80">{{ document_locations | join('; ') }}</dd>
                 </div>
                 {% endif %}
@@ -125,7 +132,7 @@
 
         {# Stacked page sheets — scroll naturally through them #}
         {% if not pages %}
-        <p class="catalog-placeholder flex min-h-40 items-center justify-center text-sm uppercase tracking-[0.18em] text-base-content/40">Catalog entry — no attached files</p>
+        <p class="catalog-placeholder flex min-h-40 items-center justify-center text-sm uppercase tracking-[0.18em] text-base-content/40">{{ t("document.catalog_no_files") }}</p>
         {% endif %}
 
         {% for p in pages %}
@@ -133,7 +140,7 @@
         {% set media_src = url_for('static', filename='media/' ~ item.filename) %}
         <section data-page="{{ p.n }}" id="page-{{ p.n }}" class="mx-auto mb-8 w-full scroll-mt-20" style="max-width:var(--page-width,880px)">
             <div class="mb-2 flex items-baseline justify-between">
-                <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/45">Page {{ p.n }} / {{ pages | length }}</span>
+                <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/45">{{ t("document.page_count", page=p.n, total=pages | length) }}</span>
                 {% if item.title %}<span dir="auto" class="truncate text-xs text-base-content/45">{{ item.title }}</span>{% endif %}
             </div>
 
@@ -142,22 +149,22 @@
                 <div
                     class="cursor-zoom-in"
                     data-zoom-src="{{ media_src }}"
-                    data-lightbox-title="{{ item.title or item.filename or 'Image' }}"
+                    data-lightbox-title="{{ item.title or item.filename or t('document.image') }}"
                     data-lightbox-filename="{{ item.filename }}"
                 >
-                    <img src="{{ media_src }}" alt="{{ item.title or 'Page ' ~ p.n }}" loading="lazy" class="h-auto w-full object-contain pointer-events-none">
+                    <img src="{{ media_src }}" alt="{{ item.title or t('document.page') ~ ' ' ~ p.n }}" loading="lazy" class="h-auto w-full object-contain pointer-events-none">
                 </div>
                 <div class="scroll-preview-actions">
-                    <p class="scroll-preview-actions__summary">Previewing this image.</p>
+                    <p class="scroll-preview-actions__summary">{{ t("document.previewing_image") }}</p>
                     <div class="scroll-preview-actions__links">
                         <button
                             type="button"
                             class="scroll-preview-button-primary"
                             data-zoom-src="{{ media_src }}"
-                            data-lightbox-title="{{ item.title or item.filename or 'Image' }}"
+                            data-lightbox-title="{{ item.title or item.filename or t('document.image') }}"
                             data-lightbox-filename="{{ item.filename }}"
-                        >View image</button>
-                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                        >{{ t("document.view_image") }}</button>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">{{ t("document.download") }}</a>
                     </div>
                 </div>
                 {% elif p.kind == 'pdf' %}
@@ -165,31 +172,31 @@
                     class="pdf-host w-full cursor-zoom-in"
                     data-pdf-src="{{ media_src }}"
                     data-pdf-filename="{{ item.filename }}"
-                    data-lightbox-title="{{ item.title or item.filename or 'PDF' }}"
+                    data-lightbox-title="{{ item.title or item.filename or t('document.pdf') }}"
                     data-open-full-pdf="{{ media_src }}"
                     style="min-height: 56vh"
                 >
-                    <div class="flex h-full min-h-[56vh] items-center justify-center text-sm text-base-content/40">Loading PDF preview…</div>
+                    <div class="flex h-full min-h-[56vh] items-center justify-center text-sm text-base-content/40">{{ t("document.loading_pdf") }}</div>
                 </div>
                 {% elif p.kind == 'docx' %}
                 <div
                     class="docx-host w-full cursor-zoom-in"
                     data-docx-src="{{ media_src }}"
                     data-docx-filename="{{ item.filename }}"
-                    data-lightbox-title="{{ item.title or item.filename or 'DOCX' }}"
+                    data-lightbox-title="{{ item.title or item.filename or t('document.docx') }}"
                     data-open-full-docx="{{ media_src }}"
                     style="min-height: 46vh"
                 >
-                    <div class="flex h-full min-h-[46vh] items-center justify-center text-sm text-base-content/40">Loading DOCX preview…</div>
+                    <div class="flex h-full min-h-[46vh] items-center justify-center text-sm text-base-content/40">{{ t("document.loading_docx") }}</div>
                 </div>
                 {% elif p.kind == 'video' %}
                 <video controls preload="metadata" class="block max-h-[80vh] w-full bg-black">
                     <source src="{{ media_src }}" type="{{ item.media_type }}">
                 </video>
                 <div class="scroll-preview-actions">
-                    <p class="scroll-preview-actions__summary">Previewing this video.</p>
+                    <p class="scroll-preview-actions__summary">{{ t("document.previewing_video") }}</p>
                     <div class="scroll-preview-actions__links">
-                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">{{ t("document.download") }}</a>
                     </div>
                 </div>
                 {% elif p.kind == 'audio' %}
@@ -199,9 +206,9 @@
                     </audio>
                 </div>
                 <div class="scroll-preview-actions">
-                    <p class="scroll-preview-actions__summary">Previewing this audio.</p>
+                    <p class="scroll-preview-actions__summary">{{ t("document.previewing_audio") }}</p>
                     <div class="scroll-preview-actions__links">
-                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">{{ t("document.download") }}</a>
                     </div>
                 </div>
                 {% else %}
@@ -215,18 +222,18 @@
                         </svg>
                     </span>
                     <div class="min-w-0">
-                        <p dir="auto" class="scroll-other-file__name">{{ item.title or item.filename or 'Attached file' }}</p>
-                        <p class="scroll-other-file__message">Preview unavailable</p>
+                        <p dir="auto" class="scroll-other-file__name">{{ item.title or item.filename or t("document.attached_file") }}</p>
+                        <p class="scroll-other-file__message">{{ t("document.preview_unavailable") }}</p>
                         {% if item.media_type %}
                         <p class="scroll-other-file__type">{{ item.media_type }}</p>
                         {% endif %}
                     </div>
                 </div>
                 <div class="scroll-preview-actions">
-                    <p class="scroll-preview-actions__summary">Open or download the original file.</p>
+                    <p class="scroll-preview-actions__summary">{{ t("document.open_download_original") }}</p>
                     <div class="scroll-preview-actions__links">
-                        <a class="scroll-preview-button-primary" href="{{ media_src }}" target="_blank" rel="noopener noreferrer" hx-boost="false">View file</a>
-                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">Download</a>
+                        <a class="scroll-preview-button-primary" href="{{ media_src }}" target="_blank" rel="noopener noreferrer" hx-boost="false">{{ t("document.view_file") }}</a>
+                        <a class="scroll-preview-button-secondary" href="{{ media_src }}" download="{{ item.filename }}">{{ t("document.download") }}</a>
                     </div>
                 </div>
                 {% endif %}
@@ -234,7 +241,7 @@
 
             {% if item.original_text or item.ocr_text %}
             <details class="card-archive mt-2 px-5 py-3">
-                <summary class="cursor-pointer text-xs font-semibold uppercase tracking-[0.12em] text-base-content/55">Extracted text</summary>
+                <summary class="cursor-pointer text-xs font-semibold uppercase tracking-[0.12em] text-base-content/55">{{ t("document.extracted_text") }}</summary>
                 <div class="mt-3 text-sm leading-7 text-base-content/75">{{ (item.original_text or item.ocr_text) | bidirectional_text }}</div>
             </details>
             {% endif %}
@@ -262,6 +269,35 @@
 {% endblock %}
 
 {% block scripts %}
+<script>
+window.BDA_SCROLL_LABELS = {{ {
+    "close": t("nav.close"),
+    "docx": t("document.docx"),
+    "docxRenderFailed": t("document.docx_render_failed"),
+    "download": t("document.download"),
+    "downloadDocx": t("document.download_docx"),
+    "downloadLabel": t("document.download_label"),
+    "downloadPdf": t("document.download_pdf"),
+    "fit": t("document.fit"),
+    "fitToScreen": t("document.fit_to_screen"),
+    "fullDocxPreview": t("document.full_docx_preview"),
+    "fullPdfPreview": t("document.full_pdf_preview"),
+    "loadingDocx": t("document.loading_docx"),
+    "loadingImage": t("document.loading_image"),
+    "loadingPdf": t("document.loading_pdf"),
+    "pdf": t("document.pdf"),
+    "pdfPage": t("document.pdf_page"),
+    "pdfRenderFailed": t("document.pdf_render_failed"),
+    "preview": t("document.preview"),
+    "previewingDocx": t("document.previewing_docx"),
+    "previewingPdf": t("document.previewing_pdf"),
+    "previewingPdfPage": t("document.previewing_pdf_page"),
+    "viewFullDocx": t("document.view_full_docx"),
+    "viewFullPdf": t("document.view_full_pdf"),
+    "zoomIn": t("document.zoom_in"),
+    "zoomOut": t("document.zoom_out")
+} | tojson }};
+</script>
 <script defer src="{{ url_for('static', filename='js/document-scroll-media.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/document-scroll-lightbox.js') }}"></script>
 <script defer src="{{ url_for('static', filename='js/document-scroll-proto.js') }}"></script>

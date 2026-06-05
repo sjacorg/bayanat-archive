@@ -2,9 +2,12 @@ import os
 import re
 import sqlite3
 from datetime import datetime
+from urllib.parse import urlencode
 
-from flask import Flask, g, render_template
+from flask import Flask, g, render_template, request
 from markupsafe import Markup, escape
+
+from app.i18n import DEFAULT_LANG, SUPPORTED_LANGS, translate
 
 
 def get_db():
@@ -70,11 +73,50 @@ def create_app():
             return Markup("")
         text = _re_spaces.sub(" ", _re_tags.sub(" ", value)).strip()
         runs = _split_bidirectional_runs(text)
-        return Markup("".join(f'<div dir="auto">{escape(run.strip())}</div>' for _, run in runs))
+        return Markup(
+            "".join(f'<div dir="auto">{escape(run.strip())}</div>' for _, run in runs)
+        )
+
+    @app.before_request
+    def resolve_locale():
+        requested_lang = request.args.get("lang", "").strip()
+        cookie_lang = request.cookies.get("lang", "").strip()
+        g.lang = (
+            requested_lang
+            if requested_lang in SUPPORTED_LANGS
+            else cookie_lang
+            if cookie_lang in SUPPORTED_LANGS
+            else DEFAULT_LANG
+        )
+        g.dir = "rtl" if g.lang == "ar" else "ltr"
+
+    @app.after_request
+    def persist_locale(response):
+        requested_lang = request.args.get("lang", "").strip()
+        if requested_lang in SUPPORTED_LANGS:
+            response.set_cookie(
+                "lang",
+                requested_lang,
+                max_age=60 * 60 * 24 * 365,
+                samesite="Lax",
+            )
+        return response
+
+    def language_url(target_lang):
+        query = request.args.to_dict(flat=False)
+        query["lang"] = [target_lang]
+        return request.path + "?" + urlencode(query, doseq=True)
 
     @app.context_processor
     def inject_template_globals():
-        return {"current_year": datetime.now().year}
+        lang = getattr(g, "lang", DEFAULT_LANG)
+        return {
+            "current_year": datetime.now().year,
+            "dir": getattr(g, "dir", "ltr"),
+            "lang": lang,
+            "language_url": language_url,
+            "t": lambda key, **kwargs: translate(lang, key, **kwargs),
+        }
 
     app.teardown_appcontext(close_db)
 

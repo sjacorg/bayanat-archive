@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="{{ lang }}" dir="{{ dir }}" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Bayanat Document Archive{% endblock %}</title>
-    <meta name="description" content="{% block description %}Public searchable archive of Syrian government documents{% endblock %}">
+    <title>{% block title %}{{ t("site.name") }}{% endblock %}</title>
+    <meta name="description" content="{% block description %}{{ t("site.description") }}{% endblock %}">
 
     <!-- Fonts: IBM Plex superfamily (Latin serif/sans + Arabic), harmonized for EN/AR -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,10 +39,10 @@
     <meta name="theme-color" content="#00382c">
 
     <!-- OpenGraph -->
-    <meta property="og:site_name" content="Bayanat Document Archive">
+    <meta property="og:site_name" content="{{ t('site.name') }}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-    <meta property="og:title" content="{% block og_title %}Bayanat Document Archive{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}Public searchable archive of Syrian government documents{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{{ t('site.name') }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ t('site.description') }}{% endblock %}">
     <meta property="og:url" content="{% block og_url %}{{ request.url }}{% endblock %}">
     <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='assets/og_image.png') }}{% endblock %}">
     <meta property="og:image:width" content="1200">
@@ -62,8 +62,8 @@
 
         <div class="drawer-content flex min-h-screen flex-col">
             {% set nav_links = [
-                {"href": url_for("search.index"), "label": "Search", "active_paths": ["/", "/search"]},
-                {"href": url_for("pages.about"), "label": "About Us", "active_paths": ["/about"]}
+                {"href": url_for("search.index"), "label": t("nav.search"), "active_paths": ["/", "/search"]},
+                {"href": url_for("pages.about"), "label": t("nav.about"), "active_paths": ["/about"]}
             ] %}
 
             {% block page_header %}
@@ -77,13 +77,17 @@
                 <div class="mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-10">
                     <div class="flex min-h-16 items-center justify-between gap-3 py-2 sm:gap-4">
                         <div class="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-                            <label for="main-nav-drawer" class="btn btn-ghost btn-square md:hidden" aria-label="Open navigation menu">
+                            <label for="main-nav-drawer" class="btn btn-ghost btn-square md:hidden" aria-label="{{ t('nav.open') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path d="M4 7h16M4 12h16M4 17h16" stroke-width="2" stroke-linecap="round"></path>
                                 </svg>
                             </label>
                             <a href="{{ url_for('search.index') }}" class="min-w-0 shrink whitespace-nowrap text-base font-light leading-tight tracking-tight text-primary sm:text-xl">
-                                Bayanat <span class="font-semibold"><span class="hidden sm:inline">Document </span>Archive</span>
+                                {% if lang == "ar" %}
+                                <span class="font-semibold">{{ t("site.name") }}</span>
+                                {% else %}
+                                {{ t("site.brand_prefix") }} <span class="font-semibold"><span class="hidden sm:inline">{{ t("site.brand_middle") }} </span>{{ t("site.brand_suffix") }}</span>
+                                {% endif %}
                             </a>
                             <span class="mx-1 hidden h-7 w-px shrink-0 bg-slate-300 md:block" aria-hidden="true"></span>
                             <a
@@ -115,6 +119,10 @@
                                 {{ link.label }}
                             </a>
                             {% endfor %}
+                            {% set target_lang = "en" if lang == "ar" else "ar" %}
+                            <a href="{{ language_url(target_lang) }}" class="border border-primary/25 px-3 py-1.5 font-medium text-primary transition-colors hover:bg-primary hover:text-primary-content" hx-boost="false">
+                                {{ t("nav.language." ~ target_lang) }}
+                            </a>
                         </nav>
                     </div>
                 </div>
@@ -145,9 +153,9 @@
             hx-select=".drawer"
             hx-swap="outerHTML transition:true"
         >
-            <label for="main-nav-drawer" aria-label="Close navigation menu" class="drawer-overlay"></label>
+            <label for="main-nav-drawer" aria-label="{{ t('nav.close') }}" class="drawer-overlay"></label>
             <aside class="min-h-full w-72 bg-base-100 p-6">
-                <p class="text-xs font-medium uppercase tracking-[0.14em] text-base-content/50">Navigation</p>
+                <p class="text-xs font-medium uppercase tracking-[0.14em] text-base-content/50">{{ t("nav.navigation") }}</p>
                 <ul class="menu mt-3 w-full p-0 text-base">
                     {% for link in nav_links %}
                     <li>
@@ -156,6 +164,12 @@
                         </a>
                     </li>
                     {% endfor %}
+                    {% set target_lang = "en" if lang == "ar" else "ar" %}
+                    <li>
+                        <a href="{{ language_url(target_lang) }}" hx-boost="false">
+                            {{ t("nav.language." ~ target_lang) }}
+                        </a>
+                    </li>
                 </ul>
             </aside>
         </div>

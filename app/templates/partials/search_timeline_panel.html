@@ -6,12 +6,12 @@
 <div
     x-show="{% if timeline_panel_always_open | default(false) %}true{% else %}timePanelOpen{% endif %}"
     {% if not (timeline_panel_always_open | default(false)) %}x-cloak{% endif %}
-    class="relative left-1/2 right-1/2 mb-6 w-screen -translate-x-1/2 {% if not (timeline_panel_transparent | default(false)) %}bg-gray-200/60{% endif %}"
+    class="full-bleed relative mb-6 {% if not (timeline_panel_transparent | default(false)) %}bg-gray-200/60{% endif %}"
 >
     <div class="mx-auto w-full max-w-[1500px] pb-5 pt-4">
         <div class="pt-4">
             <div class="mb-2 flex items-center gap-3 px-5">
-                <p class="text-base font-semibold text-primary">Select Time Period:</p>
+                <p class="text-base font-semibold text-primary">{{ t("search.select_time_period") }}</p>
                 <div class="flex items-center gap-2 text-primary">
                     <input
                         type="number"
@@ -49,7 +49,7 @@
                         @click="selectSingleYearIndex({{ loop.index0 }})"
                         @keydown.enter.prevent="selectSingleYearIndex({{ loop.index0 }})"
                         @keydown.space.prevent="selectSingleYearIndex({{ loop.index0 }})"
-                        title="{{ bin.year }}: {{ bin.count }} documents"
+                        title="{{ bin.year }}: {{ t('search.results_many', total=bin.count) }}"
                         style="height: {{ bar_height }}px;"
                         class="w-full cursor-pointer border border-gray-200"
                     ></div>

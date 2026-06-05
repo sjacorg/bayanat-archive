@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Search — Bayanat Document Archive{% endblock %}
+{% block title %}{{ t("search.title") }}{% endblock %}
 
 {% block content %}
 <div
@@ -21,7 +21,7 @@
 >
 
     <!-- Search row -->
-    <div :class="timePanelOpen ? '' : 'mb-8'" class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 bg-gray-200/60">
+    <div :class="timePanelOpen ? '' : 'mb-8'" class="full-bleed relative bg-gray-200/60">
         <div class="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
             <section
                 class="relative isolate overflow-hidden border border-primary/15 bg-primary text-primary-content"
@@ -45,21 +45,21 @@
                         class="m-0 font-light leading-[1.12] tracking-tight"
                         :class="activeSearch ? 'text-[22px] sm:text-[30px] sm:leading-[1.08]' : 'text-[28px] sm:text-[40px] sm:leading-[1.08]'"
                     >
-                        What is the Bayanat Document Archive?
+                        {{ t("search.hero_title") }}
                     </h1>
                     <p
                         class="font-light text-primary-content/88"
                         :class="activeSearch ? 'mt-2 line-clamp-2 text-base leading-[1.46] sm:mt-3 sm:text-[18px] sm:leading-[1.48]' : 'mt-5 text-[17px] leading-[1.5] sm:mt-6 sm:text-[20px] sm:leading-[1.52]'"
                     >
-                        Explore documented human rights events through clear, structured records. Built on Bayanat, an open source human rights documentation platform, the archive brings together incident reports, official documents, multimedia evidence, and research materials.
+                        {{ t("search.hero_body") }}
                     </p>
                     <a
                         href="{{ url_for('pages.about') }}"
                         class="inline-flex w-fit items-center border border-primary-content/80 font-medium text-primary-content transition hover:bg-primary-content hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary-content/75 focus:ring-offset-2 focus:ring-offset-primary"
                         :class="activeSearch ? 'mt-4 h-10 px-5 text-sm' : 'mt-6 h-11 px-6 text-base'"
                     >
-                        Read More
-                        <svg class="ml-3 h-4 w-4" viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        {{ t("search.read_more") }}
+                        <svg class="ms-3 h-4 w-4" viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3.5 8.5h10"></path>
                             <path d="m9.5 4.5 4 4-4 4"></path>
                         </svg>
@@ -80,8 +80,8 @@
                         type="search"
                         name="q"
                         id="q-input"
-                        aria-label="Search for a document"
-                        placeholder="Search for a document"
+                        aria-label="{{ t('search.input_label') }}"
+                        placeholder="{{ t('search.input_placeholder') }}"
                         autocomplete="off"
                         class="search-param text-base"
                         hx-get="/search"
@@ -97,7 +97,7 @@
                     type="button"
                     class="inline-flex h-10 w-10 items-center justify-center text-5xl leading-none text-primary/80"
                     :aria-expanded="timePanelOpen ? 'true' : 'false'"
-                    aria-label="Toggle time range filter"
+                    aria-label="{{ t('search.toggle_time') }}"
                     aria-controls="timeline-panel"
                     @click="toggleTimePanel()"
                 >
@@ -115,7 +115,7 @@
                         <path d="M12 5v14"></path>
                         <path d="M5 12h14"></path>
                     </svg>
-                    <span class="sr-only">Toggle time range</span>
+                    <span class="sr-only">{{ t("search.toggle_time") }}</span>
                 </button>
             </div>
         </div>
@@ -124,6 +124,7 @@
     <!-- Global query params that must persist across every HTMX request. -->
     <input type="hidden" name="date_from" class="search-param" :value="yearStart > minYear ? `${yearStart}-01-01` : ''">
     <input type="hidden" name="date_to" class="search-param" :value="yearEnd < maxYear ? `${yearEnd}-12-31` : ''">
+    <input type="hidden" name="lang" class="search-param" value="{{ lang }}">
 
     {% include "partials/search_timeline_panel.html" %}
 
@@ -162,7 +163,7 @@
             x-transition:enter-start="opacity-0 -translate-y-0.5"
             x-transition:enter-end="opacity-100 translate-y-0"
             @click.outside="open = null"
-            class="absolute top-[120%] left-0 z-30 w-full bg-base-100 border border-gray-200 shadow-ambient p-6 h-[274px] overflow-y-auto"
+            class="absolute top-[120%] start-0 z-30 w-full bg-base-100 border border-gray-200 shadow-ambient p-6 h-[274px] overflow-y-auto"
             role="listbox"
             aria-multiselectable="true"
         >
@@ -203,7 +204,7 @@
                     </label>
                     {% endfor %}
                 {% else %}
-                    <p class="px-4 py-3 text-sm text-base-content/40">No options available.</p>
+                    <p class="px-4 py-3 text-sm text-base-content/40">{{ t("search.no_options") }}</p>
                 {% endif %}
             </div>
         </div>
@@ -214,7 +215,7 @@
     <div class="border-b border-base-content/10">
         <button
             type="button"
-            class="flex w-full items-center justify-between py-3 text-left"
+            class="flex w-full items-center justify-between py-3 text-start"
             @click="mobileFacetOpen = mobileFacetOpen === '{{ key }}' ? null : '{{ key }}'"
         >
             <div class="flex items-center gap-2">
@@ -222,7 +223,7 @@
                 <span
                     :class="mobileSelected['{{ key }}'].length ? 'inline' : 'hidden'"
                     class="text-sm text-secondary"
-                    x-text="`(${mobileSelected['{{ key }}'].length} Selected)`"
+                    x-text="`(${mobileSelected['{{ key }}'].length} {{ t('search.selected') }})`"
                 ></span>
             </div>
             <svg class="h-3 w-3 text-base-content/35 transition-transform duration-150" :class="{ 'rotate-180': mobileFacetOpen === '{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -248,8 +249,8 @@
                 </svg>
                 <input
                     type="search"
-                    :placeholder="'Search ' + '{{ label | lower }}'"
-                    :aria-label="'Search {{ label | lower }}'"
+                    :placeholder='{{ t("nav.search") | tojson }} + " " + {{ label | lower | tojson }}'
+                    :aria-label='{{ t("nav.search") | tojson }} + " " + {{ label | lower | tojson }}'
                     x-model="mobileSearch['{{ key }}']"
                 >
             </label>
@@ -258,7 +259,7 @@
                 {% for item in items %}
                 <label
                     :class='mobileMatches("{{ key }}", {{ item | tojson }}) ? "flex" : "hidden"'
-                    class="w-full cursor-pointer items-center justify-between py-2 text-left text-base text-base-content/85"
+                    class="w-full cursor-pointer items-center justify-between py-2 text-start text-base text-base-content/85"
                 >
                     <input
                         type="checkbox"
@@ -290,20 +291,20 @@
 
         <button
             type="button"
-            class="ml-auto inline-flex items-center gap-2 border border-primary bg-base-100 px-3 py-1.5 text-sm font-medium text-primary lg:hidden"
-            aria-label="Open filters"
+            class="ms-auto inline-flex items-center gap-2 border border-primary bg-base-100 px-3 py-1.5 text-sm font-medium text-primary lg:hidden"
+            aria-label="{{ t('search.open_filters') }}"
             aria-haspopup="dialog"
             @click="openMobileFilters()"
         >
             <svg class="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
                 <path d="M2 3h12v2H2V3zm2 4h8v2H4V7zm2 4h4v2H6v-2z"/>
             </svg>
-            Filter
+            {{ t("search.filter") }}
         </button>
 
         <div class="hidden flex-1 grid-cols-2 gap-5 lg:grid lg:grid-cols-4">
-            {{ facet("label",    "Labels",    all_labels,    label_counts) }}
-            {{ facet("location", "Locations", all_locations, location_counts) }}
+            {{ facet("label",    t("search.labels"),    all_labels,    label_counts) }}
+            {{ facet("location", t("search.locations"), all_locations, location_counts) }}
         </div>
     </div>
 
@@ -320,12 +321,12 @@
             class="absolute inset-0 z-0 bg-black/35"
             x-transition.opacity.duration.150ms
             @click="closeMobileFilters()"
-            aria-label="Close filters"
+            aria-label="{{ t('search.close_filters') }}"
         ></button>
 
         <aside
-            aria-label="Filters"
-            class="absolute inset-y-0 right-0 z-10 w-full bg-base-100"
+            aria-label="{{ t('search.filters') }}"
+            class="absolute inset-y-0 end-0 z-10 w-full bg-base-100"
             x-transition:enter="transition ease-out duration-180"
             x-transition:enter-start="translate-x-full"
             x-transition:enter-end="translate-x-0"
@@ -339,18 +340,18 @@
                         <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
                         </svg>
-                        Close Filter
+                        {{ t("search.close_filter") }}
                     </button>
                 </div>
 
                 <div class="min-h-0 flex-1 overflow-y-auto px-5 py-2">
-                    {{ mobile_facet("label",    "Labels",    all_labels,    label_counts) }}
-                    {{ mobile_facet("location", "Locations", all_locations, location_counts) }}
+                    {{ mobile_facet("label",    t("search.labels"),    all_labels,    label_counts) }}
+                    {{ mobile_facet("location", t("search.locations"), all_locations, location_counts) }}
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 bg-base-100 px-5 py-5">
-                    <button type="button" class="btn btn-ghost border border-primary py-6" @click="clearMobileFilters()">Clear Filter</button>
-                    <button type="button" class="btn btn-primary py-6" @click="applyMobileFilters()">Apply Filter</button>
+                    <button type="button" class="btn btn-ghost border border-primary py-6" @click="clearMobileFilters()">{{ t("search.clear_filter") }}</button>
+                    <button type="button" class="btn btn-primary py-6" @click="applyMobileFilters()">{{ t("search.apply_filter") }}</button>
                 </div>
             </div>
         </aside>
@@ -364,7 +365,7 @@
     <div id="toolbar" class="mb-5 flex flex-col gap-3"></div>
 
     <!-- Loading skeleton -->
-    <div id="loading" class="htmx-indicator" role="status" aria-label="Loading results">
+    <div id="loading" class="htmx-indicator" role="status" aria-label="{{ t('search.loading_results') }}">
         <div class="mb-5 skeleton h-6 w-32 opacity-40"></div>
         <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {% for _ in range(4) %}

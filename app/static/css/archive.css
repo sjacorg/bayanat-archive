@@ -153,6 +153,13 @@ h1, h2, h3, .title-serif {
     box-shadow: 0 0 32px rgba(26, 69, 64, 0.06);
 }
 
+/* Full-bleed: break out of the centered container to span the viewport.
+   Symmetric margins work in both LTR and RTL. */
+.full-bleed {
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
+}
+
 /* Document viewer sidebar buttons (Stasi pattern) */
 .sidebar-btn {
     display: block;
@@ -875,6 +882,7 @@ button.scroll-preview-button-secondary {
 .scroll-lightbox__stage {
     position: absolute;
     inset: 3.5rem 0 0;
+    direction: ltr;
     overflow: auto;
     overscroll-behavior: contain;
     padding: 1.5rem 1rem 8rem;
@@ -884,6 +892,7 @@ button.scroll-preview-button-secondary {
 
 .scroll-lightbox__content {
     margin-inline: auto;
+    direction: ltr;
     display: flex;
     min-height: calc(100vh - 7rem);
     min-width: 100%;

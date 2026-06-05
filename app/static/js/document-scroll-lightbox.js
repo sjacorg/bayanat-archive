@@ -3,6 +3,17 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
 
   var loadPdf = options.loadPdf;
   var renderDocxInto = options.renderDocxInto;
+  var labels = window.BDA_SCROLL_LABELS || {};
+
+  function t(key, values) {
+    var text = labels[key] || "";
+    if (values) {
+      Object.keys(values).forEach(function (name) {
+        text = text.replace("{" + name + "}", values[name]);
+      });
+    }
+    return text;
+  }
 
   function init() {
     var overlay = document.createElement("div");
@@ -10,12 +21,12 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     overlay.innerHTML =
       '<div data-lb="toolbar" class="scroll-lightbox__toolbar">' +
       '<div class="scroll-lightbox__zoom-controls">' +
-      '<button type="button" data-lb="out" class="scroll-lightbox__button" aria-label="Zoom out">-</button>' +
+      '<button type="button" data-lb="out" class="scroll-lightbox__button" aria-label="' + t("zoomOut") + '">-</button>' +
       '<span data-lb="label" class="scroll-lightbox__label">100%</span>' +
-      '<button type="button" data-lb="in" class="scroll-lightbox__button" aria-label="Zoom in">+</button>' +
-      '<button type="button" data-lb="fit" class="scroll-lightbox__fit" aria-label="Fit to screen">Fit</button>' +
+      '<button type="button" data-lb="in" class="scroll-lightbox__button" aria-label="' + t("zoomIn") + '">+</button>' +
+      '<button type="button" data-lb="fit" class="scroll-lightbox__fit" aria-label="' + t("fitToScreen") + '">' + t("fit") + '</button>' +
       '</div>' +
-      '<button type="button" data-lb="close" class="scroll-lightbox__close" aria-label="Close">' +
+      '<button type="button" data-lb="close" class="scroll-lightbox__close" aria-label="' + t("close") + '">' +
       '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="M18 6 6 18"></path><path d="m6 6 12 12"></path>' +
       "</svg></button>" +
@@ -24,8 +35,8 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       '<div data-lb="content" class="scroll-lightbox__content"></div>' +
       "</div>" +
       '<div data-lb="filebar" class="scroll-lightbox__filebar">' +
-      '<p data-lb="title" class="scroll-lightbox__title">Preview</p>' +
-      '<a data-lb="download" class="scroll-lightbox__download" href="#" download>Download</a>' +
+      '<p data-lb="title" class="scroll-lightbox__title">' + t("preview") + '</p>' +
+      '<a data-lb="download" class="scroll-lightbox__download" href="#" download>' + t("download") + '</a>' +
       "</div>";
     document.body.appendChild(overlay);
 
@@ -72,12 +83,12 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       meta = meta || {};
       var src = meta.src || "";
       var filename = meta.filename || filenameFromSrc(src);
-      var labelText = meta.title || filename || "Preview";
+      var labelText = meta.title || filename || t("preview");
       if (title) title.textContent = labelText;
       if (download) {
         download.href = src || "#";
         download.download = filename || "";
-        download.setAttribute("aria-label", "Download " + labelText);
+        download.setAttribute("aria-label", t("downloadLabel", { label: labelText }));
         download.classList.toggle("is-hidden", !src);
       }
     }
@@ -178,25 +189,23 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId);
       var restore = pendingScroll;
       pendingScroll = null;
-      scrollRafId = window.requestAnimationFrame(function () {
-        scrollRafId = null;
-        var maxLeft = Math.max(stage.scrollWidth - stage.clientWidth, 0);
-        var maxTop = Math.max(stage.scrollHeight - stage.clientHeight, 0);
-        if (restore.type === "pdf-page") {
-          var page = media && media.querySelector('[data-pdf-page-number="' + restore.pageNumber + '"]');
-          if (page) {
-            var stageRect = stage.getBoundingClientRect();
-            var pageRect = page.getBoundingClientRect();
-            var pageLeft = stage.scrollLeft + pageRect.left - stageRect.left;
-            var pageTop = stage.scrollTop + pageRect.top - stageRect.top;
-            stage.scrollLeft = Math.max(0, Math.min(maxLeft, pageLeft + pageRect.width * restore.xRatio - restore.localX));
-            stage.scrollTop = Math.max(0, Math.min(maxTop, pageTop + pageRect.height * restore.yRatio - restore.localY));
-            return;
-          }
+      scrollRafId = null;
+      var maxLeft = Math.max(stage.scrollWidth - stage.clientWidth, 0);
+      var maxTop = Math.max(stage.scrollHeight - stage.clientHeight, 0);
+      if (restore.type === "pdf-page") {
+        var page = media && media.querySelector('[data-pdf-page-number="' + restore.pageNumber + '"]');
+        if (page) {
+          var stageRect = stage.getBoundingClientRect();
+          var pageRect = page.getBoundingClientRect();
+          var pageLeft = stage.scrollLeft + pageRect.left - stageRect.left;
+          var pageTop = stage.scrollTop + pageRect.top - stageRect.top;
+          stage.scrollLeft = Math.max(0, Math.min(maxLeft, pageLeft + pageRect.width * restore.xRatio - restore.localX));
+          stage.scrollTop = Math.max(0, Math.min(maxTop, pageTop + pageRect.height * restore.yRatio - restore.localY));
+          return;
         }
-        stage.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
-        stage.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
-      });
+      }
+      stage.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
+      stage.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
     }
 
     function applyZoom(nextZoom, anchor) {
@@ -308,7 +317,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       meta = meta || {};
       meta.src = src;
       var token = open(meta);
-      content.innerHTML = '<p class="scroll-lightbox__loading">Loading image...</p>';
+      content.innerHTML = '<p class="scroll-lightbox__loading">' + t("loadingImage") + '</p>';
       img.onload = function () {
         if (!isOpen || token !== loadToken) return;
         mount(img, img.naturalWidth, img.naturalHeight);
@@ -323,7 +332,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       meta = meta || {};
       meta.src = src;
       var token = open(meta);
-      content.innerHTML = '<p class="scroll-lightbox__loading">Loading PDF...</p>';
+      content.innerHTML = '<p class="scroll-lightbox__loading">' + t("loadingPdf") + '</p>';
       try {
         var pdf = await loadPdf(src);
         if (!isOpen || token !== loadToken) return;
@@ -340,7 +349,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
 
         var wrapper = document.createElement("div");
         wrapper.setAttribute("role", "document");
-        wrapper.setAttribute("aria-label", "Full PDF preview");
+        wrapper.setAttribute("aria-label", t("fullPdfPreview"));
         mount(wrapper, firstDisplayViewport.width, firstDisplayViewport.height, {
           className: "scroll-lightbox__pdf-stack",
           zoomMode: "pdf",
@@ -415,7 +424,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
             canvas.style.width = "100%";
             canvas.style.height = "auto";
             canvas.className = "scroll-lightbox__pdf-page";
-            canvas.setAttribute("aria-label", "PDF page " + pageNumber);
+            canvas.setAttribute("aria-label", t("pdfPage", { page: pageNumber }));
             canvas.dataset.pdfPageNumber = String(pageNumber);
             mutatePagePreservingScroll(pageEls[pageNumber], function () {
               pageEls[pageNumber].replaceWith(canvas);
@@ -537,11 +546,11 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       meta = meta || {};
       meta.src = src;
       var token = open(meta);
-      content.innerHTML = '<p class="scroll-lightbox__loading">Loading DOCX...</p>';
+      content.innerHTML = '<p class="scroll-lightbox__loading">' + t("loadingDocx") + '</p>';
       try {
         var wrapper = document.createElement("div");
         wrapper.setAttribute("role", "document");
-        wrapper.setAttribute("aria-label", "Full DOCX preview");
+        wrapper.setAttribute("aria-label", t("fullDocxPreview"));
         mount(wrapper, 880, 1245, {
           className: "doc-docx-scope scroll-docx-lightbox-doc",
         });
@@ -658,6 +667,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     });
 
     document.addEventListener("click", function (event) {
+      if (event.target.closest("a[download], [download]")) return;
       var img = event.target.closest("[data-zoom-src]");
       if (img) {
         openImage(img.dataset.zoomSrc, {
