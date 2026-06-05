@@ -384,7 +384,7 @@
                 <div class="min-w-0 flex-1">
                     <h2
                         dir="auto"
-                        class="line-clamp-2 break-words text-base font-semibold leading-snug text-base-content transition-colors group-hover:text-primary sm:text-lg"
+                        class="line-clamp-1 break-words text-base font-semibold leading-snug text-base-content transition-colors group-hover:text-primary sm:line-clamp-2 sm:text-lg"
                     >
                         {% if doc.snippet_title %}
                             {{ doc.snippet_title | safe }}
@@ -393,7 +393,7 @@
                         {% endif %}
                     </h2>
                     <div
-                        class="mt-1.5 line-clamp-2 break-words text-sm leading-relaxed text-base-content/60 sm:text-base"
+                        class="mt-1.5 line-clamp-1 break-words text-sm leading-relaxed text-base-content/60 sm:line-clamp-2 sm:text-base"
                     >
                         {% if doc.snippet_desc %}
                             {{ doc.snippet_desc | strip_html }}
