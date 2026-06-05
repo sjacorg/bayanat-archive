@@ -73,6 +73,68 @@ h1, h2, h3, .title-serif {
     min-width: 0;
 }
 
+.search-list-card {
+    display: grid;
+    grid-template-columns: clamp(7rem, 34vw, 9.25rem) minmax(0, 1fr);
+    min-width: 0;
+    overflow: hidden;
+    height: 8.25rem;
+}
+
+.search-list-thumb {
+    position: relative;
+    min-width: 0;
+    height: 8.25rem;
+    overflow: hidden;
+}
+
+.search-list-body {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    overflow: hidden;
+    padding: 0.875rem;
+}
+
+.media-badge {
+    max-width: 100%;
+    text-overflow: ellipsis;
+}
+
+.media-badge svg {
+    flex: 0 0 auto;
+}
+
+@media (min-width: 640px) {
+    .search-list-card {
+        grid-template-columns: clamp(12rem, 34vw, 18rem) minmax(0, 1fr);
+        height: 12rem;
+    }
+
+    .search-list-thumb {
+        height: 12rem;
+    }
+
+    .search-list-body {
+        padding: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .search-list-card {
+        grid-template-columns: clamp(18rem, 35vw, 23.625rem) minmax(0, 1fr);
+        height: 14rem;
+    }
+
+    .search-list-thumb {
+        height: 14rem;
+    }
+
+    .search-list-body {
+        padding: 2.25rem 2.5rem;
+    }
+}
+
 .card-archive:hover,
 .card-archive:focus-within {
     border-color: var(--color-secondary);

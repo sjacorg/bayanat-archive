@@ -16,7 +16,7 @@
 {% set is_image = "image/" in media_type or "image" in badge_value or "photo" in badge_value or "jpeg" in badge_value or "jpg" in badge_value or "png" in badge_value or "gif" in badge_value or "webp" in badge_value %}
 {% set is_video = "video/" in media_type or "video" in badge_value or "mp4" in badge_value or "mov" in badge_value or "avi" in badge_value or "webm" in badge_value %}
 {% set is_audio = "audio/" in media_type or "audio" in badge_value or "mp3" in badge_value or "wav" in badge_value or "ogg" in badge_value or "aac" in badge_value %}
-<span class="inline-flex items-center gap-2 bg-primary px-3 py-1 text-xs font-medium text-primary-content">
+<span class="media-badge inline-flex max-w-[calc(100vw-3rem)] items-center gap-2 overflow-hidden whitespace-nowrap bg-primary px-3 py-1 text-xs font-medium text-primary-content">
     {% if not media %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M15.8333 10.2917H3.16667C2.73125 10.2917 2.375 10.6479 2.375 11.0833V15.8333C2.375 16.2688 2.73125 16.625 3.16667 16.625H15.8333C16.2688 16.625 16.625 16.2688 16.625 15.8333V11.0833C16.625 10.6479 16.2688 10.2917 15.8333 10.2917ZM5.54167 15.0417C4.67083 15.0417 3.95833 14.3292 3.95833 13.4583C3.95833 12.5875 4.67083 11.875 5.54167 11.875C6.4125 11.875 7.125 12.5875 7.125 13.4583C7.125 14.3292 6.4125 15.0417 5.54167 15.0417ZM15.8333 2.375H3.16667C2.73125 2.375 2.375 2.73125 2.375 3.16667V7.91667C2.375 8.35208 2.73125 8.70833 3.16667 8.70833H15.8333C16.2688 8.70833 16.625 8.35208 16.625 7.91667V3.16667C16.625 2.73125 16.2688 2.375 15.8333 2.375ZM5.54167 7.125C4.67083 7.125 3.95833 6.4125 3.95833 5.54167C3.95833 4.67083 4.67083 3.95833 5.54167 3.95833C6.4125 3.95833 7.125 4.67083 7.125 5.54167C7.125 6.4125 6.4125 7.125 5.54167 7.125Z" fill="white"/>
@@ -65,8 +65,8 @@
 {% macro document_label_chips(doc_id) %}
 {% set labels = doc_labels.get(doc_id, []) %}
 {% if labels %}
-<div class="flex flex-wrap gap-1.5">
-    <span class="inline-flex h-5 items-center bg-base-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] leading-none text-base-content/70">
+<div class="flex min-w-0 flex-wrap gap-1.5">
+    <span class="inline-flex h-5 max-w-full items-center truncate bg-base-200 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.06em] leading-none text-base-content/70">
         {{ labels[0].title }}
     </span>
     {% if labels|length > 1 %}
@@ -373,18 +373,18 @@
 <div class="flex flex-col gap-4">
     {% for doc in results %}
     <a href="/documents/{{ doc.id }}/{{ doc.slug }}?back={{ search_back_url | urlencode }}" class="card-archive search-result-card group block">
-        <article class="flex cursor-pointer gap-4">
-            <div class="relative h-[110px] w-[138px] shrink-0 overflow-hidden bg-base-200/70 md:h-[225px] md:w-[378px]">
+        <article class="search-list-card cursor-pointer">
+            <div class="search-list-thumb bg-base-200/70">
                 {{ thumbnail_media(doc, "h-full w-full object-cover", "h-10 w-10") }}
-                <div class="absolute bottom-2 left-2">
+                <div class="absolute bottom-2 left-2 right-2">
                     {{ card_badge(doc.id) }}
                 </div>
             </div>
-            <div class="flex w-full flex-row justify-between p-2 md:px-[30px] md:py-[50px]">
+            <div class="search-list-body">
                 <div class="min-w-0 flex-1">
                     <h2
                         dir="auto"
-                        class="line-clamp-1 text-base font-semibold leading-snug text-base-content transition-colors group-hover:text-primary md:line-clamp-2"
+                        class="line-clamp-2 break-words text-base font-semibold leading-snug text-base-content transition-colors group-hover:text-primary sm:text-lg"
                     >
                         {% if doc.snippet_title %}
                             {{ doc.snippet_title | safe }}
@@ -393,7 +393,7 @@
                         {% endif %}
                     </h2>
                     <div
-                        class="mt-1.5 line-clamp-2 text-base leading-relaxed text-base-content/60 md:line-clamp-3"
+                        class="mt-1.5 line-clamp-2 break-words text-sm leading-relaxed text-base-content/60 sm:text-base"
                     >
                         {% if doc.snippet_desc %}
                             {{ doc.snippet_desc | strip_html }}
