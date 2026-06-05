@@ -69,7 +69,7 @@
       });
 
       var params = new URLSearchParams(window.location.search);
-      if (current === 0) {
+      if (current <= 1) {
         params.delete("page");
       } else {
         params.set("page", current);
@@ -112,7 +112,7 @@
     updateActivePage();
 
     var initialPage = parseInt(new URLSearchParams(window.location.search).get("page"), 10);
-    if (initialPage && initialPage > 0) {
+    if (initialPage && initialPage > 1) {
       setTimeout(function () { jump(initialPage); }, 120);
     }
 
