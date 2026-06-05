@@ -48,6 +48,13 @@ body {
     background-color: var(--color-paper);
 }
 
+html,
+body,
+.drawer-content {
+    max-width: 100%;
+    overflow-x: clip;
+}
+
 /* Editorial serif for titles + the result count.
    Bilingual: Latin renders in Plex Serif, Arabic falls through to Plex Sans Arabic. */
 h1, h2, h3, .title-serif {
@@ -60,6 +67,72 @@ h1, h2, h3, .title-serif {
     background-color: #fff;
     border: 1px solid var(--color-paper-border);
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-result-card {
+    min-width: 0;
+}
+
+.search-list-card {
+    display: grid;
+    grid-template-columns: clamp(7rem, 34vw, 9.25rem) minmax(0, 1fr);
+    min-width: 0;
+    overflow: hidden;
+    height: 8.25rem;
+}
+
+.search-list-thumb {
+    position: relative;
+    min-width: 0;
+    height: 8.25rem;
+    overflow: hidden;
+}
+
+.search-list-body {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    overflow: hidden;
+    padding: 0.875rem;
+}
+
+.media-badge {
+    max-width: 100%;
+    text-overflow: ellipsis;
+}
+
+.media-badge svg {
+    flex: 0 0 auto;
+}
+
+@media (min-width: 640px) {
+    .search-list-card {
+        grid-template-columns: clamp(12rem, 34vw, 18rem) minmax(0, 1fr);
+        height: 12rem;
+    }
+
+    .search-list-thumb {
+        height: 12rem;
+    }
+
+    .search-list-body {
+        padding: 1.5rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .search-list-card {
+        grid-template-columns: clamp(18rem, 35vw, 23.625rem) minmax(0, 1fr);
+        height: 14rem;
+    }
+
+    .search-list-thumb {
+        height: 14rem;
+    }
+
+    .search-list-body {
+        padding: 2.25rem 2.5rem;
+    }
 }
 
 .card-archive:hover,
@@ -81,7 +154,7 @@ h1, h2, h3, .title-serif {
 }
 
 /* Full-bleed: break out of the centered container to span the viewport.
-   Symmetric margins work in both LTR and RTL (no left/translate that shifts under rtl). */
+   Symmetric margins work in both LTR and RTL. */
 .full-bleed {
     width: 100vw;
     margin-inline: calc(50% - 50vw);
@@ -391,21 +464,21 @@ body.timeline-overscroll-locked {
 .scroll-page-card > video {
     width: auto !important;
     max-width: calc(100% - 3rem);
-    max-height: calc(100% - 3rem);
+    max-height: calc(100% - 7rem);
     object-fit: contain;
 }
 
-.scroll-page-card--image > div {
+.scroll-page-card--image > [data-zoom-src] {
     width: 100%;
     height: 100%;
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 5.5rem;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-.scroll-page-card--image > div img {
+.scroll-page-card--image > [data-zoom-src] img {
     max-width: 100%;
     max-height: 100%;
     width: auto;
@@ -463,9 +536,56 @@ body.timeline-overscroll-locked {
     justify-content: center;
 }
 
-.scroll-page-card--audio > div,
-.scroll-page-card--other > div {
+.scroll-page-card--audio > .scroll-audio-frame,
+.scroll-page-card--other > .scroll-other-file {
     width: min(34rem, calc(100% - 3rem));
+}
+
+.scroll-other-file {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    max-width: min(34rem, calc(100% - 3rem));
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    background: #fff;
+    padding: 1.25rem;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
+    text-align: left;
+}
+
+.scroll-other-file__icon {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 3.75rem;
+    height: 3.75rem;
+    border: 1px solid var(--color-paper-border);
+    background: color-mix(in oklch, var(--color-base-200) 60%, #fff);
+    color: color-mix(in oklch, var(--color-primary) 82%, #111827);
+}
+
+.scroll-other-file__name {
+    margin: 0;
+    color: var(--color-base-content);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.scroll-other-file__message {
+    margin: 0.25rem 0 0;
+    color: color-mix(in oklch, var(--color-base-content) 62%, transparent);
+    font-size: 0.875rem;
+}
+
+.scroll-other-file__type {
+    margin: 0.35rem 0 0;
+    color: color-mix(in oklch, var(--color-base-content) 42%, transparent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
 .scroll-preview-actions {
@@ -503,8 +623,15 @@ body.timeline-overscroll-locked {
     padding: 0.375rem 1rem;
     font-size: 0.875rem;
     font-weight: 600;
+    line-height: 1.25rem;
     text-decoration: none;
     transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+button.scroll-preview-button-primary,
+button.scroll-preview-button-secondary {
+    cursor: pointer;
+    font: inherit;
 }
 
 .scroll-preview-button-primary {
@@ -525,6 +652,12 @@ body.timeline-overscroll-locked {
 .scroll-preview-button-secondary:hover {
     border-color: var(--color-secondary);
     color: var(--color-primary);
+}
+
+.scroll-file-actions {
+    border-right: 1px solid var(--color-paper-border);
+    border-bottom: 1px solid var(--color-paper-border);
+    border-left: 1px solid var(--color-paper-border);
 }
 
 .scroll-preview-fallback {
@@ -632,11 +765,44 @@ body.timeline-overscroll-locked {
 .scroll-lightbox__zoom-controls {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
+}
+
+.scroll-lightbox__filebar {
+    position: absolute;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 11;
+    display: flex;
+    width: min(46rem, calc(100% - 2rem));
+    min-height: 3.25rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-inline: auto;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(2, 6, 23, 0.82);
+    padding: 0.625rem 0.75rem 0.625rem 1rem;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+}
+
+.scroll-lightbox__title {
+    overflow: hidden;
+    margin: 0;
+    min-width: 0;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .scroll-lightbox__button,
 .scroll-lightbox__fit,
+.scroll-lightbox__download,
 .scroll-lightbox__close {
     border: 1px solid rgba(255, 255, 255, 0.35);
     background: rgba(255, 255, 255, 0.10);
@@ -645,6 +811,7 @@ body.timeline-overscroll-locked {
 
 .scroll-lightbox__button:hover,
 .scroll-lightbox__fit:hover,
+.scroll-lightbox__download:hover,
 .scroll-lightbox__close:hover {
     background: rgba(255, 255, 255, 0.15);
 }
@@ -673,6 +840,23 @@ body.timeline-overscroll-locked {
     text-transform: uppercase;
 }
 
+.scroll-lightbox__download {
+    display: inline-flex;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+.scroll-lightbox__download.is-hidden {
+    display: none;
+}
+
 .scroll-lightbox__label {
     min-width: 4rem;
     user-select: none;
@@ -699,7 +883,8 @@ body.timeline-overscroll-locked {
     position: absolute;
     inset: 3.5rem 0 0;
     overflow: auto;
-    padding: 1.5rem 1rem 2rem;
+    overscroll-behavior: contain;
+    padding: 1.5rem 1rem 8rem;
     scrollbar-gutter: stable;
     touch-action: pan-x pan-y;
 }
@@ -752,6 +937,18 @@ body.timeline-overscroll-locked {
     padding-top: 6rem;
     font-size: 0.875rem;
     color: rgba(255, 255, 255, 0.70);
+}
+
+@media (max-width: 640px) {
+    .scroll-lightbox__filebar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .scroll-lightbox__download {
+        width: 100%;
+    }
 }
 
 @media (max-width: 900px) {

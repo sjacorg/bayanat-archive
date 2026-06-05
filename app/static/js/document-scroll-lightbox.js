@@ -22,12 +22,18 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       "</div>" +
       '<div data-lb="stage" class="scroll-lightbox__stage">' +
       '<div data-lb="content" class="scroll-lightbox__content"></div>' +
+      "</div>" +
+      '<div data-lb="filebar" class="scroll-lightbox__filebar">' +
+      '<p data-lb="title" class="scroll-lightbox__title">Preview</p>' +
+      '<a data-lb="download" class="scroll-lightbox__download" href="#" download>Download</a>' +
       "</div>";
     document.body.appendChild(overlay);
 
     var stage = overlay.querySelector('[data-lb="stage"]');
     var content = overlay.querySelector('[data-lb="content"]');
     var label = overlay.querySelector('[data-lb="label"]');
+    var title = overlay.querySelector('[data-lb="title"]');
+    var download = overlay.querySelector('[data-lb="download"]');
     var zoomIn = overlay.querySelector('[data-lb="in"]');
     var zoomOut = overlay.querySelector('[data-lb="out"]');
     var media = null;
@@ -37,15 +43,43 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     var baseWidth = 1;
     var minZoom = 1;
     var maxZoom = 6;
+    var lastZoomAt = 0;
     var isOpen = false;
     var loadToken = 0;
     var pageObserver = null;
     var dragging = false;
     var px = 0;
     var py = 0;
+    var lockedScrollY = 0;
+    var previousBodyStyles = null;
 
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
+    }
+
+    function filenameFromSrc(src) {
+      if (!src) return "";
+      try {
+        var url = new URL(src, window.location.href);
+        var pathname = url.pathname || "";
+        return decodeURIComponent(pathname.split("/").filter(Boolean).pop() || "");
+      } catch (error) {
+        return String(src).split("/").filter(Boolean).pop() || "";
+      }
+    }
+
+    function updateToolbar(meta) {
+      meta = meta || {};
+      var src = meta.src || "";
+      var filename = meta.filename || filenameFromSrc(src);
+      var labelText = meta.title || filename || "Preview";
+      if (title) title.textContent = labelText;
+      if (download) {
+        download.href = src || "#";
+        download.download = filename || "";
+        download.setAttribute("aria-label", "Download " + labelText);
+        download.classList.toggle("is-hidden", !src);
+      }
     }
 
     function updateControls() {
@@ -54,14 +88,82 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       if (zoomIn) zoomIn.disabled = zoom >= maxZoom - 0.001;
     }
 
+    function lockDocumentScroll() {
+      if (previousBodyStyles) return;
+      lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      previousBodyStyles = {
+        position: document.body.style.position,
+        top: document.body.style.top,
+        left: document.body.style.left,
+        right: document.body.style.right,
+        width: document.body.style.width,
+        overflow: document.body.style.overflow,
+      };
+      document.body.style.position = "fixed";
+      document.body.style.top = "-" + lockedScrollY + "px";
+      document.body.style.left = "0";
+      document.body.style.right = "0";
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+    }
+
+    function unlockDocumentScroll() {
+      if (!previousBodyStyles) return;
+      document.body.style.position = previousBodyStyles.position;
+      document.body.style.top = previousBodyStyles.top;
+      document.body.style.left = previousBodyStyles.left;
+      document.body.style.right = previousBodyStyles.right;
+      document.body.style.width = previousBodyStyles.width;
+      document.body.style.overflow = previousBodyStyles.overflow;
+      previousBodyStyles = null;
+      window.scrollTo(0, lockedScrollY);
+    }
+
     var pendingScroll = null;
     var scrollRafId = null;
+
+    function findPdfAnchor(anchor, localX, localY) {
+      if (!media || activeZoomMode !== "pdf") return null;
+      var pages = Array.from(media.querySelectorAll(".scroll-lightbox__pdf-page"));
+      var pointerY = anchor ? anchor.clientY : stage.getBoundingClientRect().top + localY;
+      var pointerX = anchor ? anchor.clientX : stage.getBoundingClientRect().left + localX;
+      var best = null;
+      var bestDistance = Infinity;
+
+      pages.forEach(function (page) {
+        var rect = page.getBoundingClientRect();
+        var insideY = pointerY >= rect.top && pointerY <= rect.bottom;
+        var insideX = pointerX >= rect.left && pointerX <= rect.right;
+        var centerY = rect.top + rect.height / 2;
+        var distance = insideY ? 0 : Math.abs(pointerY - centerY);
+        if (insideY && insideX) distance = -1;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = { page: page, rect: rect };
+        }
+      });
+
+      if (!best || !best.page || !best.page.dataset.pdfPageNumber) return null;
+      return {
+        type: "pdf-page",
+        pageNumber: best.page.dataset.pdfPageNumber,
+        localX: localX,
+        localY: localY,
+        xRatio: clamp((pointerX - best.rect.left) / Math.max(best.rect.width, 1), 0, 1),
+        yRatio: clamp((pointerY - best.rect.top) / Math.max(best.rect.height, 1), 0, 1),
+      };
+    }
 
     function captureScroll(currentZoom, nextZoom, anchor) {
       if (nextZoom <= 0 || currentZoom <= 0) { pendingScroll = null; return; }
       var rect = stage.getBoundingClientRect();
       var localX = anchor ? anchor.clientX - rect.left : stage.clientWidth / 2;
       var localY = anchor ? anchor.clientY - rect.top : stage.clientHeight / 2;
+      var pdfAnchor = findPdfAnchor(anchor, localX, localY);
+      if (pdfAnchor) {
+        pendingScroll = pdfAnchor;
+        return;
+      }
       var worldX = stage.scrollLeft + localX;
       var worldY = stage.scrollTop + localY;
       var ratio = nextZoom / currentZoom;
@@ -80,6 +182,18 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         scrollRafId = null;
         var maxLeft = Math.max(stage.scrollWidth - stage.clientWidth, 0);
         var maxTop = Math.max(stage.scrollHeight - stage.clientHeight, 0);
+        if (restore.type === "pdf-page") {
+          var page = media && media.querySelector('[data-pdf-page-number="' + restore.pageNumber + '"]');
+          if (page) {
+            var stageRect = stage.getBoundingClientRect();
+            var pageRect = page.getBoundingClientRect();
+            var pageLeft = stage.scrollLeft + pageRect.left - stageRect.left;
+            var pageTop = stage.scrollTop + pageRect.top - stageRect.top;
+            stage.scrollLeft = Math.max(0, Math.min(maxLeft, pageLeft + pageRect.width * restore.xRatio - restore.localX));
+            stage.scrollTop = Math.max(0, Math.min(maxTop, pageTop + pageRect.height * restore.yRatio - restore.localY));
+            return;
+          }
+        }
         stage.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
         stage.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
       });
@@ -92,6 +206,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
 
       zoom = clamp(nextZoom, minZoom, maxZoom);
       if (Math.abs(zoom - previous) < 0.001) return;
+      lastZoomAt = Date.now();
 
       captureScroll(previous, zoom, anchor);
 
@@ -136,6 +251,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       content.appendChild(media);
       stage.scrollLeft = 0;
       stage.scrollTop = 0;
+      activeZoomMode = mountOptions.zoomMode || activeZoomMode;
       updateControls();
     }
 
@@ -163,11 +279,12 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       updateControls();
     }
 
-    function open() {
+    function open(meta) {
       isOpen = true;
       loadToken += 1;
+      updateToolbar(meta);
       overlay.classList.add("is-open");
-      document.body.style.overflow = "hidden";
+      lockDocumentScroll();
       return loadToken;
     }
 
@@ -176,17 +293,21 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       loadToken += 1;
       if (pageObserver) { pageObserver.disconnect(); pageObserver = null; }
       overlay.classList.remove("is-open");
-      document.body.style.overflow = "";
+      unlockDocumentScroll();
+      content.querySelectorAll("canvas").forEach(function (c) { c.width = 0; c.height = 0; });
       content.innerHTML = "";
       media = null;
       activeZoomTarget = null;
       activeZoomMode = "width";
       dragging = false;
+      updateToolbar({});
     }
 
-    function openImage(src) {
+    function openImage(src, meta) {
       var img = new Image();
-      var token = open();
+      meta = meta || {};
+      meta.src = src;
+      var token = open(meta);
       content.innerHTML = '<p class="scroll-lightbox__loading">Loading image...</p>';
       img.onload = function () {
         if (!isOpen || token !== loadToken) return;
@@ -198,8 +319,10 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       img.src = src;
     }
 
-    async function openFullPdf(src) {
-      var token = open();
+    async function openFullPdf(src, meta) {
+      meta = meta || {};
+      meta.src = src;
+      var token = open(meta);
       content.innerHTML = '<p class="scroll-lightbox__loading">Loading PDF...</p>';
       try {
         var pdf = await loadPdf(src);
@@ -208,8 +331,9 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         var firstPage = await pdf.getPage(1);
         if (!isOpen || token !== loadToken) return;
 
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        var target = Math.min(window.innerWidth * 1.55, 1600);
+        // cap dpr at 1.5 and canvas pixel width at 1200 to avoid OOM on low-RAM devices
+        var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        var target = Math.min(window.innerWidth * 1.2, 1200);
         var firstBase = firstPage.getViewport({ scale: 1 });
         var cssScale = target / firstBase.width;
         var firstDisplayViewport = firstPage.getViewport({ scale: cssScale });
@@ -219,20 +343,71 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         wrapper.setAttribute("aria-label", "Full PDF preview");
         mount(wrapper, firstDisplayViewport.width, firstDisplayViewport.height, {
           className: "scroll-lightbox__pdf-stack",
+          zoomMode: "pdf",
         });
 
         // tracks in-progress renders so we don't double-render a page
         var rendering = new Set();
         // live DOM node for each page number (placeholder or canvas)
         var pageEls = {};
+        // aspect ratios keep offloaded placeholders the same height as rendered pages
+        var pageAspectRatios = {};
+        pageAspectRatios[1] = firstBase.width / firstBase.height;
+
+        var scrollDebounceTimer = null;
+        // keep at most this many rendered canvases in memory
+        var MAX_RENDERED = 6;
+
+        function mutatePagePreservingScroll(el, mutate) {
+          if (!el) {
+            mutate();
+            return;
+          }
+          var stageRect = stage.getBoundingClientRect();
+          var before = el.getBoundingClientRect();
+          var shouldPreserve = before.bottom <= stageRect.top + 1;
+          var beforeHeight = before.height;
+          mutate();
+          if (!shouldPreserve) return;
+          var replacement = pageEls[el.dataset.pdfPageNumber] || el;
+          var after = replacement.getBoundingClientRect();
+          var delta = after.height - beforeHeight;
+          if (Math.abs(delta) > 0.5) {
+            stage.scrollTop += delta;
+          }
+        }
+
+        function makePlaceholder(n) {
+          var ph = document.createElement("div");
+          ph.className = "scroll-lightbox__pdf-page scroll-lightbox__pdf-placeholder";
+          ph.dataset.pdfPageNumber = String(n);
+          ph.style.width = "100%";
+          ph.style.aspectRatio = String(pageAspectRatios[n] || pageAspectRatios[1]);
+          return ph;
+        }
+
+        function unloadPage(pageNumber) {
+          var el = pageEls[pageNumber];
+          if (!el || el.tagName !== "CANVAS") return;
+          var ph = makePlaceholder(pageNumber);
+          mutatePagePreservingScroll(el, function () {
+            el.replaceWith(ph);
+            pageEls[pageNumber] = ph;
+          });
+          el.width = 0;
+          el.height = 0;
+        }
 
         async function renderPage(pageNumber) {
           if (rendering.has(pageNumber)) return;
+          var el = pageEls[pageNumber];
+          if (!el || el.tagName === "CANVAS") return;
           rendering.add(pageNumber);
           try {
             var page = await pdf.getPage(pageNumber);
             if (!isOpen || token !== loadToken) return;
             var base = page.getViewport({ scale: 1 });
+            pageAspectRatios[pageNumber] = base.width / base.height;
             var renderViewport = page.getViewport({ scale: (target / base.width) * dpr });
             var canvas = document.createElement("canvas");
             canvas.width = Math.floor(renderViewport.width);
@@ -241,60 +416,127 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
             canvas.style.height = "auto";
             canvas.className = "scroll-lightbox__pdf-page";
             canvas.setAttribute("aria-label", "PDF page " + pageNumber);
-            pageEls[pageNumber].replaceWith(canvas);
-            pageEls[pageNumber] = canvas;
+            canvas.dataset.pdfPageNumber = String(pageNumber);
+            mutatePagePreservingScroll(pageEls[pageNumber], function () {
+              pageEls[pageNumber].replaceWith(canvas);
+              pageEls[pageNumber] = canvas;
+            });
             await page.render({
               canvasContext: canvas.getContext("2d", { alpha: false }),
               viewport: renderViewport,
             }).promise;
+          } catch (renderErr) {
+            console.error("[pdf-lightbox] renderPage " + pageNumber + " failed:", renderErr);
           } finally {
             rendering.delete(pageNumber);
           }
         }
 
+        // called after scroll stops — figures out which pages are near the viewport,
+        // renders them, and unloads everything outside the keep window
+        function onScrollSettle() {
+          if (!isOpen || token !== loadToken) return;
+          if (Date.now() - lastZoomAt < 350) {
+            onScroll();
+            return;
+          }
+          var stageRect = stage.getBoundingClientRect();
+          var stageH = stageRect.height;
+          var margin = stageH; // one screen above and below
+
+          // find the center page by scroll position to anchor the keep window
+          var centerPage = 1;
+          var bestDist = Infinity;
+          for (var n = 1; n <= pdf.numPages; n++) {
+            var el = pageEls[n];
+            if (!el) continue;
+            var r = el.getBoundingClientRect();
+            var dist = Math.abs((r.top + r.bottom) / 2 - (stageRect.top + stageH / 2));
+            if (dist < bestDist) { bestDist = dist; centerPage = n; }
+          }
+
+          var half = Math.floor(MAX_RENDERED / 2);
+          var keepFrom = Math.max(1, centerPage - half);
+          var keepTo = Math.min(pdf.numPages, centerPage + half);
+
+          // unload pages outside the keep window
+          for (var u = 1; u <= pdf.numPages; u++) {
+            if (u < keepFrom || u > keepTo) unloadPage(u);
+          }
+
+          // render pages in the keep window that are within one screen of the viewport
+          for (var r2 = keepFrom; r2 <= keepTo; r2++) {
+            var el2 = pageEls[r2];
+            if (!el2 || el2.tagName === "CANVAS" || rendering.has(r2)) continue;
+            var rect = el2.getBoundingClientRect();
+            var inRange = rect.bottom >= stageRect.top - margin &&
+                          rect.top <= stageRect.bottom + margin;
+            if (inRange) renderPage(r2);
+          }
+        }
+
+        function onScroll() {
+          if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
+          scrollDebounceTimer = setTimeout(onScrollSettle, 200);
+        }
+
+        async function loadPageMetrics() {
+          for (var n = 2; n <= pdf.numPages; n += 1) {
+            if (!isOpen || token !== loadToken) return;
+            if (pageAspectRatios[n]) continue;
+            try {
+              var page = await pdf.getPage(n);
+              if (!isOpen || token !== loadToken) return;
+              var base = page.getViewport({ scale: 1 });
+              pageAspectRatios[n] = base.width / base.height;
+              var el = pageEls[n];
+              if (el && el.classList.contains("scroll-lightbox__pdf-placeholder")) {
+                mutatePagePreservingScroll(el, function () {
+                  el.style.aspectRatio = String(pageAspectRatios[n]);
+                });
+              }
+            } catch (metricErr) {
+              if (window.console && typeof window.console.warn === "function") {
+                window.console.warn("[pdf-lightbox] page metric failed:", n, metricErr);
+              }
+            }
+          }
+        }
+
+        stage.addEventListener("scroll", onScroll, { passive: true });
+
         // build placeholders for all pages upfront so the scroll height is correct
-        var placeholders = [];
         for (var i = 1; i <= pdf.numPages; i += 1) {
-          var ph = document.createElement("div");
-          ph.className = "scroll-lightbox__pdf-page scroll-lightbox__pdf-placeholder";
-          ph.dataset.pdfPageNumber = String(i);
-          ph.style.width = "100%";
-          ph.style.aspectRatio = String(firstBase.width / firstBase.height);
+          var ph = makePlaceholder(i);
           wrapper.appendChild(ph);
           pageEls[i] = ph;
-          placeholders.push(ph);
         }
+
+        pageObserver = {
+          disconnect: function () {
+            stage.removeEventListener("scroll", onScroll);
+            if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
+          }
+        };
 
         // render page 1 immediately
         await renderPage(1);
         if (!isOpen || token !== loadToken) return;
 
-        // observe remaining placeholders and render when they enter the viewport
-        var observer = new IntersectionObserver(
-          function (entries) {
-            entries.forEach(function (entry) {
-              if (!entry.isIntersecting) return;
-              var n = parseInt(entry.target.dataset.pdfPageNumber, 10);
-              if (!n) return;
-              observer.unobserve(entry.target);
-              renderPage(n);
-            });
-          },
-          { root: stage, rootMargin: "400px 0px", threshold: 0.01 }
-        );
-
-        pageObserver = observer;
-        for (var j = 1; j < placeholders.length; j += 1) {
-          observer.observe(placeholders[j]);
-        }
+        // trigger a settle to render pages visible on open
+        onScrollSettle();
+        loadPageMetrics();
 
       } catch (error) {
+        console.error("[pdf-lightbox] openFullPdf crashed:", error);
         if (token === loadToken) close();
       }
     }
 
-    async function openFullDocx(src) {
-      var token = open();
+    async function openFullDocx(src, meta) {
+      meta = meta || {};
+      meta.src = src;
+      var token = open(meta);
       content.innerHTML = '<p class="scroll-lightbox__loading">Loading DOCX...</p>';
       try {
         var wrapper = document.createElement("div");
@@ -418,17 +660,26 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
     document.addEventListener("click", function (event) {
       var img = event.target.closest("[data-zoom-src]");
       if (img) {
-        openImage(img.dataset.zoomSrc);
+        openImage(img.dataset.zoomSrc, {
+          title: img.dataset.lightboxTitle || "",
+          filename: img.dataset.lightboxFilename || "",
+        });
         return;
       }
       var fullPdf = event.target.closest("[data-open-full-pdf]");
       if (fullPdf) {
-        openFullPdf(fullPdf.dataset.openFullPdf);
+        openFullPdf(fullPdf.dataset.openFullPdf, {
+          title: fullPdf.dataset.lightboxTitle || "",
+          filename: fullPdf.dataset.lightboxFilename || "",
+        });
         return;
       }
       var fullDocx = event.target.closest("[data-open-full-docx]");
       if (fullDocx) {
-        openFullDocx(fullDocx.dataset.openFullDocx);
+        openFullDocx(fullDocx.dataset.openFullDocx, {
+          title: fullDocx.dataset.lightboxTitle || "",
+          filename: fullDocx.dataset.lightboxFilename || "",
+        });
       }
     });
   }

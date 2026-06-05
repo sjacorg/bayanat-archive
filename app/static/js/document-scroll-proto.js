@@ -38,6 +38,12 @@
     var rail = Array.from(document.querySelectorAll("[data-rail]"));
     var railScroller = document.querySelector(".scroll-page-rail");
     var counter = document.getElementById("page-counter");
+    var overviewLabel = counter && counter.dataset.overviewLabel
+      ? counter.dataset.overviewLabel
+      : "Overview";
+    var pageLabel = counter && counter.dataset.pageLabel
+      ? counter.dataset.pageLabel
+      : "Page";
     var total = pages.filter(function (p) {
       return p.dataset.page !== "0";
     }).length;
@@ -59,7 +65,7 @@
       current = n === "0" ? 0 : parseInt(n, 10);
       if (counter)
         counter.textContent =
-          n === "0" || n === 0 ? "Overview" : "Page " + n + " / " + total;
+          n === "0" || n === 0 ? overviewLabel : pageLabel + " " + n + " / " + total;
       rail.forEach(function (b) {
         var on = b.dataset.rail === String(n);
         b.classList.toggle("is-active", on);
@@ -69,7 +75,7 @@
       });
 
       var params = new URLSearchParams(window.location.search);
-      if (current === 0) {
+      if (current <= 1) {
         params.delete("page");
       } else {
         params.set("page", current);
@@ -112,7 +118,7 @@
     updateActivePage();
 
     var initialPage = parseInt(new URLSearchParams(window.location.search).get("page"), 10);
-    if (initialPage && initialPage > 0) {
+    if (initialPage && initialPage > 1) {
       setTimeout(function () { jump(initialPage); }, 120);
     }
 
