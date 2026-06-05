@@ -242,6 +242,7 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       if (pageObserver) { pageObserver.disconnect(); pageObserver = null; }
       overlay.classList.remove("is-open");
       unlockDocumentScroll();
+      content.querySelectorAll("canvas").forEach(function (c) { c.width = 0; c.height = 0; });
       content.innerHTML = "";
       media = null;
       activeZoomTarget = null;
@@ -278,8 +279,9 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         var firstPage = await pdf.getPage(1);
         if (!isOpen || token !== loadToken) return;
 
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        var target = Math.min(window.innerWidth * 1.55, 1600);
+        // cap dpr at 1.5 and canvas pixel width at 1200 to avoid OOM on low-RAM devices
+        var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        var target = Math.min(window.innerWidth * 1.2, 1200);
         var firstBase = firstPage.getViewport({ scale: 1 });
         var cssScale = target / firstBase.width;
         var firstDisplayViewport = firstPage.getViewport({ scale: cssScale });
@@ -295,9 +297,36 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
         var rendering = new Set();
         // live DOM node for each page number (placeholder or canvas)
         var pageEls = {};
+        // aspect ratio of page 1, used when re-creating placeholders
+        var pageAspectRatio = String(firstBase.width / firstBase.height);
+
+        var scrollDebounceTimer = null;
+        // keep at most this many rendered canvases in memory
+        var MAX_RENDERED = 6;
+
+        function makePlaceholder(n) {
+          var ph = document.createElement("div");
+          ph.className = "scroll-lightbox__pdf-page scroll-lightbox__pdf-placeholder";
+          ph.dataset.pdfPageNumber = String(n);
+          ph.style.width = "100%";
+          ph.style.aspectRatio = pageAspectRatio;
+          return ph;
+        }
+
+        function unloadPage(pageNumber) {
+          var el = pageEls[pageNumber];
+          if (!el || el.tagName !== "CANVAS") return;
+          var ph = makePlaceholder(pageNumber);
+          el.replaceWith(ph);
+          pageEls[pageNumber] = ph;
+          el.width = 0;
+          el.height = 0;
+        }
 
         async function renderPage(pageNumber) {
           if (rendering.has(pageNumber)) return;
+          var el = pageEls[pageNumber];
+          if (!el || el.tagName === "CANVAS") return;
           rendering.add(pageNumber);
           try {
             var page = await pdf.getPage(pageNumber);
@@ -311,54 +340,89 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
             canvas.style.height = "auto";
             canvas.className = "scroll-lightbox__pdf-page";
             canvas.setAttribute("aria-label", "PDF page " + pageNumber);
+            canvas.dataset.pdfPageNumber = String(pageNumber);
             pageEls[pageNumber].replaceWith(canvas);
             pageEls[pageNumber] = canvas;
             await page.render({
               canvasContext: canvas.getContext("2d", { alpha: false }),
               viewport: renderViewport,
             }).promise;
+          } catch (renderErr) {
+            console.error("[pdf-lightbox] renderPage " + pageNumber + " failed:", renderErr);
           } finally {
             rendering.delete(pageNumber);
           }
         }
 
+        // called after scroll stops — figures out which pages are near the viewport,
+        // renders them, and unloads everything outside the keep window
+        function onScrollSettle() {
+          if (!isOpen || token !== loadToken) return;
+          var stageRect = stage.getBoundingClientRect();
+          var stageH = stageRect.height;
+          var margin = stageH; // one screen above and below
+
+          // find the center page by scroll position to anchor the keep window
+          var centerPage = 1;
+          var bestDist = Infinity;
+          for (var n = 1; n <= pdf.numPages; n++) {
+            var el = pageEls[n];
+            if (!el) continue;
+            var r = el.getBoundingClientRect();
+            var dist = Math.abs((r.top + r.bottom) / 2 - (stageRect.top + stageH / 2));
+            if (dist < bestDist) { bestDist = dist; centerPage = n; }
+          }
+
+          var half = Math.floor(MAX_RENDERED / 2);
+          var keepFrom = Math.max(1, centerPage - half);
+          var keepTo = Math.min(pdf.numPages, centerPage + half);
+
+          // unload pages outside the keep window
+          for (var u = 1; u <= pdf.numPages; u++) {
+            if (u < keepFrom || u > keepTo) unloadPage(u);
+          }
+
+          // render pages in the keep window that are within one screen of the viewport
+          for (var r2 = keepFrom; r2 <= keepTo; r2++) {
+            var el2 = pageEls[r2];
+            if (!el2 || el2.tagName === "CANVAS" || rendering.has(r2)) continue;
+            var rect = el2.getBoundingClientRect();
+            var inRange = rect.bottom >= stageRect.top - margin &&
+                          rect.top <= stageRect.bottom + margin;
+            if (inRange) renderPage(r2);
+          }
+        }
+
+        function onScroll() {
+          if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
+          scrollDebounceTimer = setTimeout(onScrollSettle, 200);
+        }
+
+        stage.addEventListener("scroll", onScroll, { passive: true });
+
         // build placeholders for all pages upfront so the scroll height is correct
-        var placeholders = [];
         for (var i = 1; i <= pdf.numPages; i += 1) {
-          var ph = document.createElement("div");
-          ph.className = "scroll-lightbox__pdf-page scroll-lightbox__pdf-placeholder";
-          ph.dataset.pdfPageNumber = String(i);
-          ph.style.width = "100%";
-          ph.style.aspectRatio = String(firstBase.width / firstBase.height);
+          var ph = makePlaceholder(i);
           wrapper.appendChild(ph);
           pageEls[i] = ph;
-          placeholders.push(ph);
         }
+
+        pageObserver = {
+          disconnect: function () {
+            stage.removeEventListener("scroll", onScroll);
+            if (scrollDebounceTimer) clearTimeout(scrollDebounceTimer);
+          }
+        };
 
         // render page 1 immediately
         await renderPage(1);
         if (!isOpen || token !== loadToken) return;
 
-        // observe remaining placeholders and render when they enter the viewport
-        var observer = new IntersectionObserver(
-          function (entries) {
-            entries.forEach(function (entry) {
-              if (!entry.isIntersecting) return;
-              var n = parseInt(entry.target.dataset.pdfPageNumber, 10);
-              if (!n) return;
-              observer.unobserve(entry.target);
-              renderPage(n);
-            });
-          },
-          { root: stage, rootMargin: "400px 0px", threshold: 0.01 }
-        );
-
-        pageObserver = observer;
-        for (var j = 1; j < placeholders.length; j += 1) {
-          observer.observe(placeholders[j]);
-        }
+        // trigger a settle to render pages visible on open
+        onScrollSettle();
 
       } catch (error) {
+        console.error("[pdf-lightbox] openFullPdf crashed:", error);
         if (token === loadToken) close();
       }
     }
