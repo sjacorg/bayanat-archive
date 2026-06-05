@@ -6,7 +6,7 @@
 <div
     x-show="{% if timeline_panel_always_open | default(false) %}true{% else %}timePanelOpen{% endif %}"
     {% if not (timeline_panel_always_open | default(false)) %}x-cloak{% endif %}
-    class="relative left-1/2 right-1/2 mb-6 w-screen -translate-x-1/2 {% if not (timeline_panel_transparent | default(false)) %}bg-gray-200/60{% endif %}"
+    class="full-bleed relative mb-6 {% if not (timeline_panel_transparent | default(false)) %}bg-gray-200/60{% endif %}"
 >
     <div class="mx-auto w-full max-w-[1500px] pb-5 pt-4">
         <div class="pt-4">
