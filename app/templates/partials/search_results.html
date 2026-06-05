@@ -434,7 +434,9 @@
             aria-label="Previous page"
         >‹</button>
 
+        {% set window = 2 %}
         {% for p in range(1, total_pages + 1) %}
+        {% if p == 1 or p == total_pages or (p >= page - window and p <= page + window) %}
         <button
             class="join-item btn btn-sm {% if p == page %}btn-primary{% else %}btn-ghost{% endif %}"
             {% if total_pages > 1 and p != page %}
@@ -449,6 +451,9 @@
             aria-disabled="{{ 'true' if p == page else 'false' }}"
             aria-current="{{ 'page' if p == page else 'false' }}"
         >{{ p }}</button>
+        {% elif p == page - window - 1 or p == page + window + 1 %}
+        <span class="join-item btn btn-sm btn-ghost btn-disabled pointer-events-none" aria-hidden="true">…</span>
+        {% endif %}
         {% endfor %}
 
         <button
