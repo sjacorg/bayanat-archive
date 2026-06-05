@@ -3,6 +3,12 @@
 {% block title %}{{ t("about.title") }}{% endblock %}
 {% block description %}{{ t("about.description") }}{% endblock %}
 
+{% block page_feedback %}
+<div class="bg-base-100">
+    {% include "partials/feedback_widget.html" %}
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="full-bleed -mt-8 sm:-mt-10 lg:-mt-14">
     <section class="bg-[#EFF0F2]">
