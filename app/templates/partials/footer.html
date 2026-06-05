@@ -1,6 +1,6 @@
 {# Shared nav markup used by mobile and desktop variants. #}
 {% macro footer_nav(list_class) %}
-<nav aria-label="Footer navigation">
+<nav aria-label="{{ t('footer.navigation') }}">
     <ul class="{{ list_class }}">
         {% for link in nav_links %}
         <li>
@@ -14,7 +14,7 @@
 {# Left brand block ("Powered by"). #}
 {% macro powered_by() %}
 <section class="space-y-2">
-    <p class="text-sm font-light leading-none text-primary-content/80">Powered by</p>
+    <p class="text-sm font-light leading-none text-primary-content/80">{{ t("footer.powered_by") }}</p>
     <a
         href="https://bayanat.org/"
         target="_blank"
@@ -30,8 +30,8 @@
 
 {# Right attribution block ("A project by"). #}
 {% macro project_by() %}
-<section class="space-y-2 text-right">
-    <p class="text-sm font-light leading-none text-primary-content/80">A project by</p>
+<section class="space-y-2 text-end">
+    <p class="text-sm font-light leading-none text-primary-content/80">{{ t("footer.project_by") }}</p>
     <a
         href="https://syriaaccountability.org/"
         target="_blank"
@@ -77,7 +77,7 @@
         <div class="mt-6 border-t border-primary-content/20 pt-4">
             <div class="flex flex-row items-center justify-between gap-2 text-xs text-primary-content">
                 <p>
-                    &copy; {{ current_year }} Syria Justice &amp; Accountability Centre. All rights reserved.
+                    &copy; {{ current_year }} {{ t("footer.copyright") }}
                 </p>
                 <a
                     href="https://syriaaccountability.org/tos/#privacy"
@@ -85,7 +85,7 @@
                     rel="noopener noreferrer"
                     hx-boost="false"
                     class="whitespace-nowrap"
-                >Privacy Policy</a>
+                >{{ t("footer.privacy") }}</a>
             </div>
         </div>
     </div>

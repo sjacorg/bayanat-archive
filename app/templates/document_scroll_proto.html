@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{{ document.title }} | Bayanat Document Archive{% endblock %}
+{% block title %}{{ document.title }} | {{ t("site.name") }}{% endblock %}
 
 {% block page_header %}{% endblock %}
 {% block page_footer %}{% endblock %}
@@ -31,11 +31,11 @@
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" class="h-5 w-5">
                 <path d="M15 18l-6-6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
             </svg>
-            <span>Back to Search</span>
+            <span>{{ t("document.back_to_search") }}</span>
         </a>
         <p dir="auto" class="min-w-0 flex-1 truncate text-center text-sm text-base-content/70" title="{{ document.title }}">{{ document.title }}</p>
         <div class="flex flex-none items-center gap-3">
-            <span id="page-counter" role="status" aria-live="polite" class="rounded-none bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary-content">Overview</span>
+            <span id="page-counter" role="status" aria-live="polite" class="rounded-none bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-[0.1em] text-primary-content">{{ t("document.overview") }}</span>
         </div>
     </div>
 </header>
@@ -44,22 +44,22 @@
 
     {# ── Page rail (desktop) ──────────────────────────────────── #}
     {% if pages %}
-    <nav aria-label="Document pages" class="hidden md:block">
-        <div class="scroll-page-rail sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col gap-2 overflow-y-auto overscroll-contain pr-1">
-            <p class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-base-content/40">Pages</p>
+    <nav aria-label="{{ t('document.pages') }}" class="hidden md:block">
+        <div class="scroll-page-rail sticky top-20 flex max-h-[calc(100vh-6rem)] flex-col gap-2 overflow-y-auto overscroll-contain pe-1">
+            <p class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-base-content/40">{{ t("document.pages") }}</p>
             <button
                 type="button"
                 data-rail="0"
-                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-left"
+                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-start"
             >
-                <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">ENTRY</span>
-                <span class="text-xs font-medium text-base-content/60 group-hover:text-primary">Entry</span>
+                <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">{{ t("media.entry") | upper }}</span>
+                <span class="text-xs font-medium text-base-content/60 group-hover:text-primary">{{ t("media.entry") }}</span>
             </button>
             {% for p in pages %}
             <button
                 type="button"
                 data-rail="{{ p.n }}"
-                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-left"
+                class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-start"
             >
                 <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">
                     {% if p.kind == 'image' %}
@@ -79,44 +79,44 @@
     <div id="reading" class="min-w-0" style="--page-width:880px">
         {# Record overview sheet #}
         <article data-page="0" id="page-0" class="card-archive mx-auto mb-8 w-full scroll-mt-20 p-7 md:p-10" style="max-width:var(--page-width,880px)">
-            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-secondary">Record</p>
+            <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-secondary">{{ t("document.record") }}</p>
             <h1 dir="auto" class="title-serif mt-2 text-2xl font-semibold leading-tight text-base-content md:text-4xl">{{ document.title }}</h1>
             {% if document.title_ar and document.title_ar != document.title %}
             <p dir="auto" class="mt-1 text-lg text-base-content/55">{{ document.title_ar }}</p>
             {% endif %}
 
             {% if document.public_description %}
-            <section class="mt-6 border-l-4 border-secondary bg-base-200/40 px-4 py-4">
-                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-secondary">SJAC Context</p>
+            <section class="mt-6 border-s-4 border-secondary bg-base-200/40 px-4 py-4">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-secondary">{{ t("catalog.sjac_context") }}</p>
                 <div class="mt-2 leading-7 text-base-content/80">{{ document.public_description | bidirectional_text }}</div>
             </section>
             {% endif %}
 
             {% if document.description %}
             <section class="mt-6">
-                <h2 class="title-serif text-lg font-semibold text-base-content">Description</h2>
+                <h2 class="title-serif text-lg font-semibold text-base-content">{{ t("catalog.description") }}</h2>
                 <div class="mt-2 leading-7 text-base-content/75">{{ document.description | bidirectional_text }}</div>
             </section>
             {% endif %}
 
             <dl class="mt-7 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[color:var(--color-paper-border)] pt-6 text-sm">
                 <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">Reference</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("document.reference") }}</dt>
                     <dd class="mt-1 text-base-content/80">{{ document.id }}</dd>
                 </div>
                 <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">Published</dt>
-                    <dd class="mt-1 text-base-content/80">{{ document.publish_date[:10] if document.publish_date else 'N/A' }}</dd>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("document.published") }}</dt>
+                    <dd class="mt-1 text-base-content/80">{{ document.publish_date[:10] if document.publish_date else t("catalog.na") }}</dd>
                 </div>
                 {% if document_labels %}
                 <div class="col-span-2">
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">Labels</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("catalog.labels") }}</dt>
                     <dd class="mt-1 text-base-content/80">{{ document_labels | join(', ') }}</dd>
                 </div>
                 {% endif %}
                 {% if document_locations %}
                 <div class="col-span-2">
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">Locations</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("catalog.locations") }}</dt>
                     <dd class="mt-1 text-base-content/80">{{ document_locations | join('; ') }}</dd>
                 </div>
                 {% endif %}
@@ -125,21 +125,21 @@
 
         {# Stacked page sheets — scroll naturally through them #}
         {% if not pages %}
-        <p class="catalog-placeholder flex min-h-40 items-center justify-center text-sm uppercase tracking-[0.18em] text-base-content/40">Catalog entry — no attached files</p>
+        <p class="catalog-placeholder flex min-h-40 items-center justify-center text-sm uppercase tracking-[0.18em] text-base-content/40">{{ t("document.catalog_no_files") }}</p>
         {% endif %}
 
         {% for p in pages %}
         {% set item = p.item %}
         <section data-page="{{ p.n }}" id="page-{{ p.n }}" class="mx-auto mb-8 w-full scroll-mt-20" style="max-width:var(--page-width,880px)">
             <div class="mb-2 flex items-baseline justify-between">
-                <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/45">Page {{ p.n }} / {{ pages | length }}</span>
+                <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/45">{{ t("document.page_count", page=p.n, total=pages | length) }}</span>
                 {% if item.title %}<span dir="auto" class="truncate text-xs text-base-content/45">{{ item.title }}</span>{% endif %}
             </div>
 
             <div class="card-archive scroll-page-card scroll-page-card--{{ p.kind }} overflow-hidden">
                 {% if p.kind == 'image' %}
                 <div class="cursor-zoom-in" data-zoom-src="{{ url_for('static', filename='media/' ~ item.filename) }}">
-                    <img src="{{ url_for('static', filename='media/' ~ item.filename) }}" alt="{{ item.title or 'Page ' ~ p.n }}" loading="lazy" class="h-auto w-full object-contain pointer-events-none">
+                    <img src="{{ url_for('static', filename='media/' ~ item.filename) }}" alt="{{ item.title or t('document.page') ~ ' ' ~ p.n }}" loading="lazy" class="h-auto w-full object-contain pointer-events-none">
                 </div>
                 {% elif p.kind == 'pdf' %}
                 <div
@@ -149,7 +149,7 @@
                     data-open-full-pdf="{{ url_for('static', filename='media/' ~ item.filename) }}"
                     style="min-height: 56vh"
                 >
-                    <div class="flex h-full min-h-[56vh] items-center justify-center text-sm text-base-content/40">Loading PDF preview…</div>
+                    <div class="flex h-full min-h-[56vh] items-center justify-center text-sm text-base-content/40">{{ t("document.loading_pdf") }}</div>
                 </div>
                 {% elif p.kind == 'docx' %}
                 <div
@@ -159,7 +159,7 @@
                     data-open-full-docx="{{ url_for('static', filename='media/' ~ item.filename) }}"
                     style="min-height: 46vh"
                 >
-                    <div class="flex h-full min-h-[46vh] items-center justify-center text-sm text-base-content/40">Loading DOCX preview…</div>
+                    <div class="flex h-full min-h-[46vh] items-center justify-center text-sm text-base-content/40">{{ t("document.loading_docx") }}</div>
                 </div>
                 {% elif p.kind == 'video' %}
                 <video controls preload="metadata" class="block max-h-[80vh] w-full bg-black">
@@ -173,15 +173,15 @@
                 </div>
                 {% else %}
                 <div class="flex flex-col items-center justify-center gap-3 p-10 text-center">
-                    <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/45">{{ item.media_type or 'File' }}</span>
-                    <a href="{{ url_for('static', filename='media/' ~ item.filename) }}" download class="border border-primary bg-primary px-4 py-1.5 text-sm font-semibold text-primary-content no-underline transition-colors hover:bg-secondary">Download file</a>
+                    <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/45">{{ item.media_type or t("document.file") }}</span>
+                    <a href="{{ url_for('static', filename='media/' ~ item.filename) }}" download class="border border-primary bg-primary px-4 py-1.5 text-sm font-semibold text-primary-content no-underline transition-colors hover:bg-secondary">{{ t("document.download_file") }}</a>
                 </div>
                 {% endif %}
             </div>
 
             {% if item.original_text or item.ocr_text %}
             <details class="card-archive mt-2 px-5 py-3">
-                <summary class="cursor-pointer text-xs font-semibold uppercase tracking-[0.12em] text-base-content/55">Extracted text</summary>
+                <summary class="cursor-pointer text-xs font-semibold uppercase tracking-[0.12em] text-base-content/55">{{ t("document.extracted_text") }}</summary>
                 <div class="mt-3 text-sm leading-7 text-base-content/75">{{ (item.original_text or item.ocr_text) | bidirectional_text }}</div>
             </details>
             {% endif %}

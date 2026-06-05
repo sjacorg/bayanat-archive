@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}Page Not Found — Bayanat Document Archive{% endblock %}
+{% block title %}{{ t("not_found.meta_title") }}{% endblock %}
 
-{% block og_title %}Page Not Found — Bayanat Document Archive{% endblock %}
+{% block og_title %}{{ t("not_found.meta_title") }}{% endblock %}
 
 {% block main_container_class %}mx-auto w-full max-w-[1200px] px-4 sm:px-6 lg:px-10{% endblock %}
 
@@ -25,12 +25,12 @@
     <section class="flex min-h-[calc(100svh-16rem)] items-center justify-center py-10 text-center sm:min-h-[calc(100svh-12rem)] sm:py-12 lg:min-h-[calc(100svh-13rem)] lg:py-16">
         <div class="mx-auto max-w-md">
             <p class="select-none text-[5.5rem] font-light leading-none text-secondary/40 sm:text-[7rem] lg:text-[8rem]">404</p>
-            <h1 class="mt-2 text-xl font-semibold tracking-tight text-secondary sm:text-2xl">Page Not Found</h1>
+            <h1 class="mt-2 text-xl font-semibold tracking-tight text-secondary sm:text-2xl">{{ t("not_found.title") }}</h1>
             <p class="mx-auto mt-5 max-w-sm text-sm leading-snug text-base-content sm:text-base">
-                The page you're looking for doesn't exist. Continue your search below in the archives.
+                {{ t("not_found.body") }}
             </p>
             <a href="{{ url_for('search.index') }}" class="btn btn-outline btn-primary btn-sm mt-5">
-                Browse the Archive
+                {{ t("not_found.browse") }}
             </a>
         </div>
     </section>
@@ -42,7 +42,7 @@
     >
         <div class="mx-auto w-full max-w-[1200px] px-4 pb-20 pt-7 sm:px-6 sm:pb-10 sm:pt-8 lg:px-10">
             <div class="grid gap-4 border-b border-gray-300/70 pb-7 sm:grid-cols-[9rem_1fr] sm:items-center lg:gap-10">
-                <h2 class="hidden text-xl font-semibold tracking-tight text-primary sm:block">Search</h2>
+                <h2 class="hidden text-xl font-semibold tracking-tight text-primary sm:block">{{ t("nav.search") }}</h2>
                 <label for="not-found-q-input" class="input h-[44px] w-full border-base-300 bg-base-100 md:h-[54px]">
                     <svg class="size-5 m-1 opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
                         <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
@@ -55,8 +55,8 @@
                         id="not-found-q-input"
                         type="search"
                         name="q"
-                        aria-label="Search for a document"
-                        placeholder="Search for a document"
+                        aria-label="{{ t('search.input_label') }}"
+                        placeholder="{{ t('search.input_placeholder') }}"
                         autocomplete="off"
                         class="text-base"
                         autofocus
@@ -66,6 +66,7 @@
 
             <input type="hidden" name="date_from" :value="yearStart > minYear ? `${yearStart}-01-01` : ''">
             <input type="hidden" name="date_to" :value="yearEnd < maxYear ? `${yearEnd}-12-31` : ''">
+            <input type="hidden" name="lang" value="{{ lang }}">
 
             {% with timeline_panel_always_open=true, timeline_panel_transparent=true %}
                 {% include "partials/search_timeline_panel.html" %}
@@ -73,7 +74,7 @@
 
             <div class="flex justify-end pt-1">
                 <button type="submit" class="btn btn-secondary min-h-12 px-6 text-white">
-                    Search Document
+                    {{ t("not_found.search_document") }}
                 </button>
             </div>
         </div>

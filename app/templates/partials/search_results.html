@@ -21,43 +21,43 @@
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M15.8333 10.2917H3.16667C2.73125 10.2917 2.375 10.6479 2.375 11.0833V15.8333C2.375 16.2688 2.73125 16.625 3.16667 16.625H15.8333C16.2688 16.625 16.625 16.2688 16.625 15.8333V11.0833C16.625 10.6479 16.2688 10.2917 15.8333 10.2917ZM5.54167 15.0417C4.67083 15.0417 3.95833 14.3292 3.95833 13.4583C3.95833 12.5875 4.67083 11.875 5.54167 11.875C6.4125 11.875 7.125 12.5875 7.125 13.4583C7.125 14.3292 6.4125 15.0417 5.54167 15.0417ZM15.8333 2.375H3.16667C2.73125 2.375 2.375 2.73125 2.375 3.16667V7.91667C2.375 8.35208 2.73125 8.70833 3.16667 8.70833H15.8333C16.2688 8.70833 16.625 8.35208 16.625 7.91667V3.16667C16.625 2.73125 16.2688 2.375 15.8333 2.375ZM5.54167 7.125C4.67083 7.125 3.95833 6.4125 3.95833 5.54167C3.95833 4.67083 4.67083 3.95833 5.54167 3.95833C6.4125 3.95833 7.125 4.67083 7.125 5.54167C7.125 6.4125 6.4125 7.125 5.54167 7.125Z" fill="white"/>
     </svg>
-    Entry
+    {{ t("media.entry") }}
     {% elif media_type == "mixed" %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M5.54175 3.16675H15.0417C15.9126 3.16675 16.6251 3.87925 16.6251 4.75008V12.6667H15.0417V4.75008H5.54175V3.16675ZM3.95841 6.33341H13.4584C14.3292 6.33341 15.0417 7.04591 15.0417 7.91675V14.2501C15.0417 15.1209 14.3292 15.8334 13.4584 15.8334H3.95841C3.08758 15.8334 2.37508 15.1209 2.37508 14.2501V7.91675C2.37508 7.04591 3.08758 6.33341 3.95841 6.33341ZM3.95841 7.91675V14.2501H13.4584V7.91675H3.95841ZM5.54175 9.50008H11.8751V11.0834H5.54175V9.50008ZM5.54175 11.8751H9.50008V13.4584H5.54175V11.8751Z" fill="white"/>
     </svg>
-    Collection ({{ media_count }} files)
+    {{ t("media.collection", count=media_count) }}
     {% elif is_pdf %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="white"/>
     </svg>
-    {% if media_count > 1 %}{{ media_count }} PDFs{% else %}PDF{% endif %}
+    {% if media_count > 1 %}{{ t("media.pdfs", count=media_count) }}{% else %}{{ t("media.pdf") }}{% endif %}
     {% elif is_image %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M16.625 15.0417V3.95833C16.625 3.0875 15.9125 2.375 15.0417 2.375H3.95833C3.0875 2.375 2.375 3.0875 2.375 3.95833V15.0417C2.375 15.9125 3.0875 16.625 3.95833 16.625H15.0417C15.9125 16.625 16.625 15.9125 16.625 15.0417ZM6.72917 10.6875L8.70833 13.0704L11.4792 9.5L15.0417 14.25H3.95833L6.72917 10.6875Z" fill="white"/>
     </svg>
-    {% if media_count > 1 %}{{ media_count }} Images{% else %}Image{% endif %}
+    {% if media_count > 1 %}{{ t("media.images", count=media_count) }}{% else %}{{ t("media.image") }}{% endif %}
     {% elif is_video %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M9.49992 1.5835C5.12992 1.5835 1.58325 5.13016 1.58325 9.50016C1.58325 13.8702 5.12992 17.4168 9.49992 17.4168C13.8699 17.4168 17.4166 13.8702 17.4166 9.50016C17.4166 5.13016 13.8699 1.5835 9.49992 1.5835ZM7.91658 13.0627V5.93766L12.6666 9.50016L7.91658 13.0627Z" fill="white"/>
     </svg>
-    {% if media_count > 1 %}{{ media_count }} Videos{% else %}Video{% endif %}
+    {% if media_count > 1 %}{{ t("media.videos", count=media_count) }}{% else %}{{ t("media.video") }}{% endif %}
     {% elif is_audio %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M9.5 0.791504C5.56542 0.791504 2.375 3.98192 2.375 7.9165V13.4582C2.375 14.7723 3.43583 15.8332 4.75 15.8332H7.125V9.49984H3.95833V7.9165C3.95833 4.85275 6.43625 2.37484 9.5 2.37484C12.5638 2.37484 15.0417 4.85275 15.0417 7.9165V9.49984H11.875V15.8332H14.25C15.5642 15.8332 16.625 14.7723 16.625 13.4582V7.9165C16.625 3.98192 13.4346 0.791504 9.5 0.791504Z" fill="white"/>
     </svg>
-    {% if media_count > 1 %}{{ media_count }} Audios{% else %}Audio{% endif %}
+    {% if media_count > 1 %}{{ t("media.audios", count=media_count) }}{% else %}{{ t("media.audio") }}{% endif %}
     {% elif is_docx %}
     <svg class="size-3.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <title>file-word-outline</title>
         <path fill="currentColor" d="M14 2H6C4.89 2 4 2.9 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2M18 20H6V4H13V9H18V20M17.35 10L15.25 19H13.85L12.05 12.21L10.25 19H8.85L6.65 10H8.15L9.55 16.81L11.35 10H12.65L14.45 16.81L15.85 10H17.35Z"/>
     </svg>
-    {% if media_count > 1 %}{{ media_count }} DOCX Files{% else %}DOCX{% endif %}
+    {% if media_count > 1 %}{{ t("media.docx_files", count=media_count) }}{% else %}{{ t("media.docx") }}{% endif %}
     {% else %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
         <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="white"/>
     </svg>
-    {% if media_count > 1 %}{{ media_count }} Documents{% else %}Document{% endif %}
+    {% if media_count > 1 %}{{ t("media.documents", count=media_count) }}{% else %}{{ t("media.document") }}{% endif %}
     {% endif %}
 </span>
 {% endmacro %}
@@ -138,7 +138,7 @@
         <title>catalog entry</title>
         <path fill="currentColor" d="M14 2H6C4.89 2 4 2.9 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V8L14 2M18 20H6V4H13V9H18V20M8 12H16V14H8V12M8 16H13V18H8V16Z"/>
     </svg>
-    <span class="text-[11px] font-medium uppercase tracking-[0.18em] text-base-content/35">Catalog Entry</span>
+    <span class="text-[11px] font-medium uppercase tracking-[0.18em] text-base-content/35">{{ t("media.catalog_entry") }}</span>
 </div>
 {% else %}
 <div class="flex h-full w-full items-center justify-center bg-base-300/80">
@@ -153,9 +153,9 @@
 {% set search_back_url = request.full_path if request.query_string else request.path %}
 
 <p id="result-count" hx-swap-oob="innerHTML" class="title-serif pt-2 text-4xl font-semibold text-base-content lg:pt-1">
-    {% if total == 0 %}0 results
-    {% elif total == 1 %}1 result
-    {% else %}{{ total }} results{% endif %}
+    {% if total == 0 %}{{ t("search.results_zero") }}
+    {% elif total == 1 %}{{ t("search.results_one") }}
+    {% else %}{{ t("search.results_many", total=total) }}{% endif %}
 </p>
 
 <div id="active-filters" hx-swap-oob="innerHTML">
@@ -163,12 +163,12 @@
     <div class="flex justify-between gap-4 md:justify-start">
         <div class="flex flex-wrap items-center gap-2">
             {% for f in active_filters %}
-            <span class="badge h-fit gap-1 rounded-none bg-secondary py-1 pr-2 text-sm text-white">
+            <span class="badge h-fit gap-1 rounded-none bg-secondary py-1 pe-2 text-sm text-white">
                 {{ f.label }}
                 <button
                     type="button"
-                    aria-label="Remove {{ f.label }} filter"
-                    class="ml-0.5 transition-colors hover:text-error"
+                    aria-label="{{ t('search.remove_filter', label=f.label) }}"
+                    class="ms-0.5 transition-colors hover:text-error"
                     hx-get="{{ f.remove_url }}"
                     hx-target="#results"
                     hx-push-url="true"
@@ -192,7 +192,7 @@
             <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M15.0418 5.07426L13.9256 3.95801L9.50016 8.38342L5.07475 3.95801L3.9585 5.07426L8.38391 9.49967L3.9585 13.9251L5.07475 15.0413L9.50016 10.6159L13.9256 15.0413L15.0418 13.9251L10.6164 9.49967L15.0418 5.07426Z" fill="currentColor"/>
             </svg>
-            Clear
+            {{ t("search.clear") }}
         </button>
     </div>
     {% endif %}
@@ -213,9 +213,9 @@
                     :aria-expanded="open === 'sort'"
                 >
                     <span>
-                        {% if sort == "date_desc" %}Date (newest)
-                        {% elif sort == "date_asc" %}Date (oldest)
-                        {% else %}Relevance{% endif %}
+                        {% if sort == "date_desc" %}{{ t("search.sort_date_desc") }}
+                        {% elif sort == "date_asc" %}{{ t("search.sort_date_asc") }}
+                        {% else %}{{ t("search.sort_relevance") }}{% endif %}
                     </span>
                     <svg class="h-3 w-3 shrink-0 text-primary-content transition-transform duration-150" :class="{ 'rotate-180': open === 'sort' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M2 4l4 4 4-4"/>
@@ -228,10 +228,10 @@
                     x-transition:enter="transition ease-out duration-100"
                     x-transition:enter-start="opacity-0 -translate-y-0.5"
                     x-transition:enter-end="opacity-100 translate-y-0"
-                    class="absolute right-0 top-[120%] z-30 min-w-40 border border-gray-200 bg-base-100 py-1 shadow-ambient w-full"
+                    class="absolute end-0 top-[120%] z-30 min-w-40 border border-gray-200 bg-base-100 py-1 shadow-ambient w-full"
                     role="listbox"
                 >
-                    {% for value, label in [("date_desc", "Date (newest)"), ("date_asc", "Date (oldest)"), ("relevance", "Relevance")] %}
+                    {% for value, label in [("date_desc", t("search.sort_date_desc")), ("date_asc", t("search.sort_date_asc")), ("relevance", t("search.sort_relevance"))] %}
                     {% if value != "relevance" or q %}
                     <button
                         type="button"
@@ -264,11 +264,11 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <span class="text-sm font-semibold uppercase tracking-[0.1em] text-base-content/70">Display in</span>
-            <div class="flex border border-base-300" role="group" aria-label="View as">
+            <span class="text-sm font-semibold uppercase tracking-[0.1em] text-base-content/70">{{ t("search.display_in") }}</span>
+            <div class="flex border border-base-300" role="group" aria-label="{{ t('search.view_as') }}">
                 <button
                     type="button"
-                    aria-label="Grid view"
+                    aria-label="{{ t('search.grid_view') }}"
                     :aria-pressed="view === 'grid' ? 'true' : 'false'"
                     :class="view === 'grid' ? 'bg-primary text-primary-content' : 'text-base-content/40 hover:bg-base-200 hover:text-base-content'"
                     class="p-2 transition-colors"
@@ -289,10 +289,10 @@
                 </button>
                 <button
                     type="button"
-                    aria-label="List view"
+                    aria-label="{{ t('search.list_view') }}"
                     :aria-pressed="view === 'list' ? 'true' : 'false'"
                     :class="view === 'list' ? 'bg-primary text-primary-content' : 'text-base-content/40 hover:bg-base-200 hover:text-base-content'"
-                    class="border-l border-base-content/15 p-2 transition-colors"
+                    class="border-s border-base-content/15 p-2 transition-colors"
                     @click="view = 'list'"
                     hx-get="/search"
                     hx-include=".search-param"
@@ -318,9 +318,11 @@
         <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
         <rect x="9" y="3" width="6" height="4" rx="1"/>
     </svg>
-    <p class="text-base text-base-content/45">No documents found{% if q %} for "{{ q }}"{% endif %}.</p>
+    <p class="text-base text-base-content/45">
+        {% if q %}{{ t("search.no_documents_for", query=q) }}{% else %}{{ t("search.no_documents") }}{% endif %}
+    </p>
     {% if active_filters %}
-    <p class="mt-1 text-sm text-base-content/30">Try removing some filters.</p>
+    <p class="mt-1 text-sm text-base-content/30">{{ t("search.try_removing_filters") }}</p>
     {% endif %}
 </div>
 {% elif view != "list" %}
@@ -330,7 +332,7 @@
         <article>
             <div class="relative h-[224px] w-full overflow-hidden bg-base-200/70">
                 {{ thumbnail_media(doc, "h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]", "h-12 w-12") }}
-                <div class="absolute bottom-3 left-3">
+                <div class="absolute bottom-3 start-3">
                     {{ card_badge(doc.id) }}
                 </div>
             </div>
@@ -353,7 +355,7 @@
                     {% elif doc.description %}
                         {{ doc.description | bidirectional_text }}
                     {% else %}
-                        <span class="italic text-base-content/35">No summary available.</span>
+                        <span class="italic text-base-content/35">{{ t("search.no_summary") }}</span>
                     {% endif %}
                 </div>
                 {% if doc.publish_date %}
@@ -376,7 +378,7 @@
         <article class="flex cursor-pointer gap-4">
             <div class="relative h-[110px] w-[138px] shrink-0 overflow-hidden bg-base-200/70 md:h-[225px] md:w-[378px]">
                 {{ thumbnail_media(doc, "h-full w-full object-cover", "h-10 w-10") }}
-                <div class="absolute bottom-2 left-2">
+                <div class="absolute bottom-2 start-2">
                     {{ card_badge(doc.id) }}
                 </div>
             </div>
@@ -400,7 +402,7 @@
                         {% elif doc.description %}
                             {{ doc.description | bidirectional_text }}
                         {% else %}
-                            <span class="italic text-base-content/35">No summary available.</span>
+                            <span class="italic text-base-content/35">{{ t("search.no_summary") }}</span>
                         {% endif %}
                     </div>
                     {% if doc.publish_date %}
@@ -419,7 +421,7 @@
 </div>
 {% endif %}
 
-<nav class="mb-[40px] mt-[80px] flex justify-center" aria-label="Pagination">
+<nav class="mb-[40px] mt-[80px] flex justify-center" aria-label="{{ t('search.pagination') }}">
     <div class="join border border-gray-200">
         <button
             class="join-item btn btn-sm btn-ghost {% if page <= 1 %}btn-disabled{% endif %}"
@@ -431,7 +433,7 @@
             hx-push-url="true"
             hx-indicator="#loading"
             {% endif %}
-            aria-label="Previous page"
+            aria-label="{{ t('search.previous_page') }}"
         >‹</button>
 
         {% set window = 2 %}
@@ -447,7 +449,7 @@
             hx-push-url="true"
             hx-indicator="#loading"
             {% endif %}
-            aria-label="Page {{ p }}"
+            aria-label="{{ t('search.page', page=p) }}"
             aria-disabled="{{ 'true' if p == page else 'false' }}"
             aria-current="{{ 'page' if p == page else 'false' }}"
         >{{ p }}</button>
@@ -466,7 +468,7 @@
             hx-push-url="true"
             hx-indicator="#loading"
             {% endif %}
-            aria-label="Next page"
+            aria-label="{{ t('search.next_page') }}"
         >›</button>
     </div>
 </nav>

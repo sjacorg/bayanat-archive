@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}About Us - Bayanat Document Archive{% endblock %}
-{% block description %}About the Bayanat Document Archive, SJAC programs, methodology, and how to navigate the archive.{% endblock %}
+{% block title %}{{ t("about.title") }}{% endblock %}
+{% block description %}{{ t("about.description") }}{% endblock %}
 
 {% block content %}
 <div class="relative left-1/2 right-1/2 w-screen -translate-x-1/2 -mt-8 sm:-mt-10 lg:-mt-14">
@@ -10,7 +10,7 @@
             <div class="max-w-[600px]">
                 <div class="mb-7 flex flex-wrap items-center gap-3 sm:mb-9 sm:gap-4">
                     <span class="inline-flex items-center bg-[#E9F3EF] px-3 py-2 text-[11px] font-medium tracking-wide">
-                        A project by
+                        {{ t("about.badge") }}
                     </span>
                     <a href="https://syriaaccountability.org/" target="_blank" rel="noopener noreferrer" hx-boost="false">
                         <img src="{{ url_for('static', filename='assets/sjac-logo-dt.svg') }}" alt="Syria Justice and Accountability Centre logo" class="h-7 w-auto sm:h-10">
@@ -18,11 +18,11 @@
                 </div>
 
                 <h1 class="text-[40px] font-light leading-[1.02] tracking-tight text-primary">
-                    An Archive Beyond Commercial Solutions
+                    {{ t("about.hero_title") }}
                 </h1>
 
                 <p class="mt-7 max-w-[700px] text-base font-light leading-[1.72] sm:mt-8">
-                    Bayanat Document Archive is designed as an open platform to support accountability by preserving and organizing records. It addresses the lack of purpose-built tools for human rights documentation, offering secure workflows and relationship modeling that general databases and costly commercial systems fail to provide.
+                    {{ t("about.hero_body") }}
                 </p>
             </div>
         </div>
@@ -32,16 +32,16 @@
         <div class="mx-auto w-full max-w-[1500px] px-4 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-14">
             <div class="grid gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)] lg:items-start">
                 <div class="max-w-[600px]">
-                    <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">Syria Justice &amp; Accountability Centre</h2>
+                    <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">{{ t("about.sjac_title") }}</h2>
 
                     <p class="mt-6 text-base font-light leading-[1.62]">
-                        SJAC is a Syrian-led human rights organization working for meaningful justice and accountability that holds perpetrators accountable and addresses grievances, leading to lasting peace.
+                        {{ t("about.sjac_body_1") }}
                     </p>
                     <p class="mt-4 text-base font-light leading-[1.62]">
-                        The organization collects documentation from multiple sources, secures them in a database, catalogs according to human rights standards, and analyzes using legal expertise combined with big data methodologies.
+                        {{ t("about.sjac_body_2") }}
                     </p>
                     <p class="mt-4 text-base font-light leading-[1.62]">
-                        Since 2012, SJAC has collected and preserved millions of documents, testimonies, and pieces of evidence, supporting investigations, case building, missing persons tracking, and trial monitoring.
+                        {{ t("about.sjac_body_3") }}
                     </p>
 
                     <a
@@ -51,19 +51,19 @@
                         hx-boost="false"
                         class="btn mt-7 border-none bg-primary px-6 py-3 text-sm font-medium text-primary-content shadow-[0_4px_8px_rgba(0,0,0,0.16)] transition hover:bg-primary/95"
                     >
-                        Learn More About SJAC
+                        {{ t("about.learn_more") }}
                     </a>
                 </div>
 
                 <aside class="border border-gray-300/85 bg-base-100 px-7 py-7">
-                    <h3 class="text-base font-medium">SJAC Programs</h3>
+                    <h3 class="text-base font-medium">{{ t("about.programs") }}</h3>
                     <ul class="mt-5 space-y-4 text-base font-light leading-snug">
-                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Documentation</span></li>
-                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Investigations &amp; Case Building</span></li>
-                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Missing Persons</span></li>
-                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Trial Monitoring</span></li>
-                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Tech &amp; Human Rights</span></li>
-                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>Capacity Building</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>{{ t("about.program_documentation") }}</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>{{ t("about.program_investigations") }}</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>{{ t("about.program_missing") }}</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>{{ t("about.program_trials") }}</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>{{ t("about.program_tech") }}</span></li>
+                        <li class="flex items-center gap-3"><span class="size-2.5 rounded-full bg-primary"></span><span>{{ t("about.program_capacity") }}</span></li>
                     </ul>
                 </aside>
             </div>
@@ -72,32 +72,32 @@
 
     <section class="bg-[#EFF0F2]">
         <div class="mx-auto w-full max-w-[1500px] px-4 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-14">
-            <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">Our Approach to Documentation</h2>
+            <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">{{ t("about.approach_title") }}</h2>
 
             <div class="mt-7 grid gap-4 md:grid-cols-2 lg:mt-8 lg:grid-cols-3 lg:gap-4">
                 <article class="order-1 border border-gray-300/85 bg-base-100 p-5 lg:order-4">
-                    <h3 class="text-base font-medium">Security</h3>
-                    <p class="mt-3 text-base font-light leading-[1.52]">Sensitive information is safeguarded through strict protocols.</p>
+                    <h3 class="text-base font-medium">{{ t("about.security") }}</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">{{ t("about.security_body") }}</p>
                 </article>
 
                 <article class="order-2 border border-gray-300/85 bg-base-100 p-5 lg:order-5">
-                    <h3 class="text-base font-medium">Structure</h3>
-                    <p class="mt-3 text-base font-light leading-[1.52]">The archive is designed to balance openness with protection, supporting both accountability and research.</p>
+                    <h3 class="text-base font-medium">{{ t("about.structure") }}</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">{{ t("about.structure_body") }}</p>
                 </article>
 
                 <article class="order-3 border border-gray-300/85 bg-base-100 p-5 lg:order-1">
-                    <h3 class="text-base font-medium">Collection</h3>
-                    <p class="mt-3 text-base font-light leading-[1.52]">Records are gathered from diverse sources, ensuring breadth and reliability.</p>
+                    <h3 class="text-base font-medium">{{ t("about.collection") }}</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">{{ t("about.collection_body") }}</p>
                 </article>
 
                 <article class="order-4 border border-gray-300/85 bg-base-100 p-5 lg:order-2">
-                    <h3 class="text-base font-medium">Processing</h3>
-                    <p class="mt-3 text-base font-light leading-[1.52]">Standardized workflows preserve context and maintain accuracy.</p>
+                    <h3 class="text-base font-medium">{{ t("about.processing") }}</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">{{ t("about.processing_body") }}</p>
                 </article>
 
                 <article class="order-5 border border-gray-300/85 bg-base-100 p-5 lg:order-3">
-                    <h3 class="text-base font-medium">Cataloguing</h3>
-                    <p class="mt-3 text-base font-light leading-[1.52]">Each item is enriched with metadata to highlight relationships between events, actors, and evidence.</p>
+                    <h3 class="text-base font-medium">{{ t("about.cataloguing") }}</h3>
+                    <p class="mt-3 text-base font-light leading-[1.52]">{{ t("about.cataloguing_body") }}</p>
                 </article>
             </div>
         </div>
@@ -107,33 +107,33 @@
         <div class="mx-auto w-full max-w-[1500px] px-4 py-10 sm:px-6 sm:py-12 lg:px-10 lg:py-14">
             <div class="grid gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:items-center lg:gap-9">
                 <div>
-                    <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">Navigating the Document Archive</h2>
+                    <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">{{ t("about.navigate_title") }}</h2>
 
                     <ol class="mt-7 space-y-4 text-base leading-[1.58]">
                         <li class="flex gap-4">
                             <span class="font-medium">1.</span>
-                            <div class="font-light"><span class="font-medium">Search Records</span><br>Enter keywords or apply filters to quickly locate relevant documents.</div>
+                            <div class="font-light"><span class="font-medium">{{ t("about.step_search") }}</span><br>{{ t("about.step_search_body") }}</div>
                         </li>
                         <li class="flex gap-4">
                             <span class="font-medium">2.</span>
-                            <div class="font-light"><span class="font-medium">Browse Collections</span><br>Navigate through curated categories to explore broader sets of materials.</div>
+                            <div class="font-light"><span class="font-medium">{{ t("about.step_browse") }}</span><br>{{ t("about.step_browse_body") }}</div>
                         </li>
                         <li class="flex gap-4">
                             <span class="font-medium">3.</span>
-                            <div class="font-light"><span class="font-medium">View Details</span><br>Open individual records to see metadata, context, and linked documents.</div>
+                            <div class="font-light"><span class="font-medium">{{ t("about.step_details") }}</span><br>{{ t("about.step_details_body") }}</div>
                         </li>
                         <li class="flex gap-4">
                             <span class="font-medium">4.</span>
-                            <div class="font-light"><span class="font-medium">Trace Connections</span><br>Follow relationships between events, actors, and evidence across the archive.</div>
+                            <div class="font-light"><span class="font-medium">{{ t("about.step_connections") }}</span><br>{{ t("about.step_connections_body") }}</div>
                         </li>
                         <li class="flex gap-4">
                             <span class="font-medium">5.</span>
-                            <div class="font-light"><span class="font-medium">Leverage Bayanat</span><br>Behind the archive is Bayanat, the open-source platform purpose-built for documentation and accountability.</div>
+                            <div class="font-light"><span class="font-medium">{{ t("about.step_bayanat") }}</span><br>{{ t("about.step_bayanat_body") }}</div>
                         </li>
                     </ol>
 
                     <p class="mt-7 text-base leading-[1.42] text-primary font-light">
-                        Explore more or start building your own archive with Bayanat
+                        {{ t("about.cta") }}
                     </p>
 
                     <a
@@ -143,22 +143,22 @@
                         hx-boost="false"
                         class="btn mt-6 border-none bg-primary px-6 py-3 text-sm font-medium text-primary-content shadow-[0_4px_8px_rgba(0,0,0,0.16)] transition hover:bg-primary/95"
                     >
-                        Explore with Bayanat
+                        {{ t("about.explore") }}
                     </a>
                 </div>
 
                 <figure class="border border-gray-300/85 bg-base-100 p-3 sm:p-4 lg:mt-[3.6rem]">
-                    <figcaption class="sr-only">Search interface preview placeholder</figcaption>
+                    <figcaption class="sr-only">{{ t("about.preview") }}</figcaption>
 
                     <div class="overflow-hidden border border-gray-300/80 bg-base-100">
                         <div class="flex items-center justify-between border-b border-gray-300/80 bg-base-100 px-3 py-2 text-[9px] text-primary sm:text-[11px] font-light tracking-tight">
-                            <span>Bayanat <strong class="font-semibold">Document Archive</strong></span>
-                            <span class="flex gap-3"><span>Search</span><span>About Us</span></span>
+                            <span>{{ t("site.brand_prefix") }} <strong class="font-semibold">{{ t("site.brand_middle") }} {{ t("site.brand_suffix") }}</strong></span>
+                            <span class="flex gap-3"><span>{{ t("nav.search") }}</span><span>{{ t("nav.about") }}</span></span>
                         </div>
 
                         <div class="border-b border-gray-300/70 bg-[#ECEDEF] px-3 py-2 sm:py-3">
                             <div class="flex items-center gap-2 text-[10px] sm:gap-3 sm:text-xs">
-                                <span class="font-medium text-primary">Search</span>
+                                <span class="font-medium text-primary">{{ t("nav.search") }}</span>
                                 <div class="h-6 flex-1 border border-gray-300/85 bg-base-100 sm:h-7"></div>
                                 <span class="text-xl leading-none text-primary/85">+</span>
                             </div>

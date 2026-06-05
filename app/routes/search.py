@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 from flask import Blueprint, make_response, render_template, request
 
 from app import get_db
+from app.i18n import DEFAULT_LANG, SUPPORTED_LANGS
 
 bp = Blueprint("search", __name__)
 
@@ -168,7 +169,9 @@ def _facet_options(facets):
     all_locations = [
         row["full_location"] for row in facets["locations"] if row["full_location"]
     ]
-    label_counts = {row["title"]: row["count"] for row in facets["labels"] if row["title"]}
+    label_counts = {
+        row["title"]: row["count"] for row in facets["labels"] if row["title"]
+    }
     location_counts = {
         row["full_location"]: row["count"]
         for row in facets["locations"]
@@ -232,6 +235,9 @@ def _build_search_url(
         params.append(("view", view))
     if page > 1:
         params.append(("page", page))
+    lang = request.args.get("lang", "").strip()
+    if lang in SUPPORTED_LANGS and lang != DEFAULT_LANG:
+        params.append(("lang", lang))
 
     qs = urlencode(params, doseq=True)
     return "/search" + (f"?{qs}" if qs else "")
