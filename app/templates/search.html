@@ -249,8 +249,8 @@
                 </svg>
                 <input
                     type="search"
-                    :placeholder="{{ t('nav.search') | tojson }} + ' ' + {{ label | lower | tojson }}"
-                    :aria-label="{{ t('nav.search') | tojson }} + ' ' + {{ label | lower | tojson }}"
+                    :placeholder='{{ t("nav.search") | tojson }} + " " + {{ label | lower | tojson }}'
+                    :aria-label='{{ t("nav.search") | tojson }} + " " + {{ label | lower | tojson }}'
                     x-model="mobileSearch['{{ key }}']"
                 >
             </label>
