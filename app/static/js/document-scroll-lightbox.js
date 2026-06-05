@@ -189,25 +189,23 @@ window.createDocumentScrollLightbox = function createDocumentScrollLightbox(opti
       if (scrollRafId !== null) window.cancelAnimationFrame(scrollRafId);
       var restore = pendingScroll;
       pendingScroll = null;
-      scrollRafId = window.requestAnimationFrame(function () {
-        scrollRafId = null;
-        var maxLeft = Math.max(stage.scrollWidth - stage.clientWidth, 0);
-        var maxTop = Math.max(stage.scrollHeight - stage.clientHeight, 0);
-        if (restore.type === "pdf-page") {
-          var page = media && media.querySelector('[data-pdf-page-number="' + restore.pageNumber + '"]');
-          if (page) {
-            var stageRect = stage.getBoundingClientRect();
-            var pageRect = page.getBoundingClientRect();
-            var pageLeft = stage.scrollLeft + pageRect.left - stageRect.left;
-            var pageTop = stage.scrollTop + pageRect.top - stageRect.top;
-            stage.scrollLeft = Math.max(0, Math.min(maxLeft, pageLeft + pageRect.width * restore.xRatio - restore.localX));
-            stage.scrollTop = Math.max(0, Math.min(maxTop, pageTop + pageRect.height * restore.yRatio - restore.localY));
-            return;
-          }
+      scrollRafId = null;
+      var maxLeft = Math.max(stage.scrollWidth - stage.clientWidth, 0);
+      var maxTop = Math.max(stage.scrollHeight - stage.clientHeight, 0);
+      if (restore.type === "pdf-page") {
+        var page = media && media.querySelector('[data-pdf-page-number="' + restore.pageNumber + '"]');
+        if (page) {
+          var stageRect = stage.getBoundingClientRect();
+          var pageRect = page.getBoundingClientRect();
+          var pageLeft = stage.scrollLeft + pageRect.left - stageRect.left;
+          var pageTop = stage.scrollTop + pageRect.top - stageRect.top;
+          stage.scrollLeft = Math.max(0, Math.min(maxLeft, pageLeft + pageRect.width * restore.xRatio - restore.localX));
+          stage.scrollTop = Math.max(0, Math.min(maxTop, pageTop + pageRect.height * restore.yRatio - restore.localY));
+          return;
         }
-        stage.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
-        stage.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
-      });
+      }
+      stage.scrollLeft = Math.max(0, Math.min(maxLeft, restore.left));
+      stage.scrollTop = Math.max(0, Math.min(maxTop, restore.top));
     }
 
     function applyZoom(nextZoom, anchor) {
