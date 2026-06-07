@@ -112,7 +112,7 @@ def _get_results(db, q, labels, locations, date_from, date_to, sort, page):
         select = """
             SELECT DISTINCT d.*,
                 snippet(documents_fts, 0, '<mark>', '</mark>', '...', 32) as snippet_title,
-                snippet(documents_fts, 2, '<mark>', '</mark>', '...', 48) as snippet_desc
+                snippet(documents_fts, 3, '<mark>', '</mark>', '...', 48) as snippet_desc
             FROM documents d
         """
     else:
