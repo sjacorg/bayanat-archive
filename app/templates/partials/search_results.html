@@ -352,8 +352,8 @@
                 >
                     {% if doc.snippet_desc %}
                         {{ doc.snippet_desc | strip_html }}
-                    {% elif doc.description %}
-                        {{ doc.description | bidirectional_text }}
+                    {% elif doc.public_description %}
+                        {{ doc.public_description | bidirectional_text }}
                     {% else %}
                         <span class="italic text-base-content/35">{{ t("search.no_summary") }}</span>
                     {% endif %}
@@ -399,8 +399,8 @@
                     >
                         {% if doc.snippet_desc %}
                             {{ doc.snippet_desc | strip_html }}
-                        {% elif doc.description %}
-                            {{ doc.description | bidirectional_text }}
+                        {% elif doc.public_description %}
+                            {{ doc.public_description | bidirectional_text }}
                         {% else %}
                             <span class="italic text-base-content/35">{{ t("search.no_summary") }}</span>
                         {% endif %}
