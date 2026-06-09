@@ -67,6 +67,12 @@ def create_app():
         text = _re_tags.sub(" ", value)
         return _re_spaces.sub(" ", text).strip()
 
+    @app.template_filter("safe_html")
+    def safe_html(value):
+        if not value:
+            return Markup("")
+        return Markup(value)
+
     @app.template_filter("bidirectional_text")
     def bidirectional_text(value):
         if not value:
