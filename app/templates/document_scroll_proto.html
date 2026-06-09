@@ -102,7 +102,7 @@
             {% if document.description %}
             <section class="mt-6">
                 <h2 class="title-serif text-lg font-semibold text-base-content">{{ t("catalog.description") }}</h2>
-                <div class="mt-2 leading-7 text-base-content/75">{{ document.description | bidirectional_text }}</div>
+                <div class="mt-2 leading-7 text-base-content/75">{{ document.description | safe_html }}</div>
             </section>
             {% endif %}
 
