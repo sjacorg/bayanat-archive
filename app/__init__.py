@@ -67,11 +67,17 @@ def create_app():
         text = _re_tags.sub(" ", value)
         return _re_spaces.sub(" ", text).strip()
 
+    _re_block_tags = re.compile(
+        r"<(h[1-6]|p|li|td|th|blockquote|div)(\s|>)",
+        re.IGNORECASE,
+    )
+
     @app.template_filter("safe_html")
     def safe_html(value):
         if not value:
             return Markup("")
-        return Markup(value)
+        result = _re_block_tags.sub(r'<\1 dir="auto"\2', value)
+        return Markup(result)
 
     @app.template_filter("bidirectional_text")
     def bidirectional_text(value):
