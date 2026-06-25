@@ -52,11 +52,11 @@ app/
     documents.py           # /documents/<id>/<slug>
   templates/
     base.html              # Layout: header, footer, CDN includes
-    search.html, about.html, document_detail.html, components.html, 404.html
-    partials/              # HTMX fragments (search results, feedback, timeline, media renderers)
+    search.html, about.html, document_scroll_proto.html, components.html, 404.html
+    partials/              # HTMX fragments (search results, feedback, timeline)
   static/
     css/                   # archive.css (DaisyUI overrides), print.css
-    js/                    # search-page.js, document-detail.js
+    js/                    # search-page.js, document-scroll-proto.js
     assets/                # logos, favicons, OG image
     media/                 # document files (populated by import)
 data/

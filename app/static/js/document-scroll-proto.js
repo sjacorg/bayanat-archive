@@ -10,8 +10,7 @@
  *   3. Click-to-zoom focus    — click any page for a pan + wheel-zoom lightbox
  *                               (deep inspection; PDFs re-render sharp on demand).
  *
- * Decoupled from the classic viewer on purpose so it can't regress it. Daniel
- * can reconcile this with document-detail-pdf.js / -zoom.js when productizing.
+ * Decoupled from the classic viewer on purpose so it can't regress it.
  *
  * DOM contract:
  *   #reading                        reading column; carries --page-width
