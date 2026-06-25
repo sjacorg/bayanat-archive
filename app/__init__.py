@@ -4,6 +4,7 @@ import sqlite3
 from datetime import datetime
 from urllib.parse import urlencode
 
+import nh3
 from flask import Flask, g, render_template, request
 from markupsafe import Markup, escape
 
@@ -66,6 +67,52 @@ def create_app():
             return ""
         text = _re_tags.sub(" ", value)
         return _re_spaces.sub(" ", text).strip()
+
+    _re_block_tags = re.compile(
+        r"<(h[1-6]|p|li|td|th|blockquote|div)(\s|>)",
+        re.IGNORECASE,
+    )
+    _rich_text_tags = {
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "p",
+        "br",
+        "span",
+        "div",
+        "ul",
+        "ol",
+        "li",
+        "strong",
+        "em",
+        "b",
+        "i",
+        "u",
+        "a",
+        "blockquote",
+        "table",
+        "thead",
+        "tbody",
+        "tr",
+        "td",
+        "th",
+        "img",
+    }
+    _rich_text_attrs = {"a": {"href", "title"}, "img": {"src", "alt", "title"}}
+
+    @app.template_filter("safe_html")
+    def safe_html(value):
+        # Renders trusted TinyMCE HTML (public_description/description from the
+        # Bayanat export) as rich text. nh3 strips scripts, event handlers, and
+        # javascript: URLs; then dir="auto" is added to block tags for bidi.
+        if not value:
+            return Markup("")
+        cleaned = nh3.clean(value, tags=_rich_text_tags, attributes=_rich_text_attrs)
+        cleaned = _re_block_tags.sub(r'<\1 dir="auto"\2', cleaned)
+        return Markup(cleaned)
 
     @app.template_filter("bidirectional_text")
     def bidirectional_text(value):
