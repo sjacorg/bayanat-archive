@@ -8,6 +8,7 @@ from flask.cli import with_appcontext
 from slugify import slugify
 
 from app.database import build_fts, init_db
+from app.watermark import load_watermark, watermark_file
 
 # Child tables keyed by document_id, cleared before re-inserting a document in append mode.
 CHILD_TABLES = (
@@ -55,6 +56,9 @@ def import_archive(export_dir, append):
 
     if not isinstance(documents, list):
         raise click.ClickException("documents.json must be a JSON array")
+
+    # Load before the rebuild drops the DB, so a bad watermark config fails safely.
+    mark = load_watermark()
 
     db_path = os.environ.get("DATABASE_PATH", "data/archive.db")
     os.makedirs(os.path.dirname(db_path), exist_ok=True)
@@ -238,12 +242,14 @@ def import_archive(export_dir, append):
             )
 
             # Copy media file, skipping files already present (avoids S3 re-downloads).
+            # ponytail: a changed watermark only applies after static/media is cleared
             src_file = os.path.join(media_src, m["filename"])
             dest_file = os.path.join(media_dest, m["filename"])
             if os.path.exists(dest_file):
                 pass
             elif os.path.exists(src_file):
-                shutil.copy2(src_file, dest_file)
+                if mark is None or not watermark_file(src_file, dest_file, mark):
+                    shutil.copy2(src_file, dest_file)
                 media_count += 1
             else:
                 click.echo(f"  Warning: media file not found: {m['filename']}")

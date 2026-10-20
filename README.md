@@ -33,6 +33,8 @@ uv run flask import-archive /path/to/export/
 
 The import is destructive: it rebuilds `data/archive.db` and copies media into `app/static/media/`. See `EXPORT_SCHEMA.md` for the JSON contract.
 
+To watermark public copies, set `WATERMARK_IMAGE` (a transparent PNG). The mark runs along each page's diagonal on images and PDFs alike, and copies are written without their source metadata. Each page is solved for a consistent contrast against its own paper rather than a fixed opacity, so a white scan and a photograph end up equally legible; the mark stays SJAC white wherever that reads and flips dark only on bright scans where white cannot be seen. It also fades over ink so handwriting and stamps stay clear. `WATERMARK_OPACITY` is an optional ceiling on the solved alpha. Media already in `app/static/media/` is not reprocessed, so clear it after changing the watermark.
+
 ## Docker
 
 ```bash
