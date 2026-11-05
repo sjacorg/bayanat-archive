@@ -2,6 +2,8 @@ import re
 
 from flask import Blueprint, make_response, render_template, request
 
+from app import get_db
+
 bp = Blueprint("pages", __name__)
 
 
@@ -32,7 +34,12 @@ def feedback():
     if email and not re.match(r"^[^\s@]+@[^\s@]+\.[^\s@]+$", email):
         return render_template("partials/feedback_error.html"), 422
 
-    # TODO: persist/email submission
+    db = get_db()
+    db.execute(
+        "INSERT INTO feedback (rating, comment, email) VALUES (?, ?, ?)",
+        (rating, comment, email or None),
+    )
+    db.commit()
     return render_template("partials/feedback_success.html"), 200
 
 
