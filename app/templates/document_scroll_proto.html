@@ -9,7 +9,7 @@
 {% block main_container_class %}w-full p-0{% endblock %}
 
 {% block content %}
-{# Classify each media file into a kind, mirroring document_detail.html #}
+{# Classify each media file into a kind #}
 {% set pages = [] %}
 {% for item in media_rows %}
     {% set media_type = (item.media_type or '') | lower %}
@@ -95,14 +95,14 @@
             {% if document.public_description %}
             <section class="mt-6 border-s-4 border-secondary bg-base-200/40 px-4 py-4">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-secondary">{{ t("catalog.sjac_context") }}</p>
-                <div class="mt-2 leading-7 text-base-content/80">{{ document.public_description | bidirectional_text }}</div>
+                <div dir="auto" class="mt-2 leading-7 text-base-content/80 rich-text">{{ document.public_description | safe_html }}</div>
             </section>
             {% endif %}
 
             {% if document.description %}
             <section class="mt-6">
                 <h2 class="title-serif text-lg font-semibold text-base-content">{{ t("catalog.description") }}</h2>
-                <div class="mt-2 leading-7 text-base-content/75">{{ document.description | bidirectional_text }}</div>
+                <div dir="auto" class="mt-2 leading-7 text-base-content/75 rich-text">{{ document.description | safe_html }}</div>
             </section>
             {% endif %}
 
