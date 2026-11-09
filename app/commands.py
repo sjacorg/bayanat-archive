@@ -14,6 +14,7 @@ CHILD_TABLES = (
     "document_labels",
     "document_locations",
     "document_sources",
+    "document_publications",
     "document_events",
     "document_geo_locations",
     "media",
@@ -184,6 +185,13 @@ def import_archive(export_dir, append):
                    (document_id, source_id, title, title_ar)
                    VALUES (?, ?, ?, ?)""",
                 (doc_id, src["id"], src["title"], src.get("title_ar")),
+            )
+
+        # SJAC publications that use this document
+        for url in doc.get("publication_links") or []:
+            conn.execute(
+                "INSERT INTO document_publications (document_id, url) VALUES (?, ?)",
+                (doc_id, url),
             )
 
         # Events

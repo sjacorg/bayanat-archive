@@ -121,6 +121,16 @@
                     <dd class="mt-1 text-base-content/80">{{ document_labels | join(', ') }}</dd>
                 </div>
                 {% endif %}
+                {% if document_publications %}
+                <div class="col-span-2">
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("catalog.published_in") }}</dt>
+                    <dd class="mt-1 space-y-1">
+                        {% for url in document_publications %}
+                        <a href="{{ url }}" target="_blank" rel="noopener" dir="ltr" class="link link-secondary block break-all">{{ url.split('://', 1)[-1] }}</a>
+                        {% endfor %}
+                    </dd>
+                </div>
+                {% endif %}
                 {% if document_locations %}
                 <div class="col-span-2">
                     <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("catalog.locations") }}</dt>

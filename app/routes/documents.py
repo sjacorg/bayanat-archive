@@ -37,6 +37,14 @@ def _get_document_locations(db, document_id):
     return [row["full_location"] for row in rows]
 
 
+def _get_document_publications(db, document_id):
+    rows = db.execute(
+        "SELECT url FROM document_publications WHERE document_id = ? ORDER BY id",
+        [document_id],
+    ).fetchall()
+    return [row["url"] for row in rows]
+
+
 def _get_document_sources(db, document_id):
     rows = db.execute(
         """
@@ -191,6 +199,7 @@ def detail(document_id, slug):
     document_labels = _get_document_labels(db, document_id)
     document_locations = _get_document_locations(db, document_id)
     document_sources = _get_document_sources(db, document_id)
+    document_publications = _get_document_publications(db, document_id)
     document_events = _get_document_events(db, document_id)
     media_summary = _media_summary(media_rows)
     related_count = _related_count(db, document_id)
@@ -210,6 +219,7 @@ def detail(document_id, slug):
         document_labels=document_labels,
         document_locations=document_locations,
         document_sources=document_sources,
+        document_publications=document_publications,
         document_events=document_events,
         media_summary=media_summary,
         related_count=related_count,

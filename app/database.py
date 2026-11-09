@@ -55,6 +55,14 @@ CREATE TABLE IF NOT EXISTS document_sources (
 
 CREATE INDEX IF NOT EXISTS idx_document_sources_doc ON document_sources(document_id);
 
+CREATE TABLE IF NOT EXISTS document_publications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER NOT NULL REFERENCES documents(id),
+    url TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_document_publications_doc ON document_publications(document_id);
+
 CREATE TABLE IF NOT EXISTS document_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     document_id INTEGER NOT NULL REFERENCES documents(id),

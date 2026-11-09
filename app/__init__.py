@@ -58,6 +58,14 @@ def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-change-me")
 
+    # Bring an existing archive.db up to the current schema (new tables only), so a
+    # code deploy without a re-import cannot 500 on a missing table.
+    db_path = os.environ.get("DATABASE_PATH", "data/archive.db")
+    if os.path.exists(db_path):
+        from app.database import init_db
+
+        init_db(db_path).close()
+
     _re_tags = re.compile(r"<[^>]+>")
     _re_spaces = re.compile(r"\s+")
 
