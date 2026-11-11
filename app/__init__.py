@@ -127,8 +127,7 @@ def create_app():
     def bidirectional_text(value):
         if not value:
             return Markup("")
-        text = _re_spaces.sub(" ", _re_tags.sub(" ", value)).strip()
-        runs = _split_bidirectional_runs(text)
+        runs = _split_bidirectional_runs(strip_html(value))
         return Markup(
             "".join(f'<div dir="auto">{escape(run.strip())}</div>' for _, run in runs)
         )

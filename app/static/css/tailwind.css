@@ -1,0 +1,7 @@
+/* Source for app.css. Rebuild after changing classes in templates or JS: npm run build:css */
+@import "tailwindcss" source(none);
+@source "../../templates";
+@source "../js";
+@plugin "daisyui" {
+    themes: light --default;
+}

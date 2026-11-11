@@ -126,7 +126,7 @@
                     <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("catalog.published_in") }}</dt>
                     <dd class="mt-1 space-y-1">
                         {% for url in document_publications %}
-                        <a href="{{ url }}" target="_blank" rel="noopener" dir="ltr" class="link link-secondary block break-all">{{ url.split('://', 1)[-1] }}</a>
+                        <a href="{{ url }}" target="_blank" rel="noopener" dir="ltr" class="link link-secondary external-link block break-all">{{ url.split('://', 1)[-1] }}</a>
                         {% endfor %}
                     </dd>
                 </div>

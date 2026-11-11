@@ -6,3 +6,4 @@ data/archive.db
 app/static/media/*
 !app/static/media/.gitkeep
 .DS_Store
+node_modules/

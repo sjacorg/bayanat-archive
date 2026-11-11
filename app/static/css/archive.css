@@ -1037,3 +1037,47 @@ button.scroll-preview-button-secondary {
 .link-secondary {
     color: oklch(0.48 0.085 180);
 }
+
+/* Action icons (Lucide, ISC licence), painted in currentColor through a mask so
+ * buttons built in templates and in JS get the same icon from one rule. */
+.scroll-preview-button-primary,
+.scroll-preview-button-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.scroll-lightbox__download {
+    gap: 0.5rem;
+}
+
+.scroll-preview-button-primary::before,
+.scroll-preview-button-secondary::before,
+.scroll-lightbox__download::before,
+.external-link::after {
+    content: "";
+    flex-shrink: 0;
+    width: 1em;
+    height: 1em;
+    background-color: currentColor;
+    -webkit-mask: var(--icon) center / contain no-repeat;
+    mask: var(--icon) center / contain no-repeat;
+}
+
+.scroll-preview-button-primary:not([download]) {
+    --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7'/%3E%3C/svg%3E");
+}
+
+.scroll-preview-button-primary[download],
+.scroll-preview-button-secondary[download],
+.scroll-lightbox__download {
+    --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3'/%3E%3C/svg%3E");
+}
+
+.external-link::after {
+    --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 7h10v10M7 17 17 7'/%3E%3C/svg%3E");
+    display: inline-block;
+    margin-inline-start: 0.25em;
+    vertical-align: -0.125em;
+}
