@@ -67,6 +67,14 @@ def create_app():
 
         init_db(db_path).close()
 
+    # Version static URLs by file mtime so a deploy is never masked by browser or Cloudflare cache.
+    @app.url_defaults
+    def version_static(endpoint, values):
+        if endpoint == "static" and "filename" in values:
+            path = os.path.join(app.static_folder, values["filename"])
+            if os.path.isfile(path):
+                values["v"] = int(os.stat(path).st_mtime)
+
     _re_tags = re.compile(r"<[^>]+>")
     _re_spaces = re.compile(r"\s+")
 
