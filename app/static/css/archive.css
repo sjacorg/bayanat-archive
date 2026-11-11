@@ -1031,3 +1031,9 @@ button.scroll-preview-button-secondary {
     color: var(--color-ink-muted);
     font-style: italic;
 }
+
+/* The brand teal (L 0.61) is 3.5:1 on white; as text it needs 4.5:1, so darken it there only. */
+.text-secondary,
+.link-secondary {
+    color: oklch(0.48 0.085 180);
+}

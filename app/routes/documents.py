@@ -1,6 +1,6 @@
 from urllib.parse import urlencode
 
-from flask import Blueprint, abort, redirect, render_template, request, url_for
+from flask import Blueprint, abort, g, redirect, render_template, request, url_for
 
 from app import get_db
 
@@ -34,7 +34,11 @@ def _get_document_locations(db, document_id):
         """,
         [document_id],
     ).fetchall()
-    return [row["full_location"] for row in rows]
+    # Location paths repeat a name per admin level ("Deir-ez-Zor, Deir-ez-Zor, Deir-ez-Zor City").
+    return [
+        ", ".join(dict.fromkeys(part.strip() for part in row["full_location"].split(",")))
+        for row in rows
+    ]
 
 
 def _get_document_publications(db, document_id):
@@ -180,8 +184,12 @@ def detail(document_id, slug):
         abort(404)
 
     if slug != document["slug"]:
+        # Keep lang: browsers cache the 301, so the cookie set on it cannot be relied on.
+        params = {"lang": g.lang} if request.args.get("lang") else {}
         back_url = _get_search_back_url()
-        query = f"?{urlencode({'back': back_url})}" if back_url else ""
+        if back_url:
+            params["back"] = back_url
+        query = f"?{urlencode(params)}" if params else ""
         return redirect(
             f"/documents/{document['id']}/{document['slug']}{query}",
             code=301,

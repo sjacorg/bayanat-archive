@@ -1,3 +1,4 @@
+import html
 import os
 import re
 import sqlite3
@@ -73,7 +74,7 @@ def create_app():
     def strip_html(value):
         if not value:
             return ""
-        text = _re_tags.sub(" ", value)
+        text = html.unescape(_re_tags.sub(" ", value))
         return _re_spaces.sub(" ", text).strip()
 
     _re_block_tags = re.compile(

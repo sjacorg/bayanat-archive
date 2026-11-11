@@ -53,13 +53,13 @@
     {% if pages %}
     <nav aria-label="{{ t('document.pages') }}" class="hidden md:block">
         <div class="scroll-page-rail sticky top-20 flex max-h-[calc(100dvh-6rem)] flex-col gap-2 overflow-y-auto overscroll-contain pe-1">
-            <p class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-base-content/40">{{ t("document.pages") }}</p>
+            <p class="mb-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-base-content/65">{{ t("document.pages") }}</p>
             <button
                 type="button"
                 data-rail="0"
                 class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-start"
             >
-                <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">{{ t("media.entry") | upper }}</span>
+                <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/65">{{ t("media.entry") | upper }}</span>
                 <span class="text-xs font-medium text-base-content/60 group-hover:text-primary">{{ t("media.entry") }}</span>
             </button>
             {% for p in pages %}
@@ -68,7 +68,7 @@
                 data-rail="{{ p.n }}"
                 class="rail-btn group flex items-center gap-2 border border-[color:var(--color-paper-border)] bg-white p-1 text-start"
             >
-                <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/40">
+                <span class="flex h-12 w-10 flex-none items-center justify-center overflow-hidden bg-base-200/70 text-[10px] text-base-content/65">
                     {% if p.kind == 'image' %}
                     <img src="{{ url_for('static', filename='media/' ~ p.item.filename) }}" alt="" loading="lazy" class="h-full w-full object-cover">
                     {% else %}
@@ -89,7 +89,7 @@
             <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-secondary">{{ t("document.record") }}</p>
             <h1 dir="auto" class="title-serif mt-2 text-2xl font-semibold leading-tight text-base-content md:text-4xl">{{ document.title }}</h1>
             {% if document.title_ar and document.title_ar != document.title %}
-            <p dir="auto" class="mt-1 text-lg text-base-content/55">{{ document.title_ar }}</p>
+            <p dir="auto" class="mt-1 text-lg text-base-content/65">{{ document.title_ar }}</p>
             {% endif %}
 
             {% if document.public_description %}
@@ -108,22 +108,22 @@
 
             <dl class="mt-7 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[color:var(--color-paper-border)] pt-6 text-sm">
                 <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("document.reference") }}</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("document.reference") }}</dt>
                     <dd class="mt-1 text-base-content/80">{{ document.id }}</dd>
                 </div>
                 <div>
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("document.published") }}</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("document.published") }}</dt>
                     <dd class="mt-1 text-base-content/80">{{ document.publish_date[:10] if document.publish_date else t("catalog.na") }}</dd>
                 </div>
                 {% if document_labels %}
                 <div class="col-span-2">
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("catalog.labels") }}</dt>
-                    <dd class="mt-1 text-base-content/80">{{ document_labels | join(', ') }}</dd>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("catalog.labels") }}</dt>
+                    <dd class="mt-1 text-base-content/80">{{ document_labels | join('; ') }}</dd>
                 </div>
                 {% endif %}
                 {% if document_publications %}
                 <div class="col-span-2">
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("catalog.published_in") }}</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("catalog.published_in") }}</dt>
                     <dd class="mt-1 space-y-1">
                         {% for url in document_publications %}
                         <a href="{{ url }}" target="_blank" rel="noopener" dir="ltr" class="link link-secondary block break-all">{{ url.split('://', 1)[-1] }}</a>
@@ -133,7 +133,7 @@
                 {% endif %}
                 {% if document_locations %}
                 <div class="col-span-2">
-                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/45">{{ t("catalog.locations") }}</dt>
+                    <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("catalog.locations") }}</dt>
                     <dd class="mt-1 text-base-content/80">{{ document_locations | join('; ') }}</dd>
                 </div>
                 {% endif %}
@@ -142,7 +142,7 @@
 
         {# Stacked page sheets — scroll naturally through them #}
         {% if not pages %}
-        <p class="catalog-placeholder flex min-h-40 items-center justify-center text-sm uppercase tracking-[0.18em] text-base-content/40">{{ t("document.catalog_no_files") }}</p>
+        <p class="catalog-placeholder flex min-h-40 items-center justify-center text-sm uppercase tracking-[0.18em] text-base-content/65">{{ t("document.catalog_no_files") }}</p>
         {% endif %}
 
         {% for p in pages %}
@@ -150,8 +150,8 @@
         {% set media_src = url_for('static', filename='media/' ~ item.filename) %}
         <section data-page="{{ p.n }}" id="page-{{ p.n }}" class="mx-auto mb-8 w-full scroll-mt-20" style="max-width:var(--page-width,880px)">
             <div class="mb-2 flex items-baseline justify-between">
-                <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/45">{{ t("document.page_count", page=p.n, total=pages | length) }}</span>
-                {% if item.title %}<span dir="auto" class="truncate text-xs text-base-content/45">{{ item.title }}</span>{% endif %}
+                <span class="text-[11px] font-semibold uppercase tracking-[0.16em] text-base-content/65">{{ t("document.page_count", page=p.n, total=pages | length) }}</span>
+                {% if item.title %}<span dir="auto" class="truncate text-xs text-base-content/65">{{ item.title }}</span>{% endif %}
             </div>
 
             <div class="card-archive scroll-page-card scroll-page-card--{{ p.kind }} overflow-hidden">
@@ -186,7 +186,7 @@
                     data-open-full-pdf="{{ media_src }}"
                     style="min-height: 56vh"
                 >
-                    <div class="flex h-full min-h-[56vh] items-center justify-center text-sm text-base-content/40">{{ t("document.loading_pdf") }}</div>
+                    <div class="flex h-full min-h-[56vh] items-center justify-center text-sm text-base-content/65">{{ t("document.loading_pdf") }}</div>
                 </div>
                 {% elif p.kind == 'docx' %}
                 <div
@@ -197,7 +197,7 @@
                     data-open-full-docx="{{ media_src }}"
                     style="min-height: 46vh"
                 >
-                    <div class="flex h-full min-h-[46vh] items-center justify-center text-sm text-base-content/40">{{ t("document.loading_docx") }}</div>
+                    <div class="flex h-full min-h-[46vh] items-center justify-center text-sm text-base-content/65">{{ t("document.loading_docx") }}</div>
                 </div>
                 {% elif p.kind == 'video' %}
                 <video controls preload="metadata" class="block max-h-[80vh] w-full bg-black">
@@ -251,7 +251,7 @@
 
             {% if item.original_text or item.ocr_text %}
             <details class="card-archive mt-2 px-5 py-3">
-                <summary class="cursor-pointer text-xs font-semibold uppercase tracking-[0.12em] text-base-content/55">{{ t("document.extracted_text") }}</summary>
+                <summary class="cursor-pointer text-xs font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("document.extracted_text") }}</summary>
                 <div class="mt-3 text-sm leading-7 text-base-content/75">{{ (item.original_text or item.ocr_text) | bidirectional_text }}</div>
             </details>
             {% endif %}

@@ -84,7 +84,7 @@
                             </label>
                             <a href="{{ url_for('search.index') }}" class="min-w-0 shrink whitespace-nowrap text-base font-light leading-tight tracking-tight text-primary sm:text-xl">
                                 {% if lang == "ar" %}
-                                <span class="font-semibold">{{ t("site.name") }}</span>
+                                <span class="font-semibold"><span class="lg:hidden">{{ t("site.short_name") }}</span><span class="hidden lg:inline">{{ t("site.name") }}</span></span>
                                 {% else %}
                                 {{ t("site.brand_prefix") }} <span class="font-semibold"><span class="hidden sm:inline">{{ t("site.brand_middle") }} </span>{{ t("site.brand_suffix") }}</span>
                                 {% endif %}
@@ -155,7 +155,7 @@
         >
             <label for="main-nav-drawer" aria-label="{{ t('nav.close') }}" class="drawer-overlay"></label>
             <aside class="min-h-full w-72 bg-base-100 p-6">
-                <p class="text-xs font-medium uppercase tracking-[0.14em] text-base-content/50">{{ t("nav.navigation") }}</p>
+                <p class="text-xs font-medium uppercase tracking-[0.14em] text-base-content/65">{{ t("nav.navigation") }}</p>
                 <ul class="menu mt-3 w-full p-0 text-base">
                     {% for link in nav_links %}
                     <li>

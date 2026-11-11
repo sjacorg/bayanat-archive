@@ -17,6 +17,7 @@
                         type="number"
                         inputmode="numeric"
                         class="h-8 w-20 border-x-0 border-t-0 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
+                        aria-label="{{ t('search.year_from') }}"
                         :value="yearStart"
                         @change="commitYearStartFromEvent($event)"
                         @blur="commitYearStartFromEvent($event)"
@@ -27,6 +28,7 @@
                         type="number"
                         inputmode="numeric"
                         class="h-8 w-20 border-x-0 border-t-0 border-b border-primary/60 bg-transparent text-center text-xl font-medium outline-none"
+                        aria-label="{{ t('search.year_to') }}"
                         :value="yearEnd"
                         @change="commitYearEndFromEvent($event)"
                         @blur="commitYearEndFromEvent($event)"
@@ -66,6 +68,7 @@
                     min="0"
                     :max="timelineCount - 1"
                     step="1"
+                    aria-label="{{ t('search.year_from') }}"
                     :value="startIndex"
                     @input="setStartIndex($event.target.value, $event.target)"
                 >
@@ -76,6 +79,7 @@
                     min="0"
                     :max="timelineCount - 1"
                     step="1"
+                    aria-label="{{ t('search.year_to') }}"
                     :value="endIndex"
                     @input="setEndIndex($event.target.value, $event.target)"
                 >
