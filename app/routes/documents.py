@@ -36,7 +36,9 @@ def _get_document_locations(db, document_id):
     ).fetchall()
     # Location paths repeat a name per admin level ("Deir-ez-Zor, Deir-ez-Zor, Deir-ez-Zor City").
     return [
-        ", ".join(dict.fromkeys(part.strip() for part in row["full_location"].split(",")))
+        ", ".join(
+            dict.fromkeys(part.strip() for part in row["full_location"].split(","))
+        )
         for row in rows
     ]
 
@@ -46,7 +48,11 @@ def _get_document_publications(db, document_id):
         "SELECT url FROM document_publications WHERE document_id = ? ORDER BY id",
         [document_id],
     ).fetchall()
-    return [row["url"] for row in rows]
+    return [
+        row["url"]
+        for row in rows
+        if row["url"].lower().startswith(("https://", "http://"))
+    ]
 
 
 def _get_document_sources(db, document_id):
@@ -128,7 +134,6 @@ def _get_related_documents(db, document_id, limit=4):
           d.id AS related_document_id,
           d.slug,
           d.title AS display_title,
-          d.description,
           d.publish_date,
           m.filename AS related_filename,
           m.media_type AS related_media_type

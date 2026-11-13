@@ -58,6 +58,8 @@ def _split_bidirectional_runs(text):
 def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-change-me")
+    # The only form is feedback; cap request bodies so it cannot be used to fill the disk.
+    app.config["MAX_CONTENT_LENGTH"] = 64 * 1024
 
     # Bring an existing archive.db up to the current schema (new tables only), so a
     # code deploy without a re-import cannot 500 on a missing table.
@@ -84,6 +86,13 @@ def create_app():
             return ""
         text = html.unescape(_re_tags.sub(" ", value))
         return _re_spaces.sub(" ", text).strip()
+
+    @app.template_filter("highlight")
+    def highlight(value):
+        # FTS snippet markers are \x02/\x03 so the title text itself is always escaped.
+        return Markup(
+            str(escape(value)).replace("\x02", "<mark>").replace("\x03", "</mark>")
+        )
 
     _re_block_tags = re.compile(
         r"<(h[1-6]|p|li|td|th|blockquote|div)(\s|>)",
@@ -152,6 +161,15 @@ def create_app():
             else DEFAULT_LANG
         )
         g.dir = "rtl" if g.lang == "ar" else "ltr"
+
+    @app.after_request
+    def security_headers(response):
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "frame-ancestors 'none'; object-src 'none'; base-uri 'self'",
+        )
+        return response
 
     @app.after_request
     def persist_locale(response):

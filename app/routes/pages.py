@@ -1,6 +1,7 @@
 import re
+from urllib.parse import urlparse
 
-from flask import Blueprint, make_response, render_template, request
+from flask import Blueprint, abort, current_app, make_response, render_template, request
 
 from app import get_db
 
@@ -9,6 +10,8 @@ bp = Blueprint("pages", __name__)
 
 @bp.route("/components")
 def components():
+    if not current_app.debug:
+        abort(404)
     return render_template("components.html")
 
 
@@ -22,6 +25,12 @@ def feedback():
     rating_raw = (request.form.get("rating") or "").strip()
     comment = (request.form.get("comment") or "").strip()
     email = (request.form.get("email") or "").strip()
+
+    # Same-origin posts only, so other sites cannot submit on a visitor's behalf.
+    if request.origin and urlparse(request.origin).netloc != request.host:
+        abort(403)
+    if len(comment) > 5000 or len(email) > 254:
+        return render_template("partials/feedback_error.html"), 422
 
     try:
         rating = int(rating_raw)
@@ -56,5 +65,6 @@ def robots():
 
 @bp.route("/sitemap.xml")
 def sitemap():
-    body = render_template("sitemap.xml")
+    ids = get_db().execute("SELECT id, slug FROM documents ORDER BY id").fetchall()
+    body = render_template("sitemap.xml", documents=ids)
     return make_response(body, 200, {"Content-Type": "application/xml"})

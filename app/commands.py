@@ -104,7 +104,7 @@ def import_archive(export_dir, append):
                 title,
                 doc.get("title_ar"),
                 slug,
-                doc.get("description"),
+                None,  # internal description is never published
                 doc.get("public_description"),
                 doc.get("source_link"),
                 doc.get("publish_date"),

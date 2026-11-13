@@ -20,7 +20,7 @@ window.createDocumentScrollMedia = function createDocumentScrollMedia(options) {
   function loadPdf(src) {
     if (!pdfCache.has(src)) {
       window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDF_WORKER;
-      pdfCache.set(src, window.pdfjsLib.getDocument(src).promise);
+      pdfCache.set(src, window.pdfjsLib.getDocument({ url: src, isEvalSupported: false }).promise);
     }
     return pdfCache.get(src);
   }

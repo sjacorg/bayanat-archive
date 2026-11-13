@@ -99,13 +99,6 @@
             </section>
             {% endif %}
 
-            {% if document.description %}
-            <section class="mt-6">
-                <h2 class="title-serif text-lg font-semibold text-base-content">{{ t("catalog.description") }}</h2>
-                <div dir="auto" class="mt-2 leading-7 text-base-content/75 rich-text">{{ document.description | safe_html }}</div>
-            </section>
-            {% endif %}
-
             <dl class="mt-7 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-[color:var(--color-paper-border)] pt-6 text-sm">
                 <div>
                     <dt class="text-[11px] font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("document.reference") }}</dt>

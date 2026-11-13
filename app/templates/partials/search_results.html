@@ -342,7 +342,7 @@
                     class="line-clamp-3 text-base font-semibold leading-snug text-base-content transition-colors group-hover:text-primary"
                 >
                     {% if doc.snippet_title %}
-                        {{ doc.snippet_title | safe }}
+                        {{ doc.snippet_title | highlight }}
                     {% else %}
                         {{ doc.title }}
                     {% endif %}
@@ -389,7 +389,7 @@
                         class="line-clamp-1 break-words text-base font-semibold leading-snug text-base-content transition-colors group-hover:text-primary sm:line-clamp-2 sm:text-lg"
                     >
                         {% if doc.snippet_title %}
-                            {{ doc.snippet_title | safe }}
+                            {{ doc.snippet_title | highlight }}
                         {% else %}
                             {{ doc.title }}
                         {% endif %}
