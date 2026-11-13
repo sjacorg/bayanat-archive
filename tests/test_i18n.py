@@ -36,7 +36,7 @@ class I18nTestCase(unittest.TestCase):
 
         response = client.get("/?lang=ar")
 
-        self.assertIn("أرشيف وثائق المركز السوري للعدالة والمساءلة", response.text)
+        self.assertIn("أرشيف الوثائق الخاص بالمركز السوري للعدالة والمساءلة", response.text)
         self.assertNotIn("بيانات <span", response.text)
 
     def test_live_document_viewer_uses_translated_chrome(self):
