@@ -129,14 +129,18 @@
     {% include "partials/search_timeline_panel.html" %}
 
     <!-- Facets: live outside #results so they never re-render or flash -->
-    {% macro facet(key, label, items, counts) %}
+    {% macro facet(key, label, items, counts, param=None) %}
+    {# param lets two dropdowns (places, facilities) write to one query param;
+       they then track only their own options so each badge counts its own. #}
+    {% set param = param or key %}
     <div
         {% if key == "label" %}
         x-data="{ sel: window.readLabelParams(new URLSearchParams(window.location.search)) }"
+        @facets-sync.document="sel = $event.detail['{{ param }}']"
         {% else %}
-        x-data="{ sel: new URLSearchParams(window.location.search).getAll('{{ key }}') }"
+        x-data='{ opts: {{ items | tojson }}, sel: new URLSearchParams(window.location.search).getAll("{{ param }}").filter(v => {{ items | tojson }}.includes(v)) }'
+        @facets-sync.document='sel = ($event.detail["{{ param }}"] || []).filter(v => opts.includes(v))'
         {% endif %}
-        @facets-sync.document="sel = $event.detail['{{ key }}']"
     >
         <button
             type="button"
@@ -175,7 +179,7 @@
                     >
                         <input
                             type="checkbox"
-                            name="{{ key }}"
+                            name="{{ param }}"
                             value="{{ item }}"
                             x-model="sel"
                             class="search-param checkbox checkbox-sm checkbox-primary hidden"
@@ -303,8 +307,9 @@
         </button>
 
         <div class="hidden flex-1 grid-cols-2 gap-5 lg:grid lg:grid-cols-4">
-            {{ facet("label",    t("search.labels"),    all_labels,    label_counts) }}
-            {{ facet("location", t("search.locations"), all_locations, location_counts) }}
+            {{ facet("label",    t("search.labels"),     all_labels,     label_counts) }}
+            {{ facet("place",    t("search.places"),     all_places,     place_counts,    param="location") }}
+            {{ facet("facility", t("search.facilities"), all_facilities, facility_counts, param="location") }}
         </div>
     </div>
 

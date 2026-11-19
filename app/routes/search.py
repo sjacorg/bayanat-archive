@@ -10,8 +10,17 @@ from app.i18n import DEFAULT_LANG, SUPPORTED_LANGS
 bp = Blueprint("search", __name__)
 
 PER_PAGE = 20
+# Bayanat tags two kinds of place: an administrative path
+# ("Idleb, Ariha, Ehsem, Bara") and a named site ("First Military Prison
+# (Sidnaya)"). Facets use the first segment of the path, so governorates
+# collapse to one entry and named sites keep their own name.
+ADMIN_LOCATION_TYPE = "Administrative Location"
 ALLOWED_SORTS = {"relevance", "date_desc", "date_asc"}
 ALLOWED_VIEWS = {"grid", "list"}
+
+
+def _location_root(alias):
+    return f"rtrim(substr({alias}.full_location, 1, instr({alias}.full_location || ',', ',') - 1))"
 
 
 def _clean_list(values):
@@ -73,7 +82,7 @@ def _base_query(q=None, labels=None, locations=None, date_from=None, date_to=Non
             "JOIN document_locations dloc_filter ON dloc_filter.document_id = d.id"
         )
         placeholders = ",".join("?" * len(locations))
-        wheres.append(f"dloc_filter.full_location IN ({placeholders})")
+        wheres.append(f"{_location_root('dloc_filter')} IN ({placeholders})")
         params.extend(locations)
 
     if date_from:
@@ -148,36 +157,49 @@ def _get_facets(db, q, labels, locations, date_from, date_to):
     """
     facet_labels = db.execute(label_sql, params).fetchall()
 
-    location_wheres = list(wheres) + ["dloc.full_location IS NOT NULL"]
-    location_where_sql = " WHERE " + " AND ".join(location_wheres)
-    location_sql = f"""
-        SELECT dloc.full_location, COUNT(DISTINCT d.id) as count
-        FROM documents d {join_sql}
-        JOIN document_locations dloc ON dloc.document_id = d.id
-        {location_where_sql}
-        GROUP BY dloc.full_location
-        ORDER BY count DESC
-        LIMIT 20
-    """
-    facet_locations = db.execute(location_sql, params).fetchall()
+    def location_facet(comparison):
+        location_wheres = list(wheres) + [
+            "dloc.full_location IS NOT NULL",
+            f"dloc.location_type {comparison} ?",
+        ]
+        sql = f"""
+            SELECT {_location_root("dloc")} AS value, COUNT(DISTINCT d.id) as count
+            FROM documents d {join_sql}
+            JOIN document_locations dloc ON dloc.document_id = d.id
+            WHERE {" AND ".join(location_wheres)}
+            GROUP BY value
+            ORDER BY count DESC
+            LIMIT 40
+        """
+        return db.execute(sql, params + [ADMIN_LOCATION_TYPE]).fetchall()
 
-    return {"labels": facet_labels, "locations": facet_locations}
+    return {
+        "labels": facet_labels,
+        "places": location_facet("="),
+        "facilities": location_facet("!="),
+    }
 
 
 def _facet_options(facets):
-    all_labels = [row["title"] for row in facets["labels"] if row["title"]]
-    all_locations = [
-        row["full_location"] for row in facets["locations"] if row["full_location"]
-    ]
-    label_counts = {
-        row["title"]: row["count"] for row in facets["labels"] if row["title"]
+    """Template context for the facet controls."""
+    options = {
+        "all_labels": [row["title"] for row in facets["labels"] if row["title"]],
+        "label_counts": {
+            row["title"]: row["count"] for row in facets["labels"] if row["title"]
+        },
     }
-    location_counts = {
-        row["full_location"]: row["count"]
-        for row in facets["locations"]
-        if row["full_location"]
+    for key, singular in (("places", "place"), ("facilities", "facility")):
+        options[f"all_{key}"] = [row["value"] for row in facets[key] if row["value"]]
+        options[f"{singular}_counts"] = {
+            row["value"]: row["count"] for row in facets[key] if row["value"]
+        }
+    # The mobile drawer keeps one combined list, filtered by its own search box.
+    options["all_locations"] = options["all_places"] + options["all_facilities"]
+    options["location_counts"] = {
+        **options["place_counts"],
+        **options["facility_counts"],
     }
-    return all_labels, all_locations, label_counts, location_counts
+    return options
 
 
 def _get_timeline_bins(db):
@@ -417,19 +439,15 @@ def search_shell_context(db):
         timeline_bins, timeline_min_year, timeline_max_year = _get_timeline_bins(db)
     except Exception:
         total = 0
-        facets = {"labels": [], "locations": []}
+        facets = {"labels": [], "places": [], "facilities": []}
         now_year = datetime.now().year
         timeline_bins = [{"year": now_year, "count": 0}]
         timeline_min_year = now_year
         timeline_max_year = now_year
 
-    all_labels, all_locations, label_counts, location_counts = _facet_options(facets)
     return {
         "total": total,
-        "all_labels": all_labels,
-        "all_locations": all_locations,
-        "label_counts": label_counts,
-        "location_counts": location_counts,
+        **_facet_options(facets),
         "timeline_bins": timeline_bins,
         "timeline_min_year": timeline_min_year,
         "timeline_max_year": timeline_max_year,
