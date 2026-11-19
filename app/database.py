@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS documents (
     slug TEXT NOT NULL,
     description TEXT,
     public_description TEXT,
+    public_description_ar TEXT,
     source_link TEXT,
     publish_date TEXT,
     documentation_date TEXT,
@@ -147,6 +148,7 @@ CREATE VIRTUAL TABLE documents_fts USING fts5(
     title_ar,
     description,
     public_description,
+    public_description_ar,
     ocr_text,
     translation,
     content='documents',
@@ -154,9 +156,11 @@ CREATE VIRTUAL TABLE documents_fts USING fts5(
     tokenize='unicode61'
 );
 
-INSERT INTO documents_fts(rowid, title, title_ar, description, public_description, ocr_text, translation)
+INSERT INTO documents_fts(rowid, title, title_ar, description, public_description,
+                          public_description_ar, ocr_text, translation)
 SELECT id, COALESCE(title, ''), COALESCE(title_ar, ''), COALESCE(description, ''),
-       COALESCE(public_description, ''), COALESCE(ocr_text, ''), COALESCE(translation, '')
+       COALESCE(public_description, ''), COALESCE(public_description_ar, ''),
+       COALESCE(ocr_text, ''), COALESCE(translation, '')
 FROM documents;
 """
 

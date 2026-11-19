@@ -100,7 +100,7 @@
 {% if media and media.filename and is_image %}
 <img
     src="/static/media/{{ media.filename }}"
-    alt="{{ doc.title }}"
+    alt="{{ localized(doc, 'title') }}"
     class="{{ img_class }}"
     loading="lazy"
 >
@@ -344,7 +344,7 @@
                     {% if doc.snippet_title %}
                         {{ doc.snippet_title | highlight }}
                     {% else %}
-                        {{ doc.title }}
+                        {{ localized(doc, "title") }}
                     {% endif %}
                 </h2>
                 <div
@@ -352,8 +352,8 @@
                 >
                     {% if doc.snippet_desc %}
                         {{ doc.snippet_desc | strip_html }}
-                    {% elif doc.public_description %}
-                        {{ doc.public_description | bidirectional_text }}
+                    {% elif localized(doc, "public_description") %}
+                        {{ localized(doc, "public_description") | bidirectional_text }}
                     {% else %}
                         <span class="italic text-base-content/65">{{ t("search.no_summary") }}</span>
                     {% endif %}
@@ -391,7 +391,7 @@
                         {% if doc.snippet_title %}
                             {{ doc.snippet_title | highlight }}
                         {% else %}
-                            {{ doc.title }}
+                            {{ localized(doc, "title") }}
                         {% endif %}
                     </h2>
                     <div
@@ -399,8 +399,8 @@
                     >
                         {% if doc.snippet_desc %}
                             {{ doc.snippet_desc | strip_html }}
-                        {% elif doc.public_description %}
-                            {{ doc.public_description | bidirectional_text }}
+                        {% elif localized(doc, "public_description") %}
+                            {{ localized(doc, "public_description") | bidirectional_text }}
                         {% else %}
                             <span class="italic text-base-content/65">{{ t("search.no_summary") }}</span>
                         {% endif %}

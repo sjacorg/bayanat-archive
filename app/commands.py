@@ -96,9 +96,10 @@ def import_archive(export_dir, append):
 
         conn.execute(
             """INSERT INTO documents
-               (id, title, title_ar, slug, description, public_description, source_link,
+               (id, title, title_ar, slug, description, public_description,
+                public_description_ar, source_link,
                 publish_date, documentation_date, ocr_text, translation)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 doc_id,
                 title,
@@ -106,6 +107,7 @@ def import_archive(export_dir, append):
                 slug,
                 None,  # internal description is never published
                 doc.get("public_description"),
+                doc.get("public_description_ar"),
                 doc.get("source_link"),
                 doc.get("publish_date"),
                 doc.get("documentation_date"),

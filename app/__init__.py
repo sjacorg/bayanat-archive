@@ -140,6 +140,21 @@ def create_app():
         cleaned = _re_block_tags.sub(r'<\1 dir="auto"\2', cleaned)
         return Markup(cleaned)
 
+    @app.template_global("localized")
+    def localized(row, field):
+        """The Arabic value on Arabic pages, falling back to the English one.
+
+        SJAC fills the Arabic fields over time, so a row may hold either or both.
+        """
+        if getattr(g, "lang", DEFAULT_LANG) == "ar":
+            try:
+                value = row[f"{field}_ar"]
+            except (IndexError, KeyError, TypeError):
+                value = None
+            if value and str(value).strip():
+                return value
+        return row[field]
+
     @app.template_filter("bidirectional_text")
     def bidirectional_text(value):
         if not value:

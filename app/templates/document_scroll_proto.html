@@ -87,15 +87,18 @@
         {# Record overview sheet #}
         <article data-page="0" id="page-0" class="card-archive mx-auto mb-8 w-full scroll-mt-20 p-7 md:p-10" style="max-width:var(--page-width,880px)">
             <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-secondary">{{ t("document.record") }}</p>
-            <h1 dir="auto" class="title-serif mt-2 text-2xl font-semibold leading-tight text-base-content md:text-4xl">{{ document.title }}</h1>
-            {% if document.title_ar and document.title_ar != document.title %}
-            <p dir="auto" class="mt-1 text-lg text-base-content/65">{{ document.title_ar }}</p>
+            {% set heading = localized(document, "title") %}
+            <h1 dir="auto" class="title-serif mt-2 text-2xl font-semibold leading-tight text-base-content md:text-4xl">{{ heading }}</h1>
+            {% set alt_title = document.title if heading == document.title_ar else document.title_ar %}
+            {% if alt_title and alt_title != heading %}
+            <p dir="auto" class="mt-1 text-lg text-base-content/65">{{ alt_title }}</p>
             {% endif %}
 
-            {% if document.public_description %}
+            {% set summary = localized(document, "public_description") %}
+            {% if summary %}
             <section class="mt-6 border-s-4 border-secondary bg-base-200/40 px-4 py-4">
                 <p class="text-[11px] font-semibold uppercase tracking-[0.14em] text-secondary">{{ t("catalog.sjac_context") }}</p>
-                <div dir="auto" class="mt-2 leading-7 text-base-content/80 rich-text">{{ document.public_description | safe_html }}</div>
+                <div dir="auto" class="mt-2 leading-7 text-base-content/80 rich-text">{{ summary | safe_html }}</div>
             </section>
             {% endif %}
 
