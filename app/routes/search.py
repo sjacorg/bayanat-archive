@@ -215,10 +215,15 @@ def _get_timeline_bins(db):
         """
     ).fetchall()
 
-    timeline_bins = [{"year": row["year"], "count": row["count"]} for row in rows]
-    if timeline_bins:
-        timeline_min_year = timeline_bins[0]["year"]
-        timeline_max_year = timeline_bins[-1]["year"]
+    counts = {row["year"]: row["count"] for row in rows}
+    if counts:
+        timeline_min_year = min(counts)
+        timeline_max_year = max(counts)
+        # Every year on the axis, so one without documents shows as an empty slot.
+        timeline_bins = [
+            {"year": year, "count": counts.get(year, 0)}
+            for year in range(timeline_min_year, timeline_max_year + 1)
+        ]
     else:
         current_year = datetime.now().year
         timeline_bins = [{"year": current_year, "count": 0}]
@@ -383,7 +388,7 @@ def _get_document_media(db, doc_ids):
         return {}
     placeholders = ",".join("?" * len(doc_ids))
     rows = db.execute(
-        f"""SELECT document_id, filename, media_type
+        f"""SELECT document_id, filename, media_type, thumbnail
             FROM media
             WHERE document_id IN ({placeholders})
             ORDER BY document_id, id""",
@@ -397,6 +402,7 @@ def _get_document_media(db, doc_ids):
             thumbnails[doc_id] = {
                 "filename": row["filename"],
                 "media_type": row["media_type"],
+                "thumbnail": row["thumbnail"],
                 "media_count": 0,
             }
             media_types_seen[doc_id] = set()

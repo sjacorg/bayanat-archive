@@ -16,6 +16,8 @@
         if (p.get('q')) $refs.searchInput.value = p.get('q');
     "
     @keydown.escape.window="open = null; closeMobileFilters(); setTimePanelOpen(false)"
+    {# "/" jumps to the search box, as on most search tools. #}
+    @keydown.slash.window="if (!['INPUT', 'TEXTAREA', 'SELECT'].includes($event.target.tagName)) { $event.preventDefault(); $refs.searchInput.focus() }"
     {# Shared sync event: partial responses emit current facet/view state. #}
     @facets-sync.document="syncMobileFromDetail($event.detail)"
 >
@@ -23,9 +25,12 @@
     <!-- Search row -->
     <div :class="timePanelOpen ? '' : 'mb-8'" class="full-bleed relative bg-gray-200/60">
         <div class="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6 sm:py-6 lg:px-10">
+            {# Introduces the archive on the bare home page only; a query or filter gives the space to results. #}
+            {% set has_search = request.args.get("q", "").strip() or request.args.getlist("label") or request.args.getlist("location") or request.args.get("date_from") or request.args.get("date_to") or request.args.get("page", "1") not in ["", "1"] %}
             <section
-                class="relative isolate overflow-hidden border border-primary/15 bg-primary text-primary-content"
-                :class="activeSearch ? 'mb-4 sm:mb-5' : 'mb-6 sm:mb-7'"
+                class="relative isolate mb-6 overflow-hidden border border-primary/15 bg-primary text-primary-content sm:mb-7"
+                x-show="!activeSearch"
+                {% if has_search %}style="display: none"{% endif %}
                 aria-labelledby="search-about-title"
             >
                 <img
@@ -34,29 +39,25 @@
                     class="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-70"
                     aria-hidden="true"
                 >
-                <div class="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(7,72,57,0.94)_0%,rgba(7,72,57,0.78)_46%,rgba(7,72,57,0.28)_100%)]"></div>
+                <div class="hero-scrim absolute inset-0 -z-10"></div>
 
                 <div
-                    class="flex max-w-[760px] flex-col justify-center px-5 sm:px-8 lg:px-10"
-                    :class="activeSearch ? 'min-h-[128px] py-5 sm:min-h-[144px] sm:py-6' : 'min-h-[220px] py-7 sm:min-h-[250px]'"
+                    class="flex min-h-[220px] max-w-[760px] flex-col justify-center px-5 py-7 sm:min-h-[250px] sm:px-8 lg:px-10"
                 >
                     <h1
                         id="search-about-title"
-                        class="m-0 font-light leading-[1.12] tracking-tight"
-                        :class="activeSearch ? 'text-[22px] sm:text-[30px] sm:leading-[1.08]' : 'text-[28px] sm:text-[40px] sm:leading-[1.08]'"
+                        class="m-0 text-[28px] font-normal leading-[1.12] tracking-tight sm:text-[40px] sm:leading-[1.08]"
                     >
                         {{ t("search.hero_title") }}
                     </h1>
                     <p
-                        class="font-light text-primary-content/88"
-                        :class="activeSearch ? 'mt-2 line-clamp-2 text-base leading-[1.46] sm:mt-3 sm:text-[18px] sm:leading-[1.48]' : 'mt-5 text-[17px] leading-[1.5] sm:mt-6 sm:text-[20px] sm:leading-[1.52]'"
+                        class="mt-5 text-[17px] font-normal leading-[1.5] text-primary-content sm:mt-6 sm:text-[20px] sm:leading-[1.52]"
                     >
                         {{ t("search.hero_body") }}
                     </p>
                     <a
                         href="{{ url_for('pages.about') }}"
-                        class="inline-flex w-fit items-center border border-primary-content/80 font-medium text-primary-content transition hover:bg-primary-content hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary-content/75 focus:ring-offset-2 focus:ring-offset-primary"
-                        :class="activeSearch ? 'mt-4 h-10 px-5 text-sm' : 'mt-6 h-11 px-6 text-base'"
+                        class="mt-6 inline-flex h-11 w-fit items-center border border-primary-content/80 px-6 text-base font-medium text-primary-content transition hover:bg-primary-content hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary-content/75 focus:ring-offset-2 focus:ring-offset-primary"
                     >
                         {{ t("search.read_more") }}
                         <svg class="ms-3 h-4 w-4 rtl:-scale-x-100" viewBox="0 0 17 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -92,10 +93,11 @@
                         hx-vals='{"page": "1"}'
                         hx-indicator="#loading"
                     >
+                    <kbd class="search-kbd" aria-hidden="true">/</kbd>
                 </label>
                 <button
                     type="button"
-                    class="inline-flex h-10 w-10 items-center justify-center text-5xl leading-none text-primary/80"
+                    class="inline-flex h-[40px] shrink-0 items-center gap-2 border border-primary/25 bg-base-100 px-3 text-sm font-medium text-primary transition-colors hover:border-primary md:h-[54px] md:px-4"
                     :aria-expanded="timePanelOpen ? 'true' : 'false'"
                     aria-label="{{ t('search.toggle_time') }}"
                     aria-controls="timeline-panel"
@@ -103,7 +105,7 @@
                 >
                     <svg
                         aria-hidden="true"
-                        class="size-9 origin-center transform-gpu"
+                        class="size-5 origin-center transform-gpu transition-transform duration-150"
                         :class="timePanelOpen ? 'rotate-45' : 'rotate-0'"
                         viewBox="0 0 24 24"
                         fill="none"
@@ -115,7 +117,7 @@
                         <path d="M12 5v14"></path>
                         <path d="M5 12h14"></path>
                     </svg>
-                    <span class="sr-only">{{ t("search.toggle_time") }}</span>
+                    <span class="hidden whitespace-nowrap sm:inline">{{ t("search.date_range") }}</span>
                 </button>
             </div>
         </div>
@@ -129,87 +131,110 @@
     {% include "partials/search_timeline_panel.html" %}
 
     <!-- Facets: live outside #results so they never re-render or flash -->
-    {% macro facet(key, label, items, counts, param=None) %}
+    {% macro facet(key, label, items, counts, param=None, align="start") %}
     {# param lets two dropdowns (places, facilities) write to one query param;
        they then track only their own options so each badge counts its own. #}
     {% set param = param or key %}
+    {% set panel = "facet:" ~ key %}
     <div
+        class="relative"
         {% if key == "label" %}
-        x-data="{ sel: window.readLabelParams(new URLSearchParams(window.location.search)) }"
+        x-data='{ query: "", opts: {{ items | tojson }}, sel: window.readLabelParams(new URLSearchParams(window.location.search)) }'
         @facets-sync.document="sel = $event.detail['{{ param }}']"
         {% else %}
-        x-data='{ opts: {{ items | tojson }}, sel: new URLSearchParams(window.location.search).getAll("{{ param }}").filter(v => {{ items | tojson }}.includes(v)) }'
+        x-data='{ query: "", opts: {{ items | tojson }}, sel: new URLSearchParams(window.location.search).getAll("{{ param }}").filter(v => {{ items | tojson }}.includes(v)) }'
         @facets-sync.document='sel = ($event.detail["{{ param }}"] || []).filter(v => opts.includes(v))'
         {% endif %}
     >
         <button
             type="button"
-            @click.stop="open = (open === 'facet:{{ key }}') ? null : 'facet:{{ key }}'"
-            :class="open === 'facet:{{ key }}' ? 'bg-white' : 'hover:bg-gray-500/12'"
-            class="flex w-full items-center justify-between gap-3 px-3 h-[33px] select-none bg-gray-500/8 border border-gray-400"
-            aria-haspopup="listbox"
-            :aria-expanded="open === 'facet:{{ key }}'"
+            @click.stop="open = (open === '{{ panel }}') ? null : '{{ panel }}'; query = ''; $nextTick(() => $refs.filter && open === '{{ panel }}' && $refs.filter.focus())"
+            class="facet-trigger"
+            :aria-expanded="open === '{{ panel }}'"
             aria-label="{{ label }} filter"
         >
-            <span class="flex min-w-0 items-baseline gap-2 truncate">
-                <span class="truncate text-sm uppercase text-base-content/70">{{ label }}</span>
-                <span x-show="sel.length > 0" x-cloak x-text="sel.length" class="shrink-0 flex h-3.5 w-3.5 items-center justify-center bg-primary text-[10px] font-semibold text-white"></span>
+            <span class="flex min-w-0 items-center gap-2">
+                <span class="truncate">{{ label }}</span>
+                <span x-show="sel.length > 0" x-cloak x-text="sel.length" class="facet-trigger__count"></span>
             </span>
-            <svg class="h-3 w-3 shrink-0 text-base-content/30" :class="{ 'rotate-180': open === 'facet:{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <svg class="h-3 w-3 shrink-0 text-base-content/60" :class="{ 'rotate-180': open === '{{ panel }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M2 4l4 4 4-4"/>
             </svg>
         </button>
 
+        {# Stays open while options are ticked: results refresh behind it, Done or Esc closes. #}
         <div
+            x-show="open === '{{ panel }}'"
             x-cloak
-            :class="open === 'facet:{{ key }}' ? '' : 'hidden'"
-            x-transition:enter="transition ease-out duration-100"
-            x-transition:enter-start="opacity-0 -translate-y-0.5"
-            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 -translate-y-1 scale-[0.98]"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-100"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
             @click.outside="open = null"
-            class="absolute top-[120%] start-0 z-30 w-full bg-base-100 border border-gray-200 shadow-ambient p-6 h-[274px] overflow-y-auto"
-            role="listbox"
-            aria-multiselectable="true"
+            class="popover-panel absolute top-full z-30 mt-1.5 w-[24rem] max-w-[calc(100vw-2rem)] origin-top {{ 'end-0' if align == 'end' else 'start-0' }}"
+            role="group"
+            aria-label="{{ label }}"
         >
-            <div class="grid grid-cols-2 gap-5 lg:grid-cols-4">
-                {% if items %}
-                    {% for item in items %}
-                    <label
-                        class="flex cursor-pointer items-center gap-3 px-4 py-2 transition-colors hover:bg-gray-200/50"
+            {% if items | length > 8 %}
+            <label class="popover-search">
+                <svg class="size-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.3-4.3"></path>
+                </svg>
+                <input
+                    type="search"
+                    x-ref="filter"
+                    x-model="query"
+                    autocomplete="off"
+                    placeholder="{{ t('nav.search') }} {{ label | lower }}"
+                    aria-label="{{ t('nav.search') }} {{ label | lower }}"
+                >
+            </label>
+            {% endif %}
+
+            <div class="popover-list">
+                {% for item in items %}
+                <label
+                    class="facet-option"
+                    x-show='!query || {{ item | lower | tojson }}.includes(query.trim().toLowerCase())'
+                >
+                    <input
+                        type="checkbox"
+                        name="{{ param }}"
+                        value="{{ item }}"
+                        x-model="sel"
+                        class="search-param sr-only"
+                        hx-get="/search"
+                        hx-trigger="change"
+                        hx-target="#results"
+                        hx-push-url="true"
+                        hx-include=".search-param"
+                        hx-vals='{"page": "1"}'
+                        hx-indicator="#loading"
                     >
-                        <input
-                            type="checkbox"
-                            name="{{ param }}"
-                            value="{{ item }}"
-                            x-model="sel"
-                            class="search-param checkbox checkbox-sm checkbox-primary hidden"
-                            hx-get="/search"
-                            hx-trigger="change"
-                            hx-target="#results"
-                            hx-push-url="true"
-                            hx-include=".search-param"
-                            hx-vals='{"page": "1"}'
-                            hx-indicator="#loading"
-                            @change="open = null"
-                        >
-                        <span
-                            :class='sel.includes({{ item | tojson }}) ? "text-secondary" : "text-base-content/80"'
-                            class="text-sm"
-                        >{{ item }} ({{ counts[item] }})</span>
-                        <svg
-                            :class='sel.includes({{ item | tojson }}) ? "opacity-100" : "opacity-0"'
-                            class="size-4 shrink-0 text-secondary transition-opacity duration-100"
-                            viewBox="0 0 17 17"
-                            fill="currentColor"
-                            aria-hidden="true"
-                        >
-                            <path d="M6.37462 11.4541L3.42087 8.50038L2.41504 9.49913L6.37462 13.4587L14.8746 4.95871L13.8759 3.95996L6.37462 11.4541Z"/>
-                        </svg>
-                    </label>
-                    {% endfor %}
-                {% else %}
-                    <p class="px-4 py-3 text-sm text-base-content/65">{{ t("search.no_options") }}</p>
-                {% endif %}
+                    <span class="facet-box" aria-hidden="true">
+                        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.6l4.5-5"/></svg>
+                    </span>
+                    <span class="facet-option__text" dir="{{ item | text_dir }}">{{ item }}</span>
+                    <span class="facet-option__count">{{ counts[item] }}</span>
+                </label>
+                {% endfor %}
+                <p
+                    class="px-4 py-3 text-sm text-base-content/65"
+                    {% if items %}x-show="query && !opts.some(o => o.toLowerCase().includes(query.trim().toLowerCase()))" x-cloak{% endif %}
+                >{{ t("search.no_options") }}</p>
+            </div>
+
+            <div class="popover-foot">
+                <button
+                    type="button"
+                    class="popover-foot__clear"
+                    :disabled="sel.length === 0"
+                    @click="sel = []; $nextTick(() => htmx.trigger($root.querySelector('input[type=checkbox]'), 'change'))"
+                >{{ t("search.clear") }}</button>
+                <button type="button" class="popover-foot__done" @click="open = null">{{ t("search.done") }}</button>
             </div>
         </div>
     </div>
@@ -230,7 +255,7 @@
                     x-text="`(${mobileSelected['{{ key }}'].length} {{ t('search.selected') }})`"
                 ></span>
             </div>
-            <svg class="h-3 w-3 text-base-content/35 transition-transform duration-150" :class="{ 'rotate-180': mobileFacetOpen === '{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <svg class="h-3 w-3 text-base-content/60 transition-transform duration-150" :class="{ 'rotate-180': mobileFacetOpen === '{{ key }}' }" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M2 4l4 4 4-4"/>
             </svg>
         </button>
@@ -291,7 +316,7 @@
     {% endmacro %}
 
     <div class="relative mb-8 flex items-center gap-6 lg:gap-8">
-        <p id="result-count" role="status" aria-live="polite" class="text-base font-semibold text-base-content">0 results</p>
+        <p id="result-count" role="status" aria-live="polite" class="text-base font-semibold text-base-content"></p>
 
         <button
             type="button"
@@ -309,7 +334,7 @@
         <div class="hidden flex-1 grid-cols-2 gap-5 lg:grid lg:grid-cols-4">
             {{ facet("label",    t("search.labels"),     all_labels,     label_counts) }}
             {{ facet("place",    t("search.places"),     all_places,     place_counts,    param="location") }}
-            {{ facet("facility", t("search.facilities"), all_facilities, facility_counts, param="location") }}
+            {{ facet("facility", t("search.facilities"), all_facilities, facility_counts, param="location", align="end") }}
         </div>
     </div>
 

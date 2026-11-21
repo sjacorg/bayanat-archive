@@ -155,6 +155,15 @@ def create_app():
                 return value
         return row[field]
 
+    @app.template_filter("text_dir")
+    def text_dir(value):
+        # dir="auto" follows the first strong character, so an English title that
+        # opens with an Arabic reference ("#14129\س ت2 follow up") flips to RTL.
+        # The majority script decides instead.
+        letters = [char for char in str(value or "") if char.isalpha()]
+        arabic = sum(1 for char in letters if _contains_arabic_script(char))
+        return "rtl" if arabic * 2 > len(letters) else "ltr"
+
     @app.template_filter("bidirectional_text")
     def bidirectional_text(value):
         if not value:

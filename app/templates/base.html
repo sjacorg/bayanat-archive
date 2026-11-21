@@ -114,7 +114,7 @@
 
                         <nav class="hidden items-center gap-6 text-sm md:flex">
                             {% for link in nav_links %}
-                            <a href="{{ link.href }}" class="{% if request.path in link.active_paths %}text-primary font-medium{% else %}text-base-content/70 hover:text-primary{% endif %} transition-colors">
+                            <a href="{{ link.href }}" class="nav-link {% if request.path in link.active_paths %}is-active text-primary font-medium{% else %}text-base-content/70 hover:text-primary{% endif %} transition-colors"{% if request.path in link.active_paths %} aria-current="page"{% endif %}>
                                 {{ link.label }}
                             </a>
                             {% endfor %}

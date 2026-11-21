@@ -10,6 +10,16 @@ class I18nTestCase(unittest.TestCase):
         self.assertEqual(translate("ar", "nav.search"), "بحث")
         self.assertEqual(translate("ar", "missing.key"), "missing.key")
 
+    def test_text_dir_follows_majority_script_not_first_character(self):
+        text_dir = create_app().jinja_env.filters["text_dir"]
+
+        self.assertEqual(text_dir("#14129\\س ت2 follow up"), "ltr")
+        self.assertEqual(
+            text_dir("Doc #1604/ع ر Page 1 of 1 Surveillance report"), "ltr"
+        )
+        self.assertEqual(text_dir("مذكرة حول الوضع الأمني في Raqqa"), "rtl")
+        self.assertEqual(text_dir(None), "ltr")
+
     def test_query_param_sets_locale_and_cookie(self):
         app = create_app()
         client = app.test_client()
@@ -36,7 +46,9 @@ class I18nTestCase(unittest.TestCase):
 
         response = client.get("/?lang=ar")
 
-        self.assertIn("أرشيف الوثائق الخاص بالمركز السوري للعدالة والمساءلة", response.text)
+        self.assertIn(
+            "أرشيف الوثائق الخاص بالمركز السوري للعدالة والمساءلة", response.text
+        )
         self.assertNotIn("بيانات <span", response.text)
 
     def test_live_document_viewer_uses_translated_chrome(self):

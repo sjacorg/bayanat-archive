@@ -41,6 +41,7 @@ html {
     --font-serif: 'IBM Plex Serif', 'IBM Plex Sans Arabic', Georgia, 'Times New Roman', serif;
     --color-paper: oklch(0.985 0.006 85);        /* warm ivory canvas */
     --color-paper-border: oklch(0.90 0.010 80);  /* warm hairline */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 body {
@@ -135,10 +136,50 @@ h1, h2, h3, .title-serif {
     }
 }
 
-.card-archive:hover,
-.card-archive:focus-within {
-    border-color: var(--color-secondary);
-    box-shadow: 0 8px 30px rgba(26, 69, 64, 0.10);
+/* Only linked cards react; the record sheet and page frames are not buttons. */
+a.card-archive {
+    transition: border-color 0.2s ease, box-shadow 0.3s ease, transform 0.3s var(--ease-out);
+}
+
+a.card-archive:hover,
+a.card-archive:focus-visible {
+    border-color: color-mix(in oklch, var(--color-primary) 45%, var(--color-paper-border));
+    box-shadow: 0 1px 2px rgba(26, 69, 64, 0.06), 0 14px 28px -14px rgba(26, 69, 64, 0.28);
+}
+
+a.card-archive:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(26, 69, 64, 0.08);
+}
+
+/* Thumbnail mat: a document lies on it as a sheet, a photograph fills it. */
+.card-thumb {
+    background: oklch(0.925 0.008 80);
+    border-bottom: 1px solid var(--color-paper-border);
+}
+
+.card-thumb .doc-sheet {
+    position: absolute;
+    top: 1.1rem;
+    inset-inline: 1.6rem;
+    width: calc(100% - 3.2rem);
+    height: auto;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10), 0 10px 22px -8px rgba(15, 23, 42, 0.30);
+    transition: transform 0.45s var(--ease-out);
+}
+
+a.card-archive:hover .doc-sheet,
+a.card-archive:focus-visible .doc-sheet {
+    transform: translateY(-0.4rem);
+}
+
+.card-foot {
+    border-top: 1px solid var(--color-paper-border);
+}
+
+.card-foot:empty {
+    display: none;
 }
 
 /* Catalog (no-media) thumbnail — subtle paper texture, replaces clip-art filler */
@@ -150,7 +191,9 @@ h1, h2, h3, .title-serif {
 
 /* Ambient shadow (not drop shadow) */
 .shadow-ambient {
-    box-shadow: 0 0 32px rgba(26, 69, 64, 0.06);
+    box-shadow: 0 2px 6px rgba(26, 69, 64, 0.06), 0 16px 32px -12px rgba(26, 69, 64, 0.20);
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--color-base-content) 24%, transparent) transparent;
 }
 
 /* Full-bleed: break out of the centered container to span the viewport.
@@ -206,13 +249,413 @@ h1, h2, h3, .title-serif {
 }
 
 #results > *:not(#toolbar) {
-    animation: fade-in 1000ms ease both;
+    animation: fade-in 180ms ease-out both;
 }
 
 /* Global focus-visible ring — applies to all interactive elements */
 :focus-visible {
-    outline: 2px solid oklch(0.61 0.085 180);
+    outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+}
+
+/* On the dark teal footer the ring has to flip to stay visible. */
+footer :focus-visible {
+    outline-color: var(--color-primary-content);
+}
+
+/* Browser-drawn surfaces, themed from the palette. */
+::selection {
+    background: color-mix(in oklch, var(--color-secondary) 30%, transparent);
+}
+
+/* Search-hit highlight: a paper-toned marker instead of browser yellow. */
+mark {
+    background: oklch(0.93 0.06 85);
+    color: inherit;
+    padding-inline: 0.1em;
+}
+
+/* DaisyUI renders placeholders at 50% (3.8:1 on white); 62% clears 4.5:1. */
+input::placeholder,
+textarea::placeholder {
+    color: color-mix(in oklch, var(--color-base-content) 62%, transparent);
+    opacity: 1;
+}
+
+/* Arabic letters join, so tracking tears words apart. */
+html[lang="ar"] * {
+    letter-spacing: 0 !important;
+}
+
+/* Home hero scrim: dark end under the text in both directions, and a flat
+   veil on phones where the copy spans the whole photo. */
+.hero-scrim {
+    background: rgba(7, 72, 57, 0.9);
+}
+
+@media (min-width: 640px) {
+    .hero-scrim {
+        background: linear-gradient(90deg, rgba(7, 72, 57, 0.94) 0%, rgba(7, 72, 57, 0.84) 46%, rgba(7, 72, 57, 0.28) 100%);
+    }
+
+    [dir="rtl"] .hero-scrim {
+        background: linear-gradient(270deg, rgba(7, 72, 57, 0.94) 0%, rgba(7, 72, 57, 0.84) 46%, rgba(7, 72, 57, 0.28) 100%);
+    }
+}
+
+/* ── Small details ──────────────────────────────────────────────── */
+h1 { text-wrap: balance; }
+p, h2, h3 { text-wrap: pretty; }
+
+/* Dropdown chevrons turn rather than snap. */
+button[aria-expanded] > svg {
+    transition: transform 0.18s var(--ease-out);
+}
+
+/* Every button gives a little under the finger. */
+.btn:active,
+.scroll-preview-button-primary:active,
+.scroll-preview-button-secondary:active {
+    transform: translateY(1px);
+}
+
+/* Header navigation: a rule draws in under the current section. */
+.nav-link {
+    position: relative;
+    padding-block: 0.4rem;
+}
+
+.nav-link::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 2px;
+    background: var(--color-primary);
+    transform: scaleX(0);
+    transition: transform 0.25s var(--ease-out);
+}
+
+.nav-link:hover::after,
+.nav-link.is-active::after {
+    transform: scaleX(1);
+}
+
+/* "/" focuses search; the hint steps aside once the field is in use. */
+.search-kbd {
+    display: none;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    border: 1px solid var(--color-paper-border);
+    background: var(--color-paper);
+    color: color-mix(in oklch, var(--color-base-content) 65%, transparent);
+    font: 500 0.75rem/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    transition: opacity 0.15s ease;
+}
+
+@media (min-width: 768px) and (hover: hover) {
+    .search-kbd { display: inline-flex; }
+}
+
+label:focus-within > .search-kbd,
+input:not(:placeholder-shown) ~ .search-kbd {
+    opacity: 0;
+}
+
+/* Text fields: one ring, drawn on the box. DaisyUI outlines the wrapper and the
+   global :focus-visible outlines the input inside it, which stacked two frames. */
+.input:focus-within,
+.input:has(> input:focus) {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 16%, transparent);
+}
+
+.input > input:focus-visible,
+.popover-search > input:focus-visible {
+    outline: none;
+}
+
+.input {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ── Dropdowns: filter and sort share one trigger and one popover ── */
+.facet-trigger {
+    display: flex;
+    width: 100%;
+    height: 2.25rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-inline: 0.75rem;
+    border: 1px solid oklch(0.80 0.010 80);
+    background: #fff;
+    color: color-mix(in oklch, var(--color-base-content) 82%, transparent);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    user-select: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
+}
+
+.facet-trigger--plain {
+    font-size: 0.875rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.facet-trigger:hover {
+    border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
+    color: var(--color-base-content);
+}
+
+.facet-trigger[aria-expanded="true"] {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 16%, transparent);
+    color: var(--color-base-content);
+}
+
+.facet-trigger__count {
+    display: inline-flex;
+    min-width: 1.15rem;
+    height: 1.15rem;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0.25rem;
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+}
+
+.popover-panel {
+    border: 1px solid oklch(0.84 0.010 80);
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(26, 69, 64, 0.06), 0 20px 40px -16px rgba(26, 69, 64, 0.30);
+}
+
+.popover-search {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    border-bottom: 1px solid var(--color-paper-border);
+    color: color-mix(in oklch, var(--color-base-content) 60%, transparent);
+}
+
+.popover-search > input {
+    min-width: 0;
+    flex: 1;
+    background: transparent;
+    color: var(--color-base-content);
+    font-size: 0.875rem;
+}
+
+.popover-search:focus-within {
+    color: var(--color-primary);
+}
+
+.popover-list {
+    max-height: 19rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-block: 0.35rem;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--color-base-content) 24%, transparent) transparent;
+}
+
+.facet-option,
+.popover-option {
+    display: flex;
+    width: 100%;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.5rem 0.9rem;
+    color: color-mix(in oklch, var(--color-base-content) 82%, transparent);
+    font-size: 0.875rem;
+    line-height: 1.35;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+}
+
+.popover-option {
+    align-items: center;
+}
+
+.facet-option:hover,
+.popover-option:hover,
+.facet-option:has(input:focus-visible) {
+    background: color-mix(in oklch, var(--color-primary) 7%, transparent);
+    color: var(--color-base-content);
+}
+
+.popover-option.is-selected,
+.facet-option:has(input:checked) {
+    color: var(--color-base-content);
+    font-weight: 500;
+}
+
+.facet-box {
+    display: grid;
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    margin-top: 0.12rem;
+    place-items: center;
+    border: 1.5px solid color-mix(in oklch, var(--color-base-content) 45%, transparent);
+    background: #fff;
+    color: #fff;
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.facet-box svg {
+    width: 0.7rem;
+    height: 0.7rem;
+    opacity: 0;
+    transform: scale(0.6);
+    transition: opacity 0.12s ease, transform 0.2s var(--ease-out);
+}
+
+.facet-option input:checked + .facet-box {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+}
+
+.facet-option input:checked + .facet-box svg {
+    opacity: 1;
+    transform: none;
+}
+
+.facet-option input:focus-visible + .facet-box {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.facet-option__text {
+    min-width: 0;
+    flex: 1;
+}
+
+.facet-option__count {
+    flex: none;
+    color: color-mix(in oklch, var(--color-base-content) 62%, transparent);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 400;
+}
+
+.popover-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 0.9rem;
+    border-top: 1px solid var(--color-paper-border);
+    background: var(--color-paper);
+    font-size: 0.875rem;
+}
+
+.popover-foot__clear {
+    color: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.popover-foot__clear:hover:not(:disabled) {
+    color: var(--color-base-content);
+}
+
+.popover-foot__clear:disabled {
+    color: color-mix(in oklch, var(--color-base-content) 62%, transparent);
+    text-decoration: none;
+    cursor: default;
+}
+
+.popover-foot__done {
+    padding: 0.3rem 0.9rem;
+    background: var(--color-primary);
+    color: var(--color-primary-content);
+    font-weight: 500;
+    transition: background-color 0.15s ease;
+}
+
+.popover-foot__done:hover {
+    background: color-mix(in oklch, var(--color-primary) 88%, #000);
+}
+
+/* Record metadata as a finding-aid table: label column, value column, hairlines. */
+.record-meta {
+    margin-top: 1.75rem;
+    border-top: 1px solid var(--color-paper-border);
+}
+
+.record-row {
+    display: grid;
+    gap: 0.25rem;
+    padding-block: 0.8rem;
+    border-bottom: 1px solid var(--color-paper-border);
+}
+
+@media (min-width: 640px) {
+    .record-row {
+        grid-template-columns: 10rem minmax(0, 1fr);
+        gap: 1.5rem;
+        align-items: baseline;
+    }
+
+    .record-row > dd {
+        margin-top: 0;
+    }
+}
+
+/* Viewer: a hairline under the top bar fills as the record is read. */
+.reading-progress {
+    position: absolute;
+    inset-inline: 0;
+    bottom: -1px;
+    height: 2px;
+    background: var(--color-secondary);
+    transform: scaleX(0);
+    transform-origin: left;
+    animation: reading-progress linear both;
+    animation-timeline: scroll(root);
+}
+
+[dir="rtl"] .reading-progress {
+    transform-origin: right;
+}
+
+@keyframes reading-progress {
+    to { transform: scaleX(1); }
+}
+
+@supports not (animation-timeline: scroll()) {
+    .reading-progress { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    a.card-archive,
+    .card-thumb .doc-sheet,
+    .nav-link::after,
+    button[aria-expanded] > svg {
+        transition: none;
+    }
+
+    a.card-archive:hover .doc-sheet,
+    a.card-archive:active,
+    .btn:active {
+        transform: none;
+    }
 }
 
 /* Alpine.js: hide x-cloak elements before hydration */
@@ -234,51 +677,209 @@ body.timeline-overscroll-locked {
 }
 
 /* Dual range handles for the mobile timeline filter. */
+/* ── Date range: a histogram of the holdings with a draggable window ── */
+.timeline-card {
+    border: 1px solid var(--color-paper-border);
+    background: #fff;
+    padding: 1.1rem 1.25rem 0.9rem;
+}
+
+@media (min-width: 640px) {
+    .timeline-card { padding: 1.4rem 1.75rem 1.1rem; }
+}
+
+.timeline-label {
+    color: color-mix(in oklch, var(--color-base-content) 82%, transparent);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.timeline-year {
+    width: 4.5rem;
+    height: 2.25rem;
+    border: 1px solid oklch(0.80 0.010 80);
+    background: #fff;
+    color: var(--color-base-content);
+    font-size: 0.9375rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    text-align: center;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.timeline-year::-webkit-outer-spin-button,
+.timeline-year::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.timeline-year:hover {
+    border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
+}
+
+.timeline-year:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 16%, transparent);
+}
+
+.timeline-reset {
+    color: color-mix(in oklch, var(--color-base-content) 70%, transparent);
+    font-size: 0.875rem;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.timeline-reset:hover {
+    color: var(--color-base-content);
+}
+
+.timeline-chart {
+    margin-top: 1.25rem;
+    padding-inline: 13px; /* room for half a handle at either end */
+    user-select: none; /* dragging a handle must not select the counts */
+}
+
+.timeline-plot {
+    position: relative;
+    height: 104px;
+    border-bottom: 1px solid color-mix(in oklch, var(--color-base-content) 30%, transparent);
+}
+
+/* The selected window, tinted behind the bars. */
+.timeline-band {
+    position: absolute;
+    inset-block: 0;
+    background: color-mix(in oklch, var(--color-secondary) 12%, transparent);
+    transition: left 0.2s var(--ease-out), width 0.2s var(--ease-out);
+}
+
+.timeline-bars {
+    position: absolute;
+    inset: 0;
+    display: grid;
+}
+
+.timeline-bar {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.3rem;
+    cursor: pointer;
+}
+
+.timeline-bar__count {
+    color: color-mix(in oklch, var(--color-base-content) 62%, transparent);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    transition: color 0.15s ease;
+}
+
+.timeline-bar__fill {
+    width: min(62%, 4.5rem);
+    max-height: calc(100% - 1.25rem);
+    background: color-mix(in oklch, var(--color-base-content) 22%, transparent);
+    transition: background-color 0.15s ease;
+}
+
+.timeline-bar.is-selected .timeline-bar__fill {
+    background: var(--color-primary);
+}
+
+.timeline-bar.is-selected .timeline-bar__count {
+    color: var(--color-base-content);
+    font-weight: 500;
+}
+
+.timeline-bar:hover .timeline-bar__fill {
+    background: color-mix(in oklch, var(--color-base-content) 38%, transparent);
+}
+
+.timeline-bar.is-selected:hover .timeline-bar__fill {
+    background: color-mix(in oklch, var(--color-primary) 82%, #fff);
+}
+
+.timeline-years {
+    display: grid;
+    padding-top: 0.5rem;
+    color: color-mix(in oklch, var(--color-base-content) 62%, transparent);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+.timeline-years .is-selected {
+    color: var(--color-base-content);
+    font-weight: 500;
+}
+
+/* Two native range inputs, one per edge: only their handles take the pointer,
+   so the bars underneath stay clickable. Each handle is a full-height rule
+   with a grip. */
 .timeline-range {
     -webkit-appearance: none;
     appearance: none;
-    width: 100%;
-    height: 1.75rem;
+    position: absolute;
+    top: 0;
+    height: 104px;
+    margin: 0;
     transform: translate(-10px);
+    border: 0;
     background: transparent;
     pointer-events: none;
 }
 
+.timeline-range:focus-visible {
+    outline: none;
+}
+
 .timeline-range::-webkit-slider-runnable-track {
-    height: 2px;
+    height: 104px;
     background: transparent;
 }
 
 .timeline-range::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 0;
-    height: 0;
-    border-left: 13px solid transparent;
-    border-right: 13px solid transparent;
-    border-bottom: 30px solid #1a4540;
-    margin-top: -13px;
+    width: 26px;
+    height: 104px;
+    border: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='104' viewBox='0 0 26 104'%3E%3Cpath d='M13 0v104' stroke='%2300382c' stroke-width='2'/%3E%3Crect x='7.75' y='38.75' width='10.5' height='26.5' fill='%23fff' stroke='%2300382c' stroke-width='1.5'/%3E%3Cpath d='M11.5 46v12M14.5 46v12' stroke='%2300382c' stroke-width='1'/%3E%3C/svg%3E") center / 26px 104px no-repeat;
     pointer-events: auto;
     cursor: ew-resize;
+}
+
+.timeline-range:active::-webkit-slider-thumb,
+.timeline-range:focus-visible::-webkit-slider-thumb {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='104' viewBox='0 0 26 104'%3E%3Cpath d='M13 0v104' stroke='%2300382c' stroke-width='2'/%3E%3Crect x='7.75' y='38.75' width='10.5' height='26.5' fill='%2300382c' stroke='%2300382c' stroke-width='1.5'/%3E%3Cpath d='M11.5 46v12M14.5 46v12' stroke='%23fff' stroke-width='1'/%3E%3C/svg%3E");
 }
 
 .timeline-range::-moz-range-track {
-    height: 2px;
-    background: transparent;
+    height: 104px;
     border: 0;
+    background: transparent;
 }
 
 .timeline-range::-moz-range-thumb {
-    width: 0;
-    height: 0;
-    border-left: 13px solid transparent;
-    border-right: 13px solid transparent;
-    border-bottom: 30px solid #1a4540;
-    border-top: 0;
+    width: 26px;
+    height: 104px;
+    border: 0;
     border-radius: 0;
-    background: transparent;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='104' viewBox='0 0 26 104'%3E%3Cpath d='M13 0v104' stroke='%2300382c' stroke-width='2'/%3E%3Crect x='7.75' y='38.75' width='10.5' height='26.5' fill='%23fff' stroke='%2300382c' stroke-width='1.5'/%3E%3Cpath d='M11.5 46v12M14.5 46v12' stroke='%2300382c' stroke-width='1'/%3E%3C/svg%3E") center / 26px 104px no-repeat;
     pointer-events: auto;
     cursor: ew-resize;
+}
+
+.timeline-range:active::-moz-range-thumb,
+.timeline-range:focus-visible::-moz-range-thumb {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='104' viewBox='0 0 26 104'%3E%3Cpath d='M13 0v104' stroke='%2300382c' stroke-width='2'/%3E%3Crect x='7.75' y='38.75' width='10.5' height='26.5' fill='%2300382c' stroke='%2300382c' stroke-width='1.5'/%3E%3Cpath d='M11.5 46v12M14.5 46v12' stroke='%23fff' stroke-width='1'/%3E%3C/svg%3E");
 }
 
 /* Document detail: minimal custom CSS for behaviors not practical in utility classes */
@@ -582,7 +1183,7 @@ body.timeline-overscroll-locked {
 
 .scroll-other-file__type {
     margin: 0.35rem 0 0;
-    color: color-mix(in oklch, var(--color-base-content) 42%, transparent);
+    color: color-mix(in oklch, var(--color-base-content) 65%, transparent);
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
@@ -976,7 +1577,7 @@ button.scroll-preview-button-secondary {
 .rich-text h1, .rich-text h2, .rich-text h3,
 .rich-text h4, .rich-text h5, .rich-text h6 {
     font-family: var(--font-serif);
-    font-weight: 700;
+    font-weight: 600; /* heaviest Plex Serif face loaded */
     line-height: 1.3;
     margin-block: 0.75em 0.25em;
 }
@@ -1073,6 +1674,10 @@ button.scroll-preview-button-secondary {
 .scroll-preview-button-secondary[download],
 .scroll-lightbox__download {
     --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3'/%3E%3C/svg%3E");
+}
+
+.scroll-preview-button-secondary[data-copy] {
+    --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='14' height='14' x='8' y='8' rx='2'/%3E%3Cpath d='M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2'/%3E%3C/svg%3E");
 }
 
 .external-link::after {

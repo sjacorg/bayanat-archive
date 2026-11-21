@@ -165,6 +165,23 @@ def _get_related_documents(db, document_id, limit=4):
     return rows
 
 
+def _get_related_records(db, document_id):
+    """Documents linked to this one in Bayanat, in either direction."""
+    return db.execute(
+        """
+        SELECT DISTINCT d.id, d.slug, d.title, d.title_ar
+        FROM document_relations r
+        JOIN documents d
+          ON d.id = CASE WHEN r.document_id = :id THEN r.related_id ELSE r.document_id END
+        WHERE :id IN (r.document_id, r.related_id)
+          AND r.related_type = 'bulletin'
+          AND d.id != :id
+        ORDER BY d.title COLLATE NOCASE
+        """,
+        {"id": document_id},
+    ).fetchall()
+
+
 def _get_search_back_url():
     back_url = request.args.get("back", "")
     if back_url == "/search" or back_url.startswith("/search?"):
@@ -238,6 +255,7 @@ def detail(document_id, slug):
         related_count=related_count,
         metadata=metadata,
         relations=relations,
+        related_records=_get_related_records(db, document_id),
         back_url=_get_search_back_url(),
         canonical_url=request.url_root.rstrip("/")
         + f"/documents/{document['id']}/{document['slug']}",

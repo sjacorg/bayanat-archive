@@ -3,6 +3,7 @@ import os
 import shutil
 
 import click
+import pymupdf
 from flask import current_app
 from flask.cli import with_appcontext
 from slugify import slugify
@@ -21,6 +22,24 @@ CHILD_TABLES = (
     "media",
     "document_relations",
 )
+
+
+THUMBNAIL_WIDTH = 720  # search card is ~330px wide; 2x for dense screens
+
+
+def _pdf_thumbnail(pdf_path, thumb_path):
+    """Render page one of a PDF as the JPEG shown on search cards."""
+    try:
+        with pymupdf.open(pdf_path) as pdf:
+            page = pdf[0]
+            zoom = THUMBNAIL_WIDTH / page.rect.width
+            page.get_pixmap(matrix=pymupdf.Matrix(zoom, zoom), alpha=False).save(
+                thumb_path, jpg_quality=80
+            )
+    except (pymupdf.FileDataError, pymupdf.EmptyFileError, IndexError) as error:
+        click.echo(f"  Warning: no thumbnail for {os.path.basename(pdf_path)}: {error}")
+        return False
+    return True
 
 
 def _purge_document(conn, doc_id):
@@ -69,7 +88,7 @@ def import_archive(export_dir, append):
 
     conn = init_db(db_path)
     media_dest = os.path.join(current_app.root_path, "static", "media")
-    os.makedirs(media_dest, exist_ok=True)
+    os.makedirs(os.path.join(media_dest, "thumbs"), exist_ok=True)
 
     media_count = 0
     relation_count = 0
@@ -222,7 +241,7 @@ def import_archive(export_dir, append):
         # Media
         for m in doc.get("media", []):
             ext = m.get("extraction")
-            conn.execute(
+            media_row = conn.execute(
                 """INSERT INTO media
                    (document_id, media_id, filename, media_type, title, title_ar,
                     ocr_text, original_text, confidence, language)
@@ -253,6 +272,16 @@ def import_archive(export_dir, append):
                 media_count += 1
             else:
                 click.echo(f"  Warning: media file not found: {m['filename']}")
+
+            # Rendered from the published copy, so the thumbnail carries the watermark.
+            if m.get("type") == "application/pdf" and os.path.exists(dest_file):
+                thumbnail = f"thumbs/{m['filename']}.jpg"
+                thumb_file = os.path.join(media_dest, thumbnail)
+                if os.path.exists(thumb_file) or _pdf_thumbnail(dest_file, thumb_file):
+                    conn.execute(
+                        "UPDATE media SET thumbnail = ? WHERE id = ?",
+                        (thumbnail, media_row.lastrowid),
+                    )
 
         # Relations
         for rel in doc.get("related_bulletins", []):

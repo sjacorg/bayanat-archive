@@ -23,11 +23,11 @@
                     </a>
                 </div>
 
-                <h1 class="text-[40px] font-light leading-[1.02] tracking-tight text-primary">
+                <h1 class="text-[40px] font-normal leading-[1.02] tracking-tight text-primary">
                     {{ t("about.hero_title") }}
                 </h1>
 
-                <div class="mt-7 max-w-[700px] space-y-4 text-base font-light leading-[1.72] sm:mt-8 [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2">
+                <div class="mt-7 max-w-[700px] space-y-4 text-base font-normal leading-[1.72] sm:mt-8 [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2">
                     <p>{{ t("about.hero_body", analysis_url=t("about.analysis_url")) | safe }}</p>
                     <p>{{ t("about.hero_body_2") }}</p>
                     <p>{{ t("about.hero_body_3") | safe }}</p>
@@ -55,13 +55,13 @@
             <div class="max-w-[600px]">
                 <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">{{ t("about.collected_title") }}</h2>
 
-                <p class="mt-6 text-base font-light leading-[1.62]">
+                <p class="mt-6 text-base font-normal leading-[1.62]">
                     {{ t("about.collected_body_1") }}
                 </p>
-                <p class="mt-4 text-base font-light leading-[1.62]">
+                <p class="mt-4 text-base font-normal leading-[1.62]">
                     {{ t("about.collected_body_2") }}
                 </p>
-                <p class="mt-4 text-base font-light leading-[1.62] [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2">
+                <p class="mt-4 text-base font-normal leading-[1.62] [&_a]:font-medium [&_a]:underline [&_a]:underline-offset-2">
                     {{ t("about.collected_body_3", analysis_url=t("about.analysis_url")) | safe }}
                 </p>
             </div>
@@ -74,10 +74,10 @@
                 <div class="max-w-[600px]">
                     <h2 class="text-[24px] font-medium leading-tight tracking-tight text-primary">{{ t("about.sjac_title") }}</h2>
 
-                    <p class="mt-6 text-base font-light leading-[1.62]">
+                    <p class="mt-6 text-base font-normal leading-[1.62]">
                         {{ t("about.sjac_body_1") }}
                     </p>
-                    <p class="mt-4 text-base font-light leading-[1.62]">
+                    <p class="mt-4 text-base font-normal leading-[1.62]">
                         {{ t("about.sjac_body_2") }}
                     </p>
 
@@ -94,7 +94,7 @@
 
                 <aside class="border border-gray-300/85 bg-base-100 px-7 py-7">
                     <h3 class="text-base font-medium">{{ t("about.programs") }}</h3>
-                    <ul class="mt-5 space-y-4 text-base font-light leading-snug">
+                    <ul class="mt-5 space-y-4 text-base font-normal leading-snug">
                         {% for key in ["documentation", "investigations", "criminal", "missing", "monitoring", "tech", "capacity"] %}
                         <li>
                             <a href="{{ t("about.program_" ~ key ~ "_url") }}" target="_blank" rel="noopener noreferrer" hx-boost="false" class="flex items-center gap-3 hover:underline hover:underline-offset-2">

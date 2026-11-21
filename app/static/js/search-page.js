@@ -6,9 +6,9 @@
  */
 (function () {
     function readLabelParams(params) {
-        const values = params.getAll('label').flatMap((raw) =>
-            String(raw || '').split(',').map((v) => v.trim()).filter(Boolean)
-        );
+        // One param per label: titles are taxonomy paths ("Content, Document, Top Secret"),
+        // so a comma is part of the value, never a separator.
+        const values = params.getAll('label').map((v) => v.trim()).filter(Boolean);
         return [...new Set(values)];
     }
 

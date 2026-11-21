@@ -101,7 +101,8 @@ CREATE TABLE IF NOT EXISTS media (
     ocr_text TEXT,
     original_text TEXT,
     confidence REAL,
-    language TEXT
+    language TEXT,
+    thumbnail TEXT  -- first-page JPEG for PDFs, relative to static/media
 );
 
 CREATE INDEX IF NOT EXISTS idx_media_doc ON media(document_id);
@@ -170,6 +171,10 @@ def init_db(db_path):
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.executescript(SCHEMA)
+    # CREATE TABLE IF NOT EXISTS skips tables that already exist, so a column added
+    # after an archive.db was built has to be added to it here.
+    if "thumbnail" not in {row[1] for row in conn.execute("PRAGMA table_info(media)")}:
+        conn.execute("ALTER TABLE media ADD COLUMN thumbnail TEXT")
     return conn
 
 
