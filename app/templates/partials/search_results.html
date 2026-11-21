@@ -16,35 +16,36 @@
 {% set is_image = "image/" in media_type or "image" in badge_value or "photo" in badge_value or "jpeg" in badge_value or "jpg" in badge_value or "png" in badge_value or "gif" in badge_value or "webp" in badge_value %}
 {% set is_video = "video/" in media_type or "video" in badge_value or "mp4" in badge_value or "mov" in badge_value or "avi" in badge_value or "webm" in badge_value %}
 {% set is_audio = "audio/" in media_type or "audio" in badge_value or "mp3" in badge_value or "wav" in badge_value or "ogg" in badge_value or "aac" in badge_value %}
-<span class="media-badge inline-flex max-w-[calc(100vw-3rem)] items-center gap-2 overflow-hidden whitespace-nowrap bg-primary px-3 py-1 text-xs font-medium text-primary-content">
+{% set kind = "entry" if not media else ("mixed" if media_type == "mixed" else ("pdf" if is_pdf else ("image" if is_image else "file"))) %}
+<span class="media-badge media-badge--{{ kind }}">
     {% if not media %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M15.8333 10.2917H3.16667C2.73125 10.2917 2.375 10.6479 2.375 11.0833V15.8333C2.375 16.2688 2.73125 16.625 3.16667 16.625H15.8333C16.2688 16.625 16.625 16.2688 16.625 15.8333V11.0833C16.625 10.6479 16.2688 10.2917 15.8333 10.2917ZM5.54167 15.0417C4.67083 15.0417 3.95833 14.3292 3.95833 13.4583C3.95833 12.5875 4.67083 11.875 5.54167 11.875C6.4125 11.875 7.125 12.5875 7.125 13.4583C7.125 14.3292 6.4125 15.0417 5.54167 15.0417ZM15.8333 2.375H3.16667C2.73125 2.375 2.375 2.73125 2.375 3.16667V7.91667C2.375 8.35208 2.73125 8.70833 3.16667 8.70833H15.8333C16.2688 8.70833 16.625 8.35208 16.625 7.91667V3.16667C16.625 2.73125 16.2688 2.375 15.8333 2.375ZM5.54167 7.125C4.67083 7.125 3.95833 6.4125 3.95833 5.54167C3.95833 4.67083 4.67083 3.95833 5.54167 3.95833C6.4125 3.95833 7.125 4.67083 7.125 5.54167C7.125 6.4125 6.4125 7.125 5.54167 7.125Z" fill="white"/>
+        <path d="M15.8333 10.2917H3.16667C2.73125 10.2917 2.375 10.6479 2.375 11.0833V15.8333C2.375 16.2688 2.73125 16.625 3.16667 16.625H15.8333C16.2688 16.625 16.625 16.2688 16.625 15.8333V11.0833C16.625 10.6479 16.2688 10.2917 15.8333 10.2917ZM5.54167 15.0417C4.67083 15.0417 3.95833 14.3292 3.95833 13.4583C3.95833 12.5875 4.67083 11.875 5.54167 11.875C6.4125 11.875 7.125 12.5875 7.125 13.4583C7.125 14.3292 6.4125 15.0417 5.54167 15.0417ZM15.8333 2.375H3.16667C2.73125 2.375 2.375 2.73125 2.375 3.16667V7.91667C2.375 8.35208 2.73125 8.70833 3.16667 8.70833H15.8333C16.2688 8.70833 16.625 8.35208 16.625 7.91667V3.16667C16.625 2.73125 16.2688 2.375 15.8333 2.375ZM5.54167 7.125C4.67083 7.125 3.95833 6.4125 3.95833 5.54167C3.95833 4.67083 4.67083 3.95833 5.54167 3.95833C6.4125 3.95833 7.125 4.67083 7.125 5.54167C7.125 6.4125 6.4125 7.125 5.54167 7.125Z" fill="currentColor"/>
     </svg>
     {{ t("media.entry") }}
     {% elif media_type == "mixed" %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M5.54175 3.16675H15.0417C15.9126 3.16675 16.6251 3.87925 16.6251 4.75008V12.6667H15.0417V4.75008H5.54175V3.16675ZM3.95841 6.33341H13.4584C14.3292 6.33341 15.0417 7.04591 15.0417 7.91675V14.2501C15.0417 15.1209 14.3292 15.8334 13.4584 15.8334H3.95841C3.08758 15.8334 2.37508 15.1209 2.37508 14.2501V7.91675C2.37508 7.04591 3.08758 6.33341 3.95841 6.33341ZM3.95841 7.91675V14.2501H13.4584V7.91675H3.95841ZM5.54175 9.50008H11.8751V11.0834H5.54175V9.50008ZM5.54175 11.8751H9.50008V13.4584H5.54175V11.8751Z" fill="white"/>
+        <path d="M5.54175 3.16675H15.0417C15.9126 3.16675 16.6251 3.87925 16.6251 4.75008V12.6667H15.0417V4.75008H5.54175V3.16675ZM3.95841 6.33341H13.4584C14.3292 6.33341 15.0417 7.04591 15.0417 7.91675V14.2501C15.0417 15.1209 14.3292 15.8334 13.4584 15.8334H3.95841C3.08758 15.8334 2.37508 15.1209 2.37508 14.2501V7.91675C2.37508 7.04591 3.08758 6.33341 3.95841 6.33341ZM3.95841 7.91675V14.2501H13.4584V7.91675H3.95841ZM5.54175 9.50008H11.8751V11.0834H5.54175V9.50008ZM5.54175 11.8751H9.50008V13.4584H5.54175V11.8751Z" fill="currentColor"/>
     </svg>
     {{ t("media.collection", count=media_count) }}
     {% elif is_pdf %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="white"/>
+        <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="currentColor"/>
     </svg>
     {% if media_count > 1 %}{{ t("media.pdfs", count=media_count) }}{% else %}{{ t("media.pdf") }}{% endif %}
     {% elif is_image %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M16.625 15.0417V3.95833C16.625 3.0875 15.9125 2.375 15.0417 2.375H3.95833C3.0875 2.375 2.375 3.0875 2.375 3.95833V15.0417C2.375 15.9125 3.0875 16.625 3.95833 16.625H15.0417C15.9125 16.625 16.625 15.9125 16.625 15.0417ZM6.72917 10.6875L8.70833 13.0704L11.4792 9.5L15.0417 14.25H3.95833L6.72917 10.6875Z" fill="white"/>
+        <path d="M16.625 15.0417V3.95833C16.625 3.0875 15.9125 2.375 15.0417 2.375H3.95833C3.0875 2.375 2.375 3.0875 2.375 3.95833V15.0417C2.375 15.9125 3.0875 16.625 3.95833 16.625H15.0417C15.9125 16.625 16.625 15.9125 16.625 15.0417ZM6.72917 10.6875L8.70833 13.0704L11.4792 9.5L15.0417 14.25H3.95833L6.72917 10.6875Z" fill="currentColor"/>
     </svg>
     {% if media_count > 1 %}{{ t("media.images", count=media_count) }}{% else %}{{ t("media.image") }}{% endif %}
     {% elif is_video %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M9.49992 1.5835C5.12992 1.5835 1.58325 5.13016 1.58325 9.50016C1.58325 13.8702 5.12992 17.4168 9.49992 17.4168C13.8699 17.4168 17.4166 13.8702 17.4166 9.50016C17.4166 5.13016 13.8699 1.5835 9.49992 1.5835ZM7.91658 13.0627V5.93766L12.6666 9.50016L7.91658 13.0627Z" fill="white"/>
+        <path d="M9.49992 1.5835C5.12992 1.5835 1.58325 5.13016 1.58325 9.50016C1.58325 13.8702 5.12992 17.4168 9.49992 17.4168C13.8699 17.4168 17.4166 13.8702 17.4166 9.50016C17.4166 5.13016 13.8699 1.5835 9.49992 1.5835ZM7.91658 13.0627V5.93766L12.6666 9.50016L7.91658 13.0627Z" fill="currentColor"/>
     </svg>
     {% if media_count > 1 %}{{ t("media.videos", count=media_count) }}{% else %}{{ t("media.video") }}{% endif %}
     {% elif is_audio %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M9.5 0.791504C5.56542 0.791504 2.375 3.98192 2.375 7.9165V13.4582C2.375 14.7723 3.43583 15.8332 4.75 15.8332H7.125V9.49984H3.95833V7.9165C3.95833 4.85275 6.43625 2.37484 9.5 2.37484C12.5638 2.37484 15.0417 4.85275 15.0417 7.9165V9.49984H11.875V15.8332H14.25C15.5642 15.8332 16.625 14.7723 16.625 13.4582V7.9165C16.625 3.98192 13.4346 0.791504 9.5 0.791504Z" fill="white"/>
+        <path d="M9.5 0.791504C5.56542 0.791504 2.375 3.98192 2.375 7.9165V13.4582C2.375 14.7723 3.43583 15.8332 4.75 15.8332H7.125V9.49984H3.95833V7.9165C3.95833 4.85275 6.43625 2.37484 9.5 2.37484C12.5638 2.37484 15.0417 4.85275 15.0417 7.9165V9.49984H11.875V15.8332H14.25C15.5642 15.8332 16.625 14.7723 16.625 13.4582V7.9165C16.625 3.98192 13.4346 0.791504 9.5 0.791504Z" fill="currentColor"/>
     </svg>
     {% if media_count > 1 %}{{ t("media.audios", count=media_count) }}{% else %}{{ t("media.audio") }}{% endif %}
     {% elif is_docx %}
@@ -55,7 +56,7 @@
     {% if media_count > 1 %}{{ t("media.docx_files", count=media_count) }}{% else %}{{ t("media.docx") }}{% endif %}
     {% else %}
     <svg class="size-3.5" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="white"/>
+        <path d="M4.75008 1.58325C3.87925 1.58325 3.17466 2.29575 3.17466 3.16659L3.16675 15.8333C3.16675 16.7041 3.87133 17.4166 4.74216 17.4166H14.2501C15.1209 17.4166 15.8334 16.7041 15.8334 15.8333V6.33325L11.0834 1.58325H4.75008ZM10.2917 7.12492V2.77075L14.6459 7.12492H10.2917Z" fill="currentColor"/>
     </svg>
     {% if media_count > 1 %}{{ t("media.documents", count=media_count) }}{% else %}{{ t("media.document") }}{% endif %}
     {% endif %}
@@ -344,11 +345,9 @@
         <article class="flex h-full flex-col">
             <div class="card-thumb relative h-[224px] w-full shrink-0 overflow-hidden">
                 {{ thumbnail_media(doc, "h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]", "h-12 w-12") }}
-                <div class="absolute bottom-3 start-3">
-                    {{ card_badge(doc.id) }}
-                </div>
             </div>
-            <div class="flex flex-1 flex-col gap-3 px-6 pb-5 pt-5">
+            <div class="relative flex flex-1 flex-col gap-3 px-6 pb-5 pt-7">
+                <div class="absolute -top-3 start-6">{{ card_badge(doc.id) }}</div>
                 <h2
                     dir="{{ localized(doc, 'title') | text_dir }}"
                     class="line-clamp-3 text-base font-medium leading-snug text-base-content transition-colors group-hover:text-primary"
@@ -372,11 +371,11 @@
                     {% endif %}
                 </div>
                 {# Pinned to the card foot so dates line up across a row. #}
-                <div class="card-foot mt-auto flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-3">
+                <div class="card-foot mt-auto pt-3">
                     {% if doc.publish_date %}
-                    <time datetime="{{ doc.publish_date[:10] }}" class="text-sm tabular-nums text-base-content/65">{{ doc.publish_date[:10] }}</time>
+                    <time datetime="{{ doc.publish_date[:10] }}" class="block text-sm tabular-nums text-base-content/65">{{ doc.publish_date[:10] }}</time>
                     {% endif %}
-                    {{ document_label_chips(doc.id) }}
+                    <div class="mt-2.5">{{ document_label_chips(doc.id) }}</div>
                 </div>
             </div>
         </article>
@@ -390,12 +389,10 @@
         <article class="search-list-card cursor-pointer">
             <div class="search-list-thumb card-thumb">
                 {{ thumbnail_media(doc, "h-full w-full object-cover", "h-10 w-10") }}
-                <div class="absolute bottom-2 start-2 end-2">
-                    {{ card_badge(doc.id) }}
-                </div>
             </div>
             <div class="search-list-body">
                 <div class="min-w-0 flex-1">
+                    <div class="mb-2 hidden sm:block">{{ card_badge(doc.id) }}</div>
                     <h2
                         dir="{{ localized(doc, 'title') | text_dir }}"
                         class="line-clamp-1 break-words text-base font-medium leading-snug text-base-content transition-colors group-hover:text-primary sm:line-clamp-2 sm:text-lg"
@@ -418,9 +415,12 @@
                             <span class="italic text-base-content/65">{{ t("search.no_summary") }}</span>
                         {% endif %}
                     </div>
-                    {% if doc.publish_date %}
-                    <time datetime="{{ doc.publish_date[:10] }}" class="mt-2 block text-sm tabular-nums text-base-content/65">{{ doc.publish_date[:10] }}</time>
-                    {% endif %}
+                    <div class="mt-2 flex items-center gap-4">
+                        <span class="sm:hidden">{{ card_badge(doc.id) }}</span>
+                        {% if doc.publish_date %}
+                        <time datetime="{{ doc.publish_date[:10] }}" class="text-sm tabular-nums text-base-content/65">{{ doc.publish_date[:10] }}</time>
+                        {% endif %}
+                    </div>
                     <div class="mt-2">
                         {{ document_label_chips(doc.id) }}
                     </div>
