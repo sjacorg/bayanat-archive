@@ -403,6 +403,19 @@ input:not(:placeholder-shown) ~ .search-kbd {
     transition: border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
 }
 
+.date-trigger {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.date-trigger:hover {
+    border-color: color-mix(in oklch, var(--color-primary) 55%, transparent);
+}
+
+.date-trigger[aria-expanded="true"] {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-primary) 16%, transparent);
+}
+
 .facet-trigger--plain {
     font-size: 0.875rem;
     font-weight: 400;
