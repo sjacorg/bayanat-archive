@@ -34,6 +34,25 @@ def test_path_is_dropped_but_an_ambiguous_leaf_keeps_what_sets_it_apart():
     )
 
 
+def test_internal_process_labels_never_reach_the_public_filter():
+    # These read clearly in Bayanat and read as a verdict on the document once
+    # the path is dropped, so they are hidden whatever the export was told.
+    names = display_titles(
+        [
+            "Meta, Published",
+            "Meta, Bad Import, Low Quality",
+            "Priority, High",
+            "Peer Review, Needs Review",
+            "Content, Document, Security Report",
+        ]
+    )
+    assert names["Meta, Published"] is None
+    assert names["Meta, Bad Import, Low Quality"] is None
+    assert names["Priority, High"] is None
+    assert names["Peer Review, Needs Review"] is None
+    assert names["Content, Document, Security Report"] == "Security Report"
+
+
 def test_a_party_is_named_even_when_its_leaf_collides_with_nothing():
     # The leaf alone is unique here, so a collision rule would leave both bare
     # and a reader could not tell who did what to whom.

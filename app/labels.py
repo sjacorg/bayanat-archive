@@ -14,11 +14,21 @@ A name is also the filter value in the URL, and those URLs get cited, so a name
 has to be a function of its own path and nothing else. Both rules above are.
 `assert_unique` guards the one thing that could still break it: a later import
 introducing a second path that renders to a name already in use.
+
+Labels recording SJAC's own process are dropped rather than renamed, because a
+path that reads clearly in Bayanat can arrive stripped of the context that
+explained it: "Peer Review, Needs Review" becomes "Needs Review".
 """
 
 # Every document in the archive is a document, so the bare family tag adds
 # nothing to a listing of documents.
 EMPTY_PATHS = {"Content, Document"}
+
+# Families that record how SJAC works rather than what a document says. The
+# export can leave these out, but it has to be told to, and a tag like "Low
+# Quality" or "Bad Import" reaching a public evidence archive is not the kind
+# of mistake to leave resting on a command-line flag.
+INTERNAL_FAMILIES = {"Meta", "Priority", "Peer Review", "Workflow"}
 
 # Families that name a party rather than a property of the document. The same
 # name appears under both, so the family is part of what the tag means.
@@ -49,7 +59,7 @@ def display_titles(titles):
 
     display = {}
     for title, segments in paths.items():
-        if title in EMPTY_PATHS:
+        if title in EMPTY_PATHS or segments[0] in INTERNAL_FAMILIES:
             display[title] = None
             continue
         leaf = segments[-1]
