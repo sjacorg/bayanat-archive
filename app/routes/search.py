@@ -74,7 +74,7 @@ def _base_query(q=None, labels=None, locations=None, date_from=None, date_to=Non
     if labels:
         joins.append("JOIN document_labels dl_filter ON dl_filter.document_id = d.id")
         placeholders = ",".join("?" * len(labels))
-        wheres.append(f"dl_filter.title IN ({placeholders})")
+        wheres.append(f"dl_filter.display_title IN ({placeholders})")
         params.extend(labels)
 
     if locations:
@@ -146,14 +146,18 @@ def _get_facets(db, q, labels, locations, date_from, date_to):
     where_sql = (" WHERE " + " AND ".join(wheres)) if wheres else ""
     join_sql = " ".join(joins)
 
+    label_where = (where_sql + " AND " if where_sql else " WHERE ") + (
+        "dl.display_title IS NOT NULL"
+    )
+    # Every tag in the filtered set, not a top slice: SJAC asked for the full
+    # list, and 98 paths collapse to well under a hundred names.
     label_sql = f"""
-        SELECT dl.title, COUNT(DISTINCT d.id) as count
+        SELECT dl.display_title AS title, COUNT(DISTINCT d.id) as count
         FROM documents d {join_sql}
         JOIN document_labels dl ON dl.document_id = d.id
-        {where_sql}
-        GROUP BY dl.title
-        ORDER BY count DESC
-        LIMIT 20
+        {label_where}
+        GROUP BY dl.display_title
+        ORDER BY count DESC, title COLLATE NOCASE
     """
     facet_labels = db.execute(label_sql, params).fetchall()
 
@@ -419,9 +423,10 @@ def _get_document_labels(db, doc_ids):
         return {}
     placeholders = ",".join("?" * len(doc_ids))
     rows = db.execute(
-        f"""SELECT document_id, title, verified
+        f"""SELECT document_id, display_title AS title, verified
             FROM document_labels
             WHERE document_id IN ({placeholders})
+              AND display_title IS NOT NULL
             ORDER BY verified DESC, title""",
         doc_ids,
     ).fetchall()

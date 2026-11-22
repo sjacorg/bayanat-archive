@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS document_labels (
     label_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     title_ar TEXT,
+    -- The name shown and filtered on: see app.labels.display_titles. NULL for a
+    -- tag that says nothing once its path is dropped.
+    display_title TEXT,
     verified INTEGER NOT NULL DEFAULT 0
 );
 
@@ -175,6 +178,15 @@ def init_db(db_path):
     # after an archive.db was built has to be added to it here.
     if "thumbnail" not in {row[1] for row in conn.execute("PRAGMA table_info(media)")}:
         conn.execute("ALTER TABLE media ADD COLUMN thumbnail TEXT")
+    label_columns = {row[1] for row in conn.execute("PRAGMA table_info(document_labels)")}
+    if "display_title" not in label_columns:
+        conn.execute("ALTER TABLE document_labels ADD COLUMN display_title TEXT")
+    # After the column exists either way, so the script above can run against an
+    # archive.db built before it was added.
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_document_labels_display"
+        " ON document_labels(display_title)"
+    )
     return conn
 
 

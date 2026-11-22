@@ -10,11 +10,11 @@ bp = Blueprint("documents", __name__)
 def _get_document_labels(db, document_id):
     rows = db.execute(
         """
-        SELECT DISTINCT title
+        SELECT DISTINCT display_title AS title
         FROM document_labels
         WHERE document_id = ?
-          AND title IS NOT NULL
-          AND trim(title) != ''
+          AND display_title IS NOT NULL
+          AND trim(display_title) != ''
         ORDER BY title COLLATE NOCASE
         """,
         [document_id],

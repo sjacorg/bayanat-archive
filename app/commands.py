@@ -9,6 +9,7 @@ from flask.cli import with_appcontext
 from slugify import slugify
 
 from app.database import build_fts, init_db
+from app.labels import display_titles
 from app.watermark import load_watermark, watermark_file
 
 # Child tables keyed by document_id, cleared before re-inserting a document in append mode.
@@ -93,6 +94,15 @@ def import_archive(export_dir, append):
     media_count = 0
     relation_count = 0
 
+    # Resolved once over the whole export: a leaf is only ambiguous relative to
+    # the other labels present, so this cannot be decided one document at a time.
+    label_display = display_titles(
+        label["title"]
+        for doc in documents
+        for key in ("labels", "verified_labels")
+        for label in doc.get(key, [])
+    )
+
     for doc in documents:
         doc_id = doc["id"]
 
@@ -143,26 +153,28 @@ def import_archive(export_dir, append):
         for label in doc.get("labels", []):
             conn.execute(
                 """INSERT INTO document_labels
-                   (document_id, label_id, title, title_ar, verified)
-                   VALUES (?, ?, ?, ?, ?)""",
+                   (document_id, label_id, title, title_ar, display_title, verified)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
                 (
                     doc_id,
                     label["id"],
                     label["title"],
                     label.get("title_ar"),
+                    label_display.get((label["title"] or "").strip()),
                     0,
                 ),
             )
         for label in doc.get("verified_labels", []):
             conn.execute(
                 """INSERT INTO document_labels
-                   (document_id, label_id, title, title_ar, verified)
-                   VALUES (?, ?, ?, ?, ?)""",
+                   (document_id, label_id, title, title_ar, display_title, verified)
+                   VALUES (?, ?, ?, ?, ?, ?)""",
                 (
                     doc_id,
                     label["id"],
                     label["title"],
                     label.get("title_ar"),
+                    label_display.get((label["title"] or "").strip()),
                     1,
                 ),
             )
