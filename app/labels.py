@@ -3,13 +3,30 @@
 Bayanat stores a label as its whole path, "Content, Document, Security Report".
 The leading segments are how SJAC files a tag, not what the tag says, and the
 archive was showing them in full on every card and filter. The leaf alone is
-what a reader wants, except where two different tags share one, so a leaf that
-is not unique keeps the segment that tells the two apart.
+what a reader wants.
+
+Two rules keep that from losing meaning. A tag naming a party to the events
+always carries which party it is, because "Armed Forces" alleged to have done
+something and "Armed Forces" it was done to are not the same tag. And any other
+leaf shared by two paths keeps the segment that tells them apart.
+
+A name is also the filter value in the URL, and those URLs get cited, so a name
+has to be a function of its own path and nothing else. Both rules above are.
+`assert_unique` guards the one thing that could still break it: a later import
+introducing a second path that renders to a name already in use.
 """
 
 # Every document in the archive is a document, so the bare family tag adds
 # nothing to a listing of documents.
 EMPTY_PATHS = {"Content, Document"}
+
+# Families that name a party rather than a property of the document. The same
+# name appears under both, so the family is part of what the tag means.
+PARTY_FAMILIES = {"Alleged Perpetrator", "Injured Party"}
+
+
+class AmbiguousLabels(Exception):
+    """Two label paths would be shown, and filtered, under one name."""
 
 
 def _segments(title):
@@ -36,12 +53,14 @@ def display_titles(titles):
             display[title] = None
             continue
         leaf = segments[-1]
+        if segments[0] in PARTY_FAMILIES and len(segments) > 1:
+            display[title] = f"{segments[0]}: {leaf}"
+            continue
         sharing = leaves[leaf]
         if len(sharing) == 1:
             display[title] = leaf
             continue
-        # Shared leaf: keep the first segment that sets these paths apart, so
-        # an injured party is never filed under the same tag as a perpetrator.
+        # Shared leaf, so keep the segment that sets these paths apart.
         others = [paths[other] for other in sharing if other != title]
         qualifier = next(
             (
@@ -52,4 +71,22 @@ def display_titles(titles):
             segments[-2] if len(segments) > 1 else None,
         )
         display[title] = f"{qualifier}: {leaf}" if qualifier else leaf
+    return display
+
+
+def assert_unique(display):
+    """Raise when two paths share a name, since the name is also the filter value."""
+    seen = {}
+    clashes = []
+    for title, name in sorted(display.items()):
+        if name is None:
+            continue
+        if name in seen:
+            clashes.append(f"{name!r}: {seen[name]!r} and {title!r}")
+        seen[name] = title
+    if clashes:
+        raise AmbiguousLabels(
+            "These label paths would be shown under one name, so filtering on it "
+            "would return both:\n  " + "\n  ".join(clashes)
+        )
     return display

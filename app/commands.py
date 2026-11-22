@@ -9,7 +9,7 @@ from flask.cli import with_appcontext
 from slugify import slugify
 
 from app.database import build_fts, init_db
-from app.labels import display_titles
+from app.labels import AmbiguousLabels, assert_unique, display_titles
 from app.watermark import load_watermark, watermark_file
 
 # Child tables keyed by document_id, cleared before re-inserting a document in append mode.
@@ -94,14 +94,19 @@ def import_archive(export_dir, append):
     media_count = 0
     relation_count = 0
 
-    # Resolved once over the whole export: a leaf is only ambiguous relative to
-    # the other labels present, so this cannot be decided one document at a time.
+    # Resolved once over the whole export, since a shared leaf is only visible
+    # with every label in hand. The name is the filter value in the URL, so a
+    # clash fails the import rather than quietly merging two tags.
     label_display = display_titles(
         label["title"]
         for doc in documents
         for key in ("labels", "verified_labels")
         for label in doc.get(key, [])
     )
+    try:
+        assert_unique(label_display)
+    except AmbiguousLabels as clash:
+        raise click.ClickException(str(clash)) from clash
 
     for doc in documents:
         doc_id = doc["id"]

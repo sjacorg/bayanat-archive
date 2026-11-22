@@ -1,8 +1,10 @@
 import json
 
+import pytest
+
 from app import create_app
 from app.commands import import_archive
-from app.labels import display_titles
+from app.labels import AmbiguousLabels, assert_unique, display_titles
 
 
 def test_path_is_dropped_but_an_ambiguous_leaf_keeps_what_sets_it_apart():
@@ -30,6 +32,57 @@ def test_path_is_dropped_but_an_ambiguous_leaf_keeps_what_sets_it_apart():
     assert names["Content, Document, Transfer, Body Transfer, Transfer to Hospital"] == (
         "Body Transfer: Transfer to Hospital"
     )
+
+
+def test_a_party_is_named_even_when_its_leaf_collides_with_nothing():
+    # The leaf alone is unique here, so a collision rule would leave both bare
+    # and a reader could not tell who did what to whom.
+    names = display_titles(
+        [
+            "Alleged Perpetrator, Affiliation, Pro-Government",
+            "Injured Party, Affiliation, Pro-Opposition",
+            "Content, Document, Minorities, Kurds",
+        ]
+    )
+    assert names["Alleged Perpetrator, Affiliation, Pro-Government"] == (
+        "Alleged Perpetrator: Pro-Government"
+    )
+    assert names["Injured Party, Affiliation, Pro-Opposition"] == (
+        "Injured Party: Pro-Opposition"
+    )
+    # A document subject is not a party, so it keeps its plain name.
+    assert names["Content, Document, Minorities, Kurds"] == "Kurds"
+
+
+def test_a_name_does_not_depend_on_which_other_labels_were_exported():
+    # The name is the filter value in a URL people cite, so importing more
+    # labels later must not rename the ones already published.
+    alone = display_titles(["Alleged Perpetrator, Affiliation, Pro-Government"])
+    crowded = display_titles(
+        [
+            "Alleged Perpetrator, Affiliation, Pro-Government",
+            "Content, Document, Security Report",
+            "Type, Human, Killing",
+        ]
+    )
+    path = "Alleged Perpetrator, Affiliation, Pro-Government"
+    assert alone[path] == crowded[path]
+
+
+def test_two_paths_under_one_name_stop_the_import():
+    # Three paths on one leaf, where the segment that separates two of them from
+    # the third does not separate them from each other.
+    with pytest.raises(AmbiguousLabels) as clash:
+        assert_unique(
+            display_titles(
+                [
+                    "Content, Orders, Referral",
+                    "Content, Reports, Referral",
+                    "Type, Orders, Referral",
+                ]
+            )
+        )
+    assert "Content: Referral" in str(clash.value)
 
 
 def build(tmp_path, monkeypatch):
