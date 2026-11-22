@@ -25,11 +25,19 @@ Export from Bayanat, then import:
 
 ```bash
 # In your Bayanat installation:
-flask export public --label "public-archive" --output ./export/
+flask export public --label "public-archive" --output ./export/ \
+  --exclude-label "Peer Review, Needs Review" \
+  --exclude-label "Peer Review, Resolved"
 
 # In this repo:
 uv run flask import-archive /path/to/export/
 ```
+
+`--exclude-label` leaves a label out of the export. Use it for anything that
+records how the team works rather than what a document says: review states,
+project and funder tags. The archive shows a tag by its last segment, so an
+internal path that reads clearly in Bayanat can arrive stripped of the context
+that explained it.
 
 The import is destructive: it rebuilds `data/archive.db` and copies media into `app/static/media/`. See `EXPORT_SCHEMA.md` for the JSON contract.
 
