@@ -36,23 +36,11 @@ def _contains_arabic_script(word):
     return bool(_ARABIC_SCRIPT_RE.search(word))
 
 
-def _split_bidirectional_runs(text):
-    if not text:
-        return []
-    runs = []
-    for token in re.split(r"(\s+)", text):
-        if not token:
-            continue
-        if not token.strip():
-            if runs:
-                runs[-1] = (runs[-1][0], runs[-1][1] + token)
-            continue
-        is_arabic = _contains_arabic_script(token)
-        if runs and runs[-1][0] == is_arabic:
-            runs[-1] = (is_arabic, runs[-1][1] + token)
-        else:
-            runs.append((is_arabic, token))
-    return runs
+def _script_direction(text):
+    """"rtl" when Arabic letters outnumber Latin ones, else "ltr"."""
+    letters = [char for char in str(text or "") if char.isalpha()]
+    arabic = sum(1 for char in letters if _contains_arabic_script(char))
+    return "rtl" if arabic * 2 > len(letters) else "ltr"
 
 
 def create_app():
@@ -79,6 +67,8 @@ def create_app():
 
     _re_tags = re.compile(r"<[^>]+>")
     _re_spaces = re.compile(r"\s+")
+    # Everything _re_spaces matches except a line break.
+    _re_inline_spaces = re.compile(r"[^\S\n\r]+")
 
     @app.template_filter("strip_html")
     def strip_html(value):
@@ -160,17 +150,31 @@ def create_app():
         # dir="auto" follows the first strong character, so an English title that
         # opens with an Arabic reference ("#14129\س ت2 follow up") flips to RTL.
         # The majority script decides instead.
-        letters = [char for char in str(value or "") if char.isalpha()]
-        arabic = sum(1 for char in letters if _contains_arabic_script(char))
-        return "rtl" if arabic * 2 > len(letters) else "ltr"
+        return _script_direction(value)
 
     @app.template_filter("bidirectional_text")
     def bidirectional_text(value):
+        """Render extracted text one line per block, each in its own direction.
+
+        A line is the unit the page has to preserve: OCR returns a document's
+        own lines, and "التاريخ :" means nothing once the colon is moved. Splitting
+        any finer is what broke it before, because a run holding only a colon has
+        no strong character, so dir="auto" laid it out left to right on a line of
+        its own. Mixed scripts inside one line need no help: that is exactly what
+        the browser's bidi algorithm does, given a direction to resolve against.
+        """
         if not value:
             return Markup("")
-        runs = _split_bidirectional_runs(strip_html(value))
+        # strip_html() collapses every whitespace run, newlines included, which
+        # would flatten the document into one paragraph before it can be split.
+        text = html.unescape(_re_tags.sub(" ", value))
+        lines = [_re_inline_spaces.sub(" ", line).strip() for line in text.splitlines()]
         return Markup(
-            "".join(f'<div dir="auto">{escape(run.strip())}</div>' for _, run in runs)
+            "".join(
+                f'<div dir="{_script_direction(line)}">{escape(line)}</div>'
+                for line in lines
+                if line
+            )
         )
 
     @app.before_request

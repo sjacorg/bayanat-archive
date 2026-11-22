@@ -71,3 +71,29 @@ class I18nTestCase(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExtractedTextTestCase(unittest.TestCase):
+    def render(self, text):
+        app = create_app()
+        with app.test_request_context("/"):
+            return str(app.jinja_env.filters["bidirectional_text"](text))
+
+    def test_a_line_stays_one_block_in_one_direction(self):
+        # Splitting per script run put a lone colon in its own block, where
+        # dir="auto" had no strong character and laid it out left to right.
+        html = self.render("التاريخ :\nالمبلغ :")
+        self.assertIn('<div dir="rtl">التاريخ :</div>', html)
+        self.assertIn('<div dir="rtl">المبلغ :</div>', html)
+        self.assertNotIn(">:<", html)
+
+    def test_mixed_scripts_on_one_line_are_left_to_the_browser(self):
+        html = self.render("رقم الهاتف : 11902 memo")
+        self.assertEqual(html.count("<div"), 1)
+        self.assertIn('dir="rtl"', html)
+
+    def test_a_latin_line_keeps_its_own_direction(self):
+        self.assertIn('<div dir="ltr">', self.render("التاريخ :\nRef 2011/7/8 memo"))
+
+    def test_blank_lines_do_not_become_empty_blocks(self):
+        self.assertEqual(self.render("التاريخ :\n\n\nالمبلغ :").count("<div"), 2)
