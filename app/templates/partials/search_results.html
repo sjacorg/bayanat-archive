@@ -64,33 +64,24 @@
 {% endmacro %}
 
 {#
-  Two tags and a count, not one tag and a tooltip. app.labels.card_order puts
-  the violation first and the document kind second, which are both the shortest
-  names and the two a reader triages on. The party tags that follow run to 44
-  characters ("Alleged Perpetrator: National Defense Forces") and would only
-  truncate in a 240px column, and "Armed Forces" is on 27 of the 36 documents
-  that name a perpetrator, so it barely tells two results apart. They stay on
-  the document page, where the whole list is.
+  One tag and a count, on one line. app.labels.card_order puts the violation
+  first, which is both the shortest name and the one a reader triages on; the
+  description above already says what kind of document this is. Two tags read
+  well until a name like "Confession (to possible violation)" wrapped, which
+  turned the card foot into four stacked rows of small grey text.
 
   No expander: the card is one link, so a control inside it is a trap on touch.
 #}
-{% set CARD_LABEL_LIMIT = 2 %}
 {% macro document_label_chips(doc_id) %}
 {% set labels = doc_labels.get(doc_id, []) %}
 {% if labels %}
-{% set shown = labels[:CARD_LABEL_LIMIT] %}
-{% set hidden = labels|length - shown|length %}
-<div class="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
-    {% for label in shown %}
-    {# Wraps rather than truncates: a name is cut from the right, which is the
-       end that carries the meaning ("Confession (to possible violation)"). #}
-    <span class="max-w-full bg-base-200 px-1.5 py-0.5 text-[0.6875rem] font-medium uppercase leading-5 tracking-[0.04em] text-base-content/75" dir="{{ label.title | text_dir }}">
-        {{ label.title }}
+<div class="flex min-w-0 items-center gap-2">
+    <span class="min-w-0 truncate bg-base-200 px-1.5 py-0.5 text-[0.6875rem] font-medium uppercase leading-5 tracking-[0.04em] text-base-content/75" dir="{{ labels[0].title | text_dir }}">
+        {{ labels[0].title }}
     </span>
-    {% endfor %}
-    {% if hidden > 0 %}
-    <span class="text-[0.6875rem] leading-5 tabular-nums text-base-content/65">
-        {{ t("search.more_labels", count=hidden) }}
+    {% if labels|length > 1 %}
+    <span class="shrink-0 text-[0.6875rem] leading-5 tabular-nums text-base-content/65">
+        {{ t("search.more_labels", count=labels|length - 1) }}
     </span>
     {% endif %}
 </div>
@@ -98,29 +89,31 @@
 {% endmacro %}
 
 {#
-  The document's own date, and which field it came from. Never just a bare date:
-  a filing date presented as the document's date is the thing this fixes.
+  The date, and a label only when it is not the document's own. 86 of 103 dated
+  records come from the "Document Issued" event, so printing "Issued" on every
+  card repeats a word that carries nothing; the 17 that fall back to SJAC's
+  filing date are the ones a reader has to be told about, so those are marked.
+  Extent is not a date and no longer shares this line: it sits on the
+  thumbnail, which is the page it describes.
 #}
 {% macro document_date(doc) %}
-{% set extent = localized(doc, "title") | page_extent %}
-{% if doc.document_date or extent %}
-<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-    {% if doc.document_date %}
-    <span class="flex items-baseline gap-1.5">
-        <span class="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-base-content/65">
-            {{ t("search.date_issued") if doc.document_date_source == "issued" else t("search.date_recorded") }}
-        </span>
-        <time datetime="{{ doc.document_date[:10] }}" class="text-sm tabular-nums text-base-content/70">{{ doc.document_date[:10] }}</time>
+{% if doc.document_date %}
+<div class="flex items-baseline gap-2">
+    {% if doc.document_date_source != "issued" %}
+    <span class="shrink-0 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-base-content/55">
+        {{ t("search.date_recorded") }}
     </span>
     {% endif %}
-    {# Only when the document runs to more than one page: "Page 1 of 1" was in
-       70 of 118 titles and told a reader nothing. #}
-    {% if extent %}
-    <span class="text-[0.6875rem] font-medium uppercase tracking-[0.08em] tabular-nums text-base-content/65">
-        {{ t("search.page_of", page=extent[0], total=extent[1]) }}
-    </span>
-    {% endif %}
+    <time datetime="{{ doc.document_date[:10] }}" class="text-[0.9375rem] tabular-nums text-base-content/80">{{ doc.document_date[:10] }}</time>
 </div>
+{% endif %}
+{% endmacro %}
+
+{# "Page 2 of 4" belongs to the sheet in the picture, not to the metadata list. #}
+{% macro page_chip(doc) %}
+{% set extent = localized(doc, "title") | page_extent %}
+{% if extent %}
+<span class="page-chip">{{ t("search.page_of", page=extent[0], total=extent[1]) }}</span>
 {% endif %}
 {% endmacro %}
 
@@ -385,7 +378,11 @@
                 {{ thumbnail_media(doc, "h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]", "h-12 w-12") }}
             </div>
             <div class="relative flex flex-1 flex-col gap-3 px-6 pb-5 pt-7">
-                <div class="absolute -top-3 start-6">{{ card_badge(doc.id) }}</div>
+                {# Format and extent are both facts about the sheet above, so they
+                   sit together on its edge rather than in the metadata list. #}
+                <div class="absolute -top-3 start-6 flex max-w-[calc(100%-3rem)] items-stretch gap-px">
+                    {{ card_badge(doc.id) }}{{ page_chip(doc) }}
+                </div>
                 <h2
                     dir="{{ localized(doc, 'title') | document_title | text_dir }}"
                     class="line-clamp-3 text-[1.0625rem] font-medium leading-snug text-base-content transition-colors group-hover:text-primary"
@@ -428,7 +425,7 @@
             </div>
             <div class="search-list-body">
                 <div class="min-w-0 flex-1">
-                    <div class="mb-2 hidden sm:block">{{ card_badge(doc.id) }}</div>
+                    <div class="mb-2 hidden items-stretch gap-px sm:flex">{{ card_badge(doc.id) }}{{ page_chip(doc) }}</div>
                     <h2
                         dir="{{ localized(doc, 'title') | document_title | text_dir }}"
                         class="line-clamp-1 break-words text-base font-medium leading-snug text-base-content transition-colors group-hover:text-primary sm:line-clamp-2 sm:text-lg"
@@ -452,7 +449,7 @@
                         {% endif %}
                     </div>
                     <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
-                        <span class="sm:hidden">{{ card_badge(doc.id) }}</span>
+                        <span class="flex items-stretch gap-px sm:hidden">{{ card_badge(doc.id) }}{{ page_chip(doc) }}</span>
                         {{ document_date(doc) }}
                     </div>
                     <div class="mt-2">
