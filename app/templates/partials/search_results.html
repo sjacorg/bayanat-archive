@@ -109,7 +109,12 @@
 {% endif %}
 {% endmacro %}
 
-{# "Page 2 of 4" belongs to the sheet in the picture, not to the metadata list. #}
+{# Extent, and it is a warning more than a locator. Of the 22 multi-page sets
+   in the archive, 16 are a single published page: one of the 54 pages of a
+   detainee list, one of the 32 pages of a letter. A researcher has to know the
+   record is an extract, so the chip reads "1 of 54 pages" rather than
+   "Page 1 of 54", which looked like pagination and promised a sibling page to
+   turn to. #}
 {% macro page_chip(doc) %}
 {% set extent = localized(doc, "title") | page_extent %}
 {% if extent %}
