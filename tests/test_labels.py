@@ -4,7 +4,7 @@ import pytest
 
 from app import create_app
 from app.commands import import_archive
-from app.labels import AmbiguousLabels, assert_unique, display_titles
+from app.labels import AmbiguousLabels, assert_unique, card_order, display_titles
 
 
 def test_path_is_dropped_but_an_ambiguous_leaf_keeps_what_sets_it_apart():
@@ -29,9 +29,9 @@ def test_path_is_dropped_but_an_ambiguous_leaf_keeps_what_sets_it_apart():
         "Injured Party: Armed Forces"
     )
     # Ambiguity can sit deep in the path rather than at the root.
-    assert names["Content, Document, Transfer, Body Transfer, Transfer to Hospital"] == (
-        "Body Transfer: Transfer to Hospital"
-    )
+    assert names[
+        "Content, Document, Transfer, Body Transfer, Transfer to Hospital"
+    ] == ("Body Transfer: Transfer to Hospital")
 
 
 def test_internal_process_labels_never_reach_the_public_filter():
@@ -112,7 +112,10 @@ def build(tmp_path, monkeypatch):
         {
             "id": 1,
             "title": "Report one",
-            "labels": [label(1, "Content, Document"), label(2, "Content, Document, Secret")],
+            "labels": [
+                label(1, "Content, Document"),
+                label(2, "Content, Document, Secret"),
+            ],
         },
         {
             "id": 2,
@@ -149,3 +152,51 @@ def test_facets_and_filtering_use_the_shown_name(tmp_path, monkeypatch):
         "/search?label=Content,+Document,+Secret", headers={"HX-Request": "true"}
     ).get_data(as_text=True)
     assert "Report one" not in empty
+
+
+def test_a_card_shows_one_tag_per_family_so_three_tags_say_three_things():
+    # Alphabetical order led a detention record with "Child" and a transfer
+    # letter with "Immediate", which read as claims about the document.
+    ordered = card_order(
+        [
+            {"path": "Content, Document, Immediate", "title": "Immediate"},
+            {"path": "Content, Document, Top Secret", "title": "Top Secret"},
+            {"path": "Human, Child", "title": "Child"},
+            {
+                "path": "Type, Human, Detention/Abduction",
+                "title": "Detention/Abduction",
+            },
+            {
+                "path": "Alleged Perpetrator, Affiliation, Pro-Government",
+                "title": "Alleged Perpetrator: Pro-Government",
+            },
+        ]
+    )
+    names = [label["title"] for label in ordered]
+    # What happened, what kind of paper, then who: one per family before any
+    # family's second, so the three a card shows answer three questions.
+    assert names[:3] == [
+        "Detention/Abduction",
+        "Immediate",
+        "Alleged Perpetrator: Pro-Government",
+    ]
+    # Nothing is dropped, so the card can count what it does not show.
+    assert sorted(names) == sorted(
+        [
+            "Detention/Abduction",
+            "Immediate",
+            "Top Secret",
+            "Child",
+            "Alleged Perpetrator: Pro-Government",
+        ]
+    )
+
+
+def test_an_unknown_family_sorts_after_the_known_ones():
+    ordered = card_order(
+        [
+            {"path": "Surprise, Something New", "title": "Something New"},
+            {"path": "Type, Human, Killing", "title": "Killing"},
+        ]
+    )
+    assert [label["title"] for label in ordered] == ["Killing", "Something New"]

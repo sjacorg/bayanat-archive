@@ -44,6 +44,18 @@ Quality" or "Needs Review" on a piece of evidence is not a mistake worth
 resting on a command-line flag. Excluding them at the export is still better:
 they then never leave Bayanat at all.
 
+Dates come from the "Document Issued" event, not from `publish_date`. In Bayanat
+`publish_date` is when SJAC filed the bulletin: where a document has both, the
+two never agree, the filing dates cluster in 2014 and 2015 down to the minute
+while the issue dates run 2011 to 2019. The import stores whichever it used in
+`document_date_source`, and the archive labels the date "Issued" or "Recorded"
+so a filing date is never shown as the document's own.
+
+A result card shows the first two tags and counts the rest, ordered one per
+family (`app/labels.py`), so the two are a violation and a document kind rather
+than whichever sorted first alphabetically. The whole list is on the document
+page.
+
 The import is destructive: it rebuilds `data/archive.db` and copies media into `app/static/media/`. See `EXPORT_SCHEMA.md` for the JSON contract.
 
 To watermark public copies, set `WATERMARK_IMAGE` (a transparent PNG). The mark runs along each page's diagonal on images and PDFs alike, and copies are written without their source metadata. Each page is solved for a consistent contrast against its own paper rather than a fixed opacity, so a white scan and a photograph end up equally legible; the mark stays SJAC white wherever that reads and flips dark only on bright scans where white cannot be seen. It also fades over ink so handwriting and stamps stay clear. `WATERMARK_OPACITY` is an optional ceiling on the solved alpha. Media already in `app/static/media/` is not reprocessed, so clear it after changing the watermark.

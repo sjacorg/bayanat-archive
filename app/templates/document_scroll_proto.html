@@ -111,8 +111,11 @@
                     <dd class="mt-1 tabular-nums text-base-content/80">{{ document.id }}</dd>
                 </div>
                 <div class="record-row">
-                    <dt class="text-xs font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("document.published") }}</dt>
-                    <dd class="mt-1 tabular-nums text-base-content/80">{{ document.publish_date[:10] if document.publish_date else t("catalog.na") }}</dd>
+                    {# "Published" was this record's filing date read as the document's own. #}
+                    <dt class="text-xs font-semibold uppercase tracking-[0.12em] text-base-content/65">
+                        {{ t("search.date_issued") if document.document_date_source == "issued" else t("search.date_recorded") }}
+                    </dt>
+                    <dd class="mt-1 tabular-nums text-base-content/80">{{ document.document_date[:10] if document.document_date else t("catalog.na") }}</dd>
                 </div>
                 {% if document_labels %}
                 <div class="record-row">

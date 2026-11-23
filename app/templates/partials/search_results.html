@@ -63,25 +63,51 @@
 </span>
 {% endmacro %}
 
+{#
+  Two tags and a count, not one tag and a tooltip. app.labels.card_order puts
+  the violation first and the document kind second, which are both the shortest
+  names and the two a reader triages on. The party tags that follow run to 44
+  characters ("Alleged Perpetrator: National Defense Forces") and would only
+  truncate in a 240px column, and "Armed Forces" is on 27 of the 36 documents
+  that name a perpetrator, so it barely tells two results apart. They stay on
+  the document page, where the whole list is.
+
+  No expander: the card is one link, so a control inside it is a trap on touch.
+#}
+{% set CARD_LABEL_LIMIT = 2 %}
 {% macro document_label_chips(doc_id) %}
 {% set labels = doc_labels.get(doc_id, []) %}
 {% if labels %}
-<div class="flex min-w-0 flex-wrap gap-1.5">
-    <span class="block h-6 max-w-full truncate bg-base-200 px-2 text-xs font-medium uppercase leading-6 tracking-[0.04em] text-base-content/75" dir="{{ labels[0].title | text_dir }}">
-        {{ labels[0].title }}
+{% set shown = labels[:CARD_LABEL_LIMIT] %}
+{% set hidden = labels|length - shown|length %}
+<div class="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
+    {% for label in shown %}
+    {# Wraps rather than truncates: a name is cut from the right, which is the
+       end that carries the meaning ("Confession (to possible violation)"). #}
+    <span class="max-w-full bg-base-200 px-1.5 py-0.5 text-[0.6875rem] font-medium uppercase leading-5 tracking-[0.04em] text-base-content/75" dir="{{ label.title | text_dir }}">
+        {{ label.title }}
     </span>
-    {% if labels|length > 1 %}
-    {% set overflow_titles = labels[1:] | map(attribute='title') | join('; ') %}
-    <div class="tooltip tooltip-top inline-flex [&::before]:max-w-[200px] [&::before]:whitespace-normal [&::before]:break-words" data-tip="{{ overflow_titles }}">
-        <span
-            class="inline-flex h-6 items-center bg-base-200 px-2 text-xs font-medium leading-none text-base-content/75"
-            tabindex="0"
-            aria-label="More labels: {{ overflow_titles }}"
-        >
-            +{{ labels|length - 1 }}
-        </span>
-    </div>
+    {% endfor %}
+    {% if hidden > 0 %}
+    <span class="text-[0.6875rem] leading-5 tabular-nums text-base-content/65">
+        {{ t("search.more_labels", count=hidden) }}
+    </span>
     {% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{#
+  The document's own date, and which field it came from. Never just a bare date:
+  a filing date presented as the document's date is the thing this fixes.
+#}
+{% macro document_date(doc) %}
+{% if doc.document_date %}
+<div class="flex items-baseline gap-1.5">
+    <span class="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-base-content/65">
+        {{ t("search.date_issued") if doc.document_date_source == "issued" else t("search.date_recorded") }}
+    </span>
+    <time datetime="{{ doc.document_date[:10] }}" class="text-sm tabular-nums text-base-content/70">{{ doc.document_date[:10] }}</time>
 </div>
 {% endif %}
 {% endmacro %}
@@ -372,9 +398,7 @@
                 </div>
                 {# Pinned to the card foot so dates line up across a row. #}
                 <div class="card-foot mt-auto pt-3">
-                    {% if doc.publish_date %}
-                    <time datetime="{{ doc.publish_date[:10] }}" class="block text-sm tabular-nums text-base-content/65">{{ doc.publish_date[:10] }}</time>
-                    {% endif %}
+                    {{ document_date(doc) }}
                     <div class="mt-2.5">{{ document_label_chips(doc.id) }}</div>
                 </div>
             </div>
@@ -415,11 +439,9 @@
                             <span class="italic text-base-content/65">{{ t("search.no_summary") }}</span>
                         {% endif %}
                     </div>
-                    <div class="mt-2 flex items-center gap-4">
+                    <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                         <span class="sm:hidden">{{ card_badge(doc.id) }}</span>
-                        {% if doc.publish_date %}
-                        <time datetime="{{ doc.publish_date[:10] }}" class="text-sm tabular-nums text-base-content/65">{{ doc.publish_date[:10] }}</time>
-                        {% endif %}
+                        {{ document_date(doc) }}
                     </div>
                     <div class="mt-2">
                         {{ document_label_chips(doc.id) }}

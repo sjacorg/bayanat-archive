@@ -100,3 +100,54 @@ def assert_unique(display):
             "would return both:\n  " + "\n  ".join(clashes)
         )
     return display
+
+
+# What a result card can show at a glance, in the order a researcher scanning a
+# list of results asks for it: what happened, what kind of paper records it,
+# then who was involved. Any family not listed sorts after these.
+CARD_FAMILY_ORDER = (
+    "Type",
+    "Content",
+    "Alleged Perpetrator",
+    "Injured Party",
+    "Weapons",
+)
+
+
+def _family_rank(title):
+    family = _segments(title or "")
+    family = family[0] if family else ""
+    try:
+        return (0, CARD_FAMILY_ORDER.index(family), family)
+    except ValueError:
+        return (1, 0, family)
+
+
+def card_order(labels):
+    """Order a document's tags for a card, one per family in turn.
+
+    A card has room for about three tags, and showing whichever sorted first
+    alphabetically meant a detention record led with "Child" and a transfer
+    letter with "Immediate". Alone above a photograph those read as claims
+    about the document; beside the violation and the document kind they read
+    as what they are. Taking one tag per family before any family's second is
+    what guarantees them that company, so the three visible tags answer three
+    different questions instead of three shades of one.
+
+    `labels` are mappings carrying `path` (the full label path, which is where
+    the family comes from) and `title` (the name shown), already in the order
+    the query returned them, which puts verified tags first. Every tag is
+    returned, so a caller can show some and count the rest.
+    """
+    families = {}
+    for label in labels:
+        families.setdefault(_family_rank(label["path"]), []).append(label)
+
+    ordered = []
+    rounds = max((len(group) for group in families.values()), default=0)
+    for index in range(rounds):
+        for rank in sorted(families):
+            group = families[rank]
+            if index < len(group):
+                ordered.append(group[index])
+    return ordered

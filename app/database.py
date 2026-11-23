@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS documents (
     source_link TEXT,
     publish_date TEXT,
     documentation_date TEXT,
+    -- The document's own date and where it was read from: see
+    -- app.commands.document_date. publish_date is SJAC's filing date, not this.
+    document_date TEXT,
+    document_date_source TEXT,
     ocr_text TEXT,
     translation TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -178,7 +182,13 @@ def init_db(db_path):
     # after an archive.db was built has to be added to it here.
     if "thumbnail" not in {row[1] for row in conn.execute("PRAGMA table_info(media)")}:
         conn.execute("ALTER TABLE media ADD COLUMN thumbnail TEXT")
-    label_columns = {row[1] for row in conn.execute("PRAGMA table_info(document_labels)")}
+    document_columns = {row[1] for row in conn.execute("PRAGMA table_info(documents)")}
+    for column in ("document_date", "document_date_source"):
+        if column not in document_columns:
+            conn.execute(f"ALTER TABLE documents ADD COLUMN {column} TEXT")
+    label_columns = {
+        row[1] for row in conn.execute("PRAGMA table_info(document_labels)")
+    }
     if "display_title" not in label_columns:
         conn.execute("ALTER TABLE document_labels ADD COLUMN display_title TEXT")
     # After the column exists either way, so the script above can run against an
@@ -186,6 +196,9 @@ def init_db(db_path):
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_document_labels_display"
         " ON document_labels(display_title)"
+    )
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_documents_date ON documents(document_date)"
     )
     return conn
 

@@ -27,6 +27,29 @@ CHILD_TABLES = (
 
 THUMBNAIL_WIDTH = 720  # search card is ~330px wide; 2x for dense screens
 
+# The event Bayanat records for when a document was written.
+ISSUE_EVENT_TYPE = "Document Issued"
+
+
+def document_date(doc):
+    """The date a document carries, and which field it was read from.
+
+    Bayanat's `publish_date` is when SJAC filed the bulletin, not when the
+    document was written. Where a document has both, the two never agree:
+    filing dates cluster in 2014 and 2015 down to the minute, while the issue
+    dates run 2011 to 2014 and match the documents' own numbering. So the
+    "Document Issued" event is the document's date, and `publish_date` is a
+    fallback shown as what it is, a filing date, rather than passed off as the
+    document's own.
+    """
+    for event in doc.get("events") or []:
+        if (event.get("type") or "").strip() == ISSUE_EVENT_TYPE:
+            issued = event.get("from_date") or event.get("to_date")
+            if issued:
+                return issued, "issued"
+    filed = doc.get("publish_date")
+    return (filed, "recorded") if filed else (None, None)
+
 
 def _pdf_thumbnail(pdf_path, thumb_path):
     """Render page one of a PDF as the JPEG shown on search cards."""
@@ -136,8 +159,9 @@ def import_archive(export_dir, append):
             """INSERT INTO documents
                (id, title, title_ar, slug, description, public_description,
                 public_description_ar, source_link,
-                publish_date, documentation_date, ocr_text, translation)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                publish_date, documentation_date, document_date,
+                document_date_source, ocr_text, translation)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 doc_id,
                 title,
@@ -149,6 +173,7 @@ def import_archive(export_dir, append):
                 doc.get("source_link"),
                 doc.get("publish_date"),
                 doc.get("documentation_date"),
+                *document_date(doc),
                 ocr_text,
                 translation,
             ),

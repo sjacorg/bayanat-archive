@@ -134,7 +134,7 @@ def _get_related_documents(db, document_id, limit=4):
           d.id AS related_document_id,
           d.slug,
           d.title AS display_title,
-          d.publish_date,
+          d.document_date,
           m.filename AS related_filename,
           m.media_type AS related_media_type
         FROM documents d
@@ -151,11 +151,10 @@ def _get_related_documents(db, document_id, limit=4):
         WHERE d.id != ?
         ORDER BY
           CASE
-            WHEN coalesce(d.documentation_date, d.publish_date) IS NULL
-              OR trim(coalesce(d.documentation_date, d.publish_date)) = '' THEN 1
+            WHEN d.document_date IS NULL OR trim(d.document_date) = '' THEN 1
             ELSE 0
           END,
-          coalesce(d.documentation_date, d.publish_date) DESC,
+          d.document_date DESC,
           d.id DESC
         LIMIT ?
         """,
@@ -236,7 +235,7 @@ def detail(document_id, slug):
     relations = _get_related_documents(db, document_id)
 
     metadata = {
-        "date": document["documentation_date"] or document["publish_date"],
+        "date": document["document_date"],
         "department": None,
         "rights": None,
         "location": None,

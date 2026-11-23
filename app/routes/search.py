@@ -6,6 +6,7 @@ from flask import Blueprint, make_response, render_template, request
 
 from app import get_db
 from app.i18n import DEFAULT_LANG, SUPPORTED_LANGS
+from app.labels import card_order
 
 bp = Blueprint("search", __name__)
 
@@ -16,6 +17,12 @@ PER_PAGE = 20
 # collapse to one entry and named sites keep their own name.
 ADMIN_LOCATION_TYPE = "Administrative Location"
 ALLOWED_SORTS = {"relevance", "date_desc", "date_asc"}
+
+# A document with no date sorts last in both directions. SQLite puts NULL first
+# on ASC, which led the oldest-first list with every undated document.
+UNDATED_LAST = "d.document_date IS NULL"
+DATE_DESC_ORDER = f"{UNDATED_LAST}, d.document_date DESC, d.id DESC"
+DATE_ASC_ORDER = f"{UNDATED_LAST}, d.document_date ASC, d.id ASC"
 ALLOWED_VIEWS = {"grid", "list"}
 
 
@@ -61,7 +68,7 @@ def _base_query(q=None, labels=None, locations=None, date_from=None, date_to=Non
     joins = []
     wheres = []
     params = []
-    order = "d.publish_date DESC, d.id DESC"
+    order = DATE_DESC_ORDER
 
     if q:
         joins.append("JOIN documents_fts f ON f.rowid = d.id")
@@ -86,11 +93,11 @@ def _base_query(q=None, labels=None, locations=None, date_from=None, date_to=Non
         params.extend(locations)
 
     if date_from:
-        wheres.append("d.publish_date >= ?")
+        wheres.append("d.document_date >= ?")
         params.append(date_from)
 
     if date_to:
-        wheres.append("d.publish_date <= ?")
+        wheres.append("d.document_date <= ?")
         params.append(date_to)
 
     return joins, wheres, params, order
@@ -106,9 +113,9 @@ def _get_results(db, q, labels, locations, date_from, date_to, sort, page):
     )
 
     if sort == "date_asc":
-        order = "d.publish_date ASC, d.id ASC"
+        order = DATE_ASC_ORDER
     elif sort == "date_desc":
-        order = "d.publish_date DESC, d.id DESC"
+        order = DATE_DESC_ORDER
 
     where_sql = (" WHERE " + " AND ".join(wheres)) if wheres else ""
     join_sql = " ".join(joins)
@@ -209,11 +216,11 @@ def _facet_options(facets):
 def _get_timeline_bins(db):
     rows = db.execute(
         """
-        SELECT CAST(substr(publish_date, 1, 4) AS INTEGER) AS year, COUNT(*) AS count
+        SELECT CAST(substr(document_date, 1, 4) AS INTEGER) AS year, COUNT(*) AS count
         FROM documents
-        WHERE publish_date IS NOT NULL
-          AND length(publish_date) >= 4
-          AND substr(publish_date, 1, 4) GLOB '[0-9][0-9][0-9][0-9]'
+        WHERE document_date IS NOT NULL
+          AND length(document_date) >= 4
+          AND substr(document_date, 1, 4) GLOB '[0-9][0-9][0-9][0-9]'
         GROUP BY year
         ORDER BY year
         """
@@ -423,17 +430,21 @@ def _get_document_labels(db, doc_ids):
         return {}
     placeholders = ",".join("?" * len(doc_ids))
     rows = db.execute(
-        f"""SELECT document_id, display_title AS title, verified
+        f"""SELECT document_id, display_title AS title, title AS path, verified
             FROM document_labels
             WHERE document_id IN ({placeholders})
               AND display_title IS NOT NULL
-            ORDER BY verified DESC, title""",
+            ORDER BY verified DESC, display_title""",
         doc_ids,
     ).fetchall()
     labels = {}
     for row in rows:
-        labels.setdefault(row["document_id"], []).append(row)
-    return labels
+        labels.setdefault(row["document_id"], []).append(
+            {"title": row["title"], "path": row["path"], "verified": row["verified"]}
+        )
+    # Cards show the first few, so which few they are is decided here, not by
+    # whichever tag happened to sort first.
+    return {doc_id: card_order(rows) for doc_id, rows in labels.items()}
 
 
 def search_shell_context(db):
