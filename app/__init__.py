@@ -37,7 +37,7 @@ def _contains_arabic_script(word):
 
 
 def _script_direction(text):
-    """"rtl" when Arabic letters outnumber Latin ones, else "ltr"."""
+    """ "rtl" when Arabic letters outnumber Latin ones, else "ltr"."""
     letters = [char for char in str(text or "") if char.isalpha()]
     arabic = sum(1 for char in letters if _contains_arabic_script(char))
     return "rtl" if arabic * 2 > len(letters) else "ltr"
@@ -69,6 +69,11 @@ def create_app():
     _re_spaces = re.compile(r"\s+")
     # Everything _re_spaces matches except a line break.
     _re_inline_spaces = re.compile(r"[^\S\n\r]+")
+    # "- Page 1 of 1", "– Page 2 of 4", or a bare "pg 1 of 1" after an Arabic
+    # document reference. Searched anywhere, since a few titles carry it mid-way.
+    _re_page_marker = re.compile(
+        r"\s*[-\u2013\u2014]?\s*(?:page|pg)\s*(\d+)\s*of\s*(\d+)\s*", re.I
+    )
 
     @app.template_filter("strip_html")
     def strip_html(value):
@@ -144,6 +149,33 @@ def create_app():
             if value and str(value).strip():
                 return value
         return row[field]
+
+    @app.template_filter("document_title")
+    def document_title(value):
+        """The title without its "Page 1 of 1" tail.
+
+        SJAC files one bulletin per page and writes the page into the title, so
+        103 of 118 titles carry a marker and 70 of those read "Page 1 of 1",
+        which says only that the document is a single page. In a 240px column
+        that costs a line of headline and sometimes two. Extent is a fact about
+        the record, so the card shows it as one (see page_extent) instead of
+        leaving it inside the sentence.
+        """
+        text = _re_page_marker.sub(" ", str(value or ""))
+        return _re_inline_spaces.sub(" ", text).strip(" -\u2013\u2014,")
+
+    @app.template_filter("page_extent")
+    def page_extent(value):
+        """("2", "4") when a title says which page of several this is, else None.
+
+        A single-page document returns None: "Page 1 of 1" tells a reader
+        nothing they would not assume.
+        """
+        match = _re_page_marker.search(str(value or ""))
+        if not match:
+            return None
+        page, total = match.group(1), match.group(2)
+        return None if total == "1" else (page, total)
 
     @app.template_filter("text_dir")
     def text_dir(value):

@@ -97,8 +97,12 @@ h1, h2, h3, .title-serif {
     padding: 0.875rem;
 }
 
-/* File type: a small solid tag, colour-coded so the kind of record reads at a
-   glance. Oxblood for scanned documents, teal for photographs, ink for the rest. */
+/* File type: a small solid tag in one ink. It used to be colour-coded, oxblood
+   for PDFs and teal for photographs, which spent the card's only saturated
+   colour on the container format. Every record here is a photograph of paper;
+   whether SJAC saved it as a PDF or a JPEG is not a property of the document,
+   and it was outranking the title for attention. The icon still tells them
+   apart, and the accent is kept for selection and state. */
 .media-badge {
     display: inline-flex;
     max-width: 100%;
@@ -115,14 +119,6 @@ h1, h2, h3, .title-serif {
     text-overflow: ellipsis;
     text-transform: uppercase;
     white-space: nowrap;
-}
-
-.media-badge--pdf {
-    background: oklch(0.43 0.13 25);
-}
-
-.media-badge--image {
-    background: var(--color-primary);
 }
 
 .media-badge svg {

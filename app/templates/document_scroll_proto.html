@@ -90,9 +90,12 @@
         {# Record overview sheet #}
         <article data-page="0" id="page-0" class="card-archive mx-auto mb-8 w-full scroll-mt-20 p-7 md:p-10" style="max-width:var(--page-width,880px)">
             <p class="text-xs font-semibold uppercase tracking-[0.18em] text-secondary">{{ t("document.record") }}</p>
-            {% set heading = localized(document, "title") %}
+            {# The filed title carries "- Page 1 of 1" on most records. Extent is
+               a fact about the document, so it is a row in the record below. #}
+            {% set heading = localized(document, "title") | document_title %}
+            {% set extent = localized(document, "title") | page_extent %}
             <h1 dir="{{ heading | text_dir }}" class="title-serif mt-2 text-2xl font-semibold leading-tight text-base-content md:text-4xl">{{ heading }}</h1>
-            {% set alt_title = document.title if heading == document.title_ar else document.title_ar %}
+            {% set alt_title = (document.title if heading == (document.title_ar | document_title) else document.title_ar) | document_title %}
             {% if alt_title and alt_title != heading %}
             <p dir="{{ alt_title | text_dir }}" class="mt-1 text-lg text-base-content/65">{{ alt_title }}</p>
             {% endif %}
@@ -110,6 +113,12 @@
                     <dt class="text-xs font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("document.reference") }}</dt>
                     <dd class="mt-1 tabular-nums text-base-content/80">{{ document.id }}</dd>
                 </div>
+                {% if extent %}
+                <div class="record-row">
+                    <dt class="text-xs font-semibold uppercase tracking-[0.12em] text-base-content/65">{{ t("document.page") }}</dt>
+                    <dd class="mt-1 tabular-nums text-base-content/80">{{ t("search.page_of", page=extent[0], total=extent[1]) }}</dd>
+                </div>
+                {% endif %}
                 <div class="record-row">
                     {# "Published" was this record's filing date read as the document's own. #}
                     <dt class="text-xs font-semibold uppercase tracking-[0.12em] text-base-content/65">

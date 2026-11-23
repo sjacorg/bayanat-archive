@@ -102,12 +102,24 @@
   a filing date presented as the document's date is the thing this fixes.
 #}
 {% macro document_date(doc) %}
-{% if doc.document_date %}
-<div class="flex items-baseline gap-1.5">
-    <span class="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-base-content/65">
-        {{ t("search.date_issued") if doc.document_date_source == "issued" else t("search.date_recorded") }}
+{% set extent = localized(doc, "title") | page_extent %}
+{% if doc.document_date or extent %}
+<div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+    {% if doc.document_date %}
+    <span class="flex items-baseline gap-1.5">
+        <span class="text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-base-content/65">
+            {{ t("search.date_issued") if doc.document_date_source == "issued" else t("search.date_recorded") }}
+        </span>
+        <time datetime="{{ doc.document_date[:10] }}" class="text-sm tabular-nums text-base-content/70">{{ doc.document_date[:10] }}</time>
     </span>
-    <time datetime="{{ doc.document_date[:10] }}" class="text-sm tabular-nums text-base-content/70">{{ doc.document_date[:10] }}</time>
+    {% endif %}
+    {# Only when the document runs to more than one page: "Page 1 of 1" was in
+       70 of 118 titles and told a reader nothing. #}
+    {% if extent %}
+    <span class="text-[0.6875rem] font-medium uppercase tracking-[0.08em] tabular-nums text-base-content/65">
+        {{ t("search.page_of", page=extent[0], total=extent[1]) }}
+    </span>
+    {% endif %}
 </div>
 {% endif %}
 {% endmacro %}
@@ -375,18 +387,18 @@
             <div class="relative flex flex-1 flex-col gap-3 px-6 pb-5 pt-7">
                 <div class="absolute -top-3 start-6">{{ card_badge(doc.id) }}</div>
                 <h2
-                    dir="{{ localized(doc, 'title') | text_dir }}"
-                    class="line-clamp-3 text-base font-medium leading-snug text-base-content transition-colors group-hover:text-primary"
+                    dir="{{ localized(doc, 'title') | document_title | text_dir }}"
+                    class="line-clamp-3 text-[1.0625rem] font-medium leading-snug text-base-content transition-colors group-hover:text-primary"
                 >
                     {% if doc.snippet_title %}
-                        {{ doc.snippet_title | highlight }}
+                        {{ doc.snippet_title | document_title | highlight }}
                     {% else %}
-                        {{ localized(doc, "title") }}
+                        {{ localized(doc, "title") | document_title }}
                     {% endif %}
                 </h2>
                 <div
                     dir="{{ (doc.snippet_desc or localized(doc, 'public_description')) | text_dir }}"
-                    class="line-clamp-4 text-[0.95rem] leading-relaxed text-base-content/70"
+                    class="line-clamp-3 text-[0.9375rem] leading-relaxed text-base-content/70"
                 >
                     {% if doc.snippet_desc %}
                         {{ doc.snippet_desc | strip_html }}
@@ -418,13 +430,13 @@
                 <div class="min-w-0 flex-1">
                     <div class="mb-2 hidden sm:block">{{ card_badge(doc.id) }}</div>
                     <h2
-                        dir="{{ localized(doc, 'title') | text_dir }}"
+                        dir="{{ localized(doc, 'title') | document_title | text_dir }}"
                         class="line-clamp-1 break-words text-base font-medium leading-snug text-base-content transition-colors group-hover:text-primary sm:line-clamp-2 sm:text-lg"
                     >
                         {% if doc.snippet_title %}
-                            {{ doc.snippet_title | highlight }}
+                            {{ doc.snippet_title | document_title | highlight }}
                         {% else %}
-                            {{ localized(doc, "title") }}
+                            {{ localized(doc, "title") | document_title }}
                         {% endif %}
                     </h2>
                     <div
