@@ -71,8 +71,12 @@ def create_app():
     _re_inline_spaces = re.compile(r"[^\S\n\r]+")
     # "- Page 1 of 1", "– Page 2 of 4", or a bare "pg 1 of 1" after an Arabic
     # document reference. Searched anywhere, since a few titles carry it mid-way.
+    # Titles carry the page marker in the language they were written in, so the
+    # Arabic form has to come out of the title and into the extent chip too.
     _re_page_marker = re.compile(
-        r"\s*[-\u2013\u2014]?\s*(?:page|pg)\s*(\d+)\s*of\s*(\d+)\s*", re.I
+        r"\s*[-\u2013\u2014]?\s*(?:(?:page|pg)\s*(\d+)\s*of\s*(\d+)"
+        r"|(?:\u0627\u0644)?\u0635\u0641\u062d\u0629\s*(\d+)\s*\u0645\u0646\s*(\d+))\s*",
+        re.I,
     )
 
     @app.template_filter("strip_html")
@@ -174,7 +178,7 @@ def create_app():
         match = _re_page_marker.search(str(value or ""))
         if not match:
             return None
-        page, total = match.group(1), match.group(2)
+        page, total = [group for group in match.groups() if group]
         return None if total == "1" else (page, total)
 
     @app.template_filter("text_dir")

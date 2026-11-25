@@ -54,3 +54,11 @@ def test_extent_is_reported_only_when_there_is_more_than_one_page(
 
 def test_a_title_that_is_only_a_marker_does_not_become_a_stray_dash(filters):
     assert filters["document_title"]("- Page 1 of 1") == ""
+
+
+def test_arabic_page_marker_leaves_the_title(filters):
+    title = filters["document_title"]
+    extent = filters["page_extent"]
+    assert title("تقرير أمني وتقرير احتجاز - الصفحة 1 من 2") == "تقرير أمني وتقرير احتجاز"
+    assert extent("تقرير أمني وتقرير احتجاز - الصفحة 1 من 2") == ("1", "2")
+    assert extent("تقرير اعتقال - صفحة 1 من 1") is None
